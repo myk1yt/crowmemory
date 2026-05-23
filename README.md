@@ -145,4 +145,4 @@ MIT License — see [`LICENSE`](LICENSE) for details.
 ---
 
 *Crow Memory v1.0 — May 2026*  
-*Co-designed by User & DeepSeek V4 Pro*
+*Co-designed by Stefano,Kim & DeepSeek V4 Pro*
