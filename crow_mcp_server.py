@@ -41,10 +41,11 @@ TOOL_DEFINITIONS = [
             "type": "object",
             "properties": {
                 "query": {"type": "string", "description": "Natural language description of the current task."},
-                "register": {"type": "string", "enum": ["style", "bug", "arch", "context"]},
+                "register": {"type": "string", "enum": ["style", "bug", "arch", "context", "life_pref", "life_avoid", "life_phil", "life_context"], "description": "Which register. Code: style/bug/arch/context. Life: life_pref/life_avoid/life_phil/life_context."},
                 "top_k": {"type": "integer", "default": 2, "description": "Number of hints (1-3)."},
+                "domain": {"type": "string", "enum": ["code", "life", "all"], "default": "all", "description": "Domain filter shortcut."},
             },
-            "required": ["query", "register"],
+            "required": ["query"],
         },
     },
     {
@@ -59,7 +60,7 @@ TOOL_DEFINITIONS = [
                 "key": {"type": "string", "description": "Abstract description of the situation."},
                 "value": {"type": "string", "description": "Code pattern or decision applied."},
                 "polarity": {"type": "number", "description": "Reinforcement strength [-2.0, 2.0]."},
-                "register": {"type": "string", "enum": ["style", "bug", "arch", "context"]},
+                "register": {"type": "string", "enum": ["style", "bug", "arch", "context", "life_pref", "life_avoid", "life_phil", "life_context"]},
             },
             "required": ["key", "value", "polarity", "register"],
         },
@@ -226,10 +227,28 @@ def create_server(state_path: str) -> Server:
 # ---------------------------------------------------------------------------
 
 def _recall(crow: CrowMemory, args: dict) -> list:
+    domain = args.get("domain")
+    register = args.get("register")
+    top_k = max(1, min(5, args.get("top_k", 2)))
+
+    # If domain specified without register, query all registers in domain
+    if domain and not register:
+        from crow_core import DOMAINS
+        all_hints = []
+        total_conf = 0.0
+        registers = DOMAINS.get(domain, ["style"])
+        for reg in registers:
+            r = crow.recall(args.get("query", ""), reg, max(1, top_k // len(registers)))
+            all_hints.extend(r.get("hints", []))
+            total_conf += r.get("confidence", 0)
+        avg_conf = round(total_conf / len(registers), 4) if registers else 0.0
+        result = {"hints": all_hints[:top_k], "confidence": avg_conf, "domain": domain}
+        return _ok(result)
+
     result = crow.recall(
         args.get("query", ""),
-        args.get("register", "style"),
-        max(1, min(3, args.get("top_k", 2))),
+        register or "style",
+        top_k,
     )
     return _ok(result)
 

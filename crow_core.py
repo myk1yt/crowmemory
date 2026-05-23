@@ -28,12 +28,27 @@ MAX_SV = 2.0
 NEG_DAMPEN = 0.6
 VALUE_BANK_MAX = 500
 
+# 8 registers: 4 coding (original) + 4 personal life
 REGISTERS: dict[str, tuple[int, int, float]] = {
+    # Coding domain (original v1.0 names preserved)
     "style":   (DIM, DIM,    0.9999),
     "bug":     (2048, 2048,  0.9995),
     "arch":    (2048, 2048,  0.9995),
     "context": (2048, DIM,   0.9500),
+    # Life domain (NEW — personal/lifestyle memory)
+    "life_pref":    (DIM, DIM,    0.9999),
+    "life_avoid":   (2048, 2048,  0.9995),
+    "life_phil":    (2048, 2048,  0.9995),
+    "life_context": (2048, DIM,   0.9500),
 }
+
+# Domain groupings
+DOMAINS: dict[str, list[str]] = {
+    "code": ["style", "bug", "arch", "context"],
+    "life": ["life_pref", "life_avoid", "life_phil", "life_context"],
+}
+CODE_REGISTERS = DOMAINS["code"]
+LIFE_REGISTERS = DOMAINS["life"]
 
 
 # ---------------------------------------------------------------------------
@@ -50,6 +65,11 @@ class CrowMemory:
 
         try:
             self.data = load_file(path)
+            # Migrate: add any missing registers from REGISTERS
+            for name, (d_k, d_v, _) in REGISTERS.items():
+                key = f"{name}_S"
+                if key not in self.data:
+                    self.data[key] = np.zeros((d_k, d_v), dtype=np.float16)
         except (FileNotFoundError, ValueError):
             self.data = self._init_blank()
 
