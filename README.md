@@ -1,37 +1,33 @@
 # Crow Memory (까마귀 메모리)
 
 > *"Crow remembers not the code, but the hand that wrote it."*
-> — 까마귀는 코드를 기억하지 않고, 코드를 쓴 손을 기억한다.
 
-**Crow**는 AI 코딩 에이전트(DeepSeek V4 Pro)에 장착하는 외부 시냅스 기억 장치다. 네 코딩 스타일, 버그 직관, 아키텍처 선호도를 압축된 가중치 행렬로 저장하고, 자연어 질문으로 인출한다.
+**Crow** is an external synaptic memory chip for AI coding agents (DeepSeek V4 Pro). It stores your coding style, bug intuition, and architectural preferences as compressed weight matrices inside a fixed-size `crow.bin` file, and retrieves them via natural language queries.
 
 ---
 
-## 빠른 시작 (5분)
+## Quick Start
 
-### 1. 요구사항
+### 1. Requirements
 
 - **Python 3.10+**
-- **Zoo Code** (VS Code 확장)
-- **DeepSeek V4 Pro API** 접근 권한
+- **Zoo Code** (VS Code extension)
+- **DeepSeek V4 Pro API** access
 
-### 2. 설치
+### 2. Installation
 
 ```bash
-# 저장소 클론
-git clone https://github.com/YOUR_USER/crow-memory.git
-cd crow-memory
-
-# 의존성 설치
+git clone https://github.com/myk1yt/crowmemory.git
+cd crowmemory
 pip install -r requirements.txt
 ```
 
-### 3. Zoo Code에 MCP 연결
+### 3. Connect to Zoo Code
 
-Zoo Code의 MCP 설정 파일을 연다:
-- 경로: `%APPDATA%/Code/User/globalStorage/zoocodeorganization.zoo-code/settings/mcp_settings.json`
+Open Zoo Code's MCP settings file:
+- Path: `%APPDATA%/Code/User/globalStorage/zoocodeorganization.zoo-code/settings/mcp_settings.json`
 
-다음 내용을 `mcpServers` 안에 추가한다:
+Add the following inside `mcpServers`:
 
 ```json
 {
@@ -39,110 +35,114 @@ Zoo Code의 MCP 설정 파일을 연다:
     "crow_memory": {
       "command": "python",
       "args": [
-        "절대경로/crow_mcp_server.py",
+        "/absolute/path/to/crow_mcp_server.py",
         "--state",
-        "절대경로/memory/crow.bin"
+        "/absolute/path/to/memory/crow.bin"
       ]
     }
   }
 }
 ```
 
-Zoo Code를 재시작하면 Crow가 자동으로 활성화된다.
+Restart Zoo Code. Crow activates automatically.
 
-### 4. 작동 확인
+### 4. Verify
 
-Zoo Code에서 AI에게 이렇게 말해본다:
-> "crow_diagnostics 도구를 호출해서 Crow 메모리 상태를 확인해줘."
+In Zoo Code, ask the AI:
+> "Call the crow_diagnostics tool to check Crow memory status."
 
-Crow가 살아있다면 진단 정보가 반환된다.
-
----
-
-## crow.bin 공유 정책 (중요!)
-
-| 파일 | 공유 여부 | 이유 |
-|------|----------|------|
-| `crow_core.py` | ✅ 공유 | 핵심 엔진 (코드) |
-| `crow_mcp_server.py` | ✅ 공유 | MCP 서버 |
-| `backup_manager.py` | ✅ 공유 | 백업 유틸리티 |
-| `hitl_panel.html` | ✅ 공유 | HITL UI |
-| `test_crow.py` | ✅ 공유 | 테스트 |
-| `test_integration.py` | ✅ 공유 | 통합 테스트 |
-| `requirements.txt` | ✅ 공유 | 의존성 |
-| `mcp_config.json` | ✅ 공유 | 설정 예시 |
-| **`memory/crow.bin`** | ❌ **비공유** | 네 개인 기억이 담겨 있음 |
-| **`memory/value_bank.json`** | ❌ **비공유** | 네 경험 데이터 |
-| **`memory/recall_stats.json`** | ❌ **비공유** | 네 리콜 통계 |
-| **`memory/system_prompt.md`** | ❌ **비공유** | 네 진화된 규칙 |
-
-**`.gitignore`에 반드시 추가할 것:**
-```
-memory/crow.bin
-memory/*.bak*
-memory/value_bank.json
-memory/recall_stats.json
-memory/system_prompt.md
-memory/test_*/
-```
-
-각 사용자는 처음 실행 시 자동으로 빈 `crow.bin`을 생성하므로, 네 기억이 다른 사람에게 넘어갈 일은 없다.
+If Crow is alive, diagnostics will be returned.
 
 ---
 
-## 작동 원리
+## How It Works
 
 ```
-사용자 질문 → DeepSeek V4 Pro
-                  ↓ crow_recall("query", "style")
-             Crow MCP Server (stdio)
-                  ↓ encode() → S.T @ q → nearest neighbor
-             crow.bin (4-register weight matrix)
-                  ↓
-             [User Bias] 힌트 반환 → 시스템 프롬프트 앞에 주입
-                  ↓
-             DeepSeek V4 Pro가 네 스타일로 코드 생성
+User query → DeepSeek V4 Pro
+                ↓ crow_recall("query", "style")
+           Crow MCP Server (stdio)
+                ↓ encode() → Sᵀ @ q → nearest neighbor
+           crow.bin (4-register weight matrix)
+                ↓
+           [User Bias] hints returned → prepended to system prompt
+                ↓
+           DeepSeek V4 Pro generates code in your style
 ```
 
----
+### The 4 Registers
 
-## 10가지 MCP 도구
-
-| 도구 | 설명 |
-|------|------|
-| `crow_recall` | 저장된 코딩 스타일/버그 직관 인출 |
-| `crow_ingest` | 새로운 경험을 시냅스에 기록 |
-| `crow_evolve_propose` | 통계적으로 유의미한 패턴 → 영구 프롬프트 규칙 제안 |
-| `crow_diagnostics` | 메모리 상태 진단 |
-| `crow_check_drift` | 기억 드리프트 감지 |
-| `crow_ingest_from_build` | 빌드 결과 기반 자동 평가 |
-| `crow_get_user_bias` | [User Bias] 블록 생성 |
-| `crow_manage_prompt` | 시스템 프롬프트 관리 |
-| `crow_manage_backup` | 백업 생성/순환/복구 |
-| `crow_project_info` | 프로젝트별 메모리 격리 |
+| Register | Dimensions | λ (EMA decay) | Capacity | Domain |
+|----------|-----------|----------------|----------|--------|
+| `style` | 4096×4096 | 0.9999 (~7K to halve) | ~2,000 patterns | Variable naming, comment style, folder aesthetics |
+| `bug` | 2048×2048 | 0.9995 (~1.4K to halve) | ~800 patterns | Abstract bug families, not exact fixes |
+| `arch` | 2048×2048 | 0.9995 | ~800 patterns | Early-return vs deep-nesting, error-handling philosophy |
+| `context` | 2048×4096 | 0.9500 (~14 to halve) | ~400 patterns | Recent conversation topics, active file context |
 
 ---
 
-## 문제 해결
+## 10 MCP Tools
 
-### Crow 도구가 보이지 않아요
-- Zoo Code 재시작
-- 최초 실행 시 `nomic-embed-text-v1.5` 모델 다운로드로 30~60초 소요될 수 있음
-- Python이 PATH에 등록되어 있는지 확인: `python --version`
-
-### recall 결과가 "Few memories stored yet"만 나와요
-- 정상! Crow는 경험이 쌓일수록 정확해진다. 20~30회 이상 ingest하면 의미 있는 힌트가 나오기 시작한다.
-
-### Windows에서 PermissionError 발생
-- crow_core.py v1.0.1 이상에서는 자동 재시도 메커니즘이 내장되어 있다.
-
----
-
-## 라이선스
-
-MIT License — 자유롭게 사용, 수정, 공유할 수 있다.
+| Tool | Description |
+|------|-------------|
+| `crow_recall` | Retrieve stored coding style / bug intuition |
+| `crow_ingest` | Write new experience into synaptic memory |
+| `crow_evolve_propose` | Propose permanent prompt rule from statistically significant patterns |
+| `crow_diagnostics` | Memory state diagnostics |
+| `crow_check_drift` | Detect memory drift (confidence too low) |
+| `crow_ingest_from_build` | Auto-evaluate from build exit code + user edits |
+| `crow_get_user_bias` | Generate `[User Bias]` block for prompt injection |
+| `crow_manage_prompt` | Read / append to `system_prompt.md` |
+| `crow_manage_backup` | Create / rotate / list / recover backups |
+| `crow_project_info` | Multi-project memory isolation |
 
 ---
 
-*Crow Memory v1.0 — 2026년 5월*
-*공동 설계: User & DeepSeek V4 Pro*
+## Sharing Policy (Important!)
+
+| File | Share? | Reason |
+|------|--------|--------|
+| `crow_core.py` | ✅ Yes | Core engine (code) |
+| `crow_mcp_server.py` | ✅ Yes | MCP server |
+| `backup_manager.py` | ✅ Yes | Backup utility |
+| `hitl_panel.html` | ✅ Yes | HITL UI |
+| `test_*.py` | ✅ Yes | Tests |
+| `requirements.txt` | ✅ Yes | Dependencies |
+| `mcp_config.json` | ✅ Yes | Config example |
+| **`memory/crow.bin`** | ❌ **No** | Your personal synaptic memories |
+| **`memory/value_bank.json`** | ❌ **No** | Your experience data |
+| **`memory/recall_stats.json`** | ❌ **No** | Your recall statistics |
+| **`memory/system_prompt.md`** | ❌ **No** | Your evolved rules |
+
+The included `.gitignore` automatically excludes all personal memory files.
+
+---
+
+## Troubleshooting
+
+### Crow tools don't appear
+- Restart Zoo Code
+- First launch downloads `nomic-embed-text-v1.5` model (~30-60s). Subsequent launches are fast (~5-10s).
+- Verify Python is in PATH: `python --version`
+
+### Recall returns only "Few memories stored yet"
+- Normal! Crow needs 20-30+ ingestions before meaningful hints emerge. Keep coding.
+
+### PermissionError on Windows
+- `crow_core.py` v1.0+ includes automatic retry with exponential backoff.
+
+---
+
+## Architecture
+
+See [`CROW_MEMORY_ARCHITECTURE.md`](CROW_MEMORY_ARCHITECTURE.md) for the full technical specification including mathematical foundations, Hebbian EMA update rules, spectral clipping, and capacity bounds.
+
+---
+
+## License
+
+MIT License — see [`LICENSE`](LICENSE) for details.
+
+---
+
+*Crow Memory v1.0 — May 2026*  
+*Co-designed by User & DeepSeek V4 Pro*
