@@ -1,0 +1,12 @@
+# Crow Memory - Python Dependencies
+# Phase 0: Core prototype
+numpy>=1.25.0
+torch>=2.0.0
+safetensors>=0.4.0
+sentence-transformers>=2.7.0
+faiss-cpu>=1.7.4
+mcp>=1.0.0
+
+# Optional / Phase 2+
+# fastapi>=0.110.0  # If switching to HTTP transport
+# uvicorn>=0.29.0   # If switching to HTTP transport

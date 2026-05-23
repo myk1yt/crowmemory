@@ -1,0 +1,17 @@
+{
+  "mcpServers": {
+    "crow_memory": {
+      "command": "python",
+      "args": [
+        "crow_mcp_server.py",
+        "--state",
+        "./memory/crow.bin"
+      ],
+      "cwd": "${workspaceFolder}",
+      "description": "Crow Memory - External synaptic memory for AI coding agents. Stores your coding style, bug intuition, and architectural preferences as compressed weight matrices.",
+      "env": {
+        "PYTHONUNBUFFERED": "1"
+      }
+    }
+  }
+}

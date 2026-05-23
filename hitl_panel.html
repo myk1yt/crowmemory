@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Crow Memory — HITL Approval Panel</title>
+<style>
+  :root {
+    --bg: #1a1a2e;
+    --panel-bg: #16213e;
+    --accent: #e94560;
+    --accent-green: #0f9b58;
+    --text: #eee;
+    --text-muted: #999;
+    --border: #333;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, 'Segoe UI', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    display: flex; justify-content: center; align-items: center;
+    min-height: 100vh; padding: 2rem;
+  }
+  .container { max-width: 640px; width: 100%; }
+  h1 {
+    font-size: 1.6rem; margin-bottom: 0.25rem;
+    display: flex; align-items: center; gap: 0.5rem;
+  }
+  h1 .icon { font-size: 1.8rem; }
+  .subtitle { color: var(--text-muted); margin-bottom: 2rem; font-size: 0.85rem; }
+
+  .card {
+    background: var(--panel-bg); border: 1px solid var(--border);
+    border-radius: 10px; padding: 1.5rem; margin-bottom: 1rem;
+  }
+  .card.proposal { border-left: 4px solid var(--accent); }
+  .card.approved { border-left: 4px solid var(--accent-green); opacity: 0.7; }
+  .card h3 { font-size: 1rem; margin-bottom: 0.5rem; }
+  .card .rule { font-family: 'Consolas', monospace; font-size: 0.9rem;
+    background: rgba(0,0,0,0.3); padding: 0.75rem; border-radius: 6px;
+    margin: 0.5rem 0; white-space: pre-wrap; word-break: break-word; }
+  .card .meta { font-size: 0.75rem; color: var(--text-muted); margin-top: 0.5rem; }
+  .card .confidence-bar {
+    height: 4px; background: #333; border-radius: 2px; margin: 0.5rem 0;
+  }
+  .card .confidence-fill {
+    height: 100%; border-radius: 2px;
+    background: linear-gradient(90deg, #f0a500, var(--accent-green));
+    transition: width 0.5s ease;
+  }
+
+  .btn-row { display: flex; gap: 0.75rem; margin-top: 1rem; }
+  .btn {
+    padding: 0.6rem 1.5rem; border: none; border-radius: 6px;
+    font-size: 0.9rem; font-weight: 600; cursor: pointer;
+    transition: opacity 0.2s, transform 0.1s;
+    display: flex; align-items: center; gap: 0.4rem;
+  }
+  .btn:hover { opacity: 0.85; }
+  .btn:active { transform: scale(0.97); }
+  .btn-approve { background: var(--accent-green); color: #fff; }
+  .btn-reject { background: var(--accent); color: #fff; }
+  .btn-edit { background: #444; color: #fff; }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .status-msg {
+    padding: 0.75rem; border-radius: 6px; font-size: 0.85rem;
+    margin-top: 1rem; display: none;
+  }
+  .status-msg.show { display: block; }
+  .status-msg.success { background: rgba(15,155,88,0.15); border: 1px solid var(--accent-green); }
+  .status-msg.error { background: rgba(233,69,96,0.15); border: 1px solid var(--accent); }
+
+  .empty-state { text-align: center; padding: 3rem 1rem; color: var(--text-muted); }
+  .empty-state .icon { font-size: 3rem; margin-bottom: 1rem; }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1><span class="icon">🐦‍⬛</span> Crow Memory — HITL Panel</h1>
+  <p class="subtitle">Prompt Evolution Approval — Human-in-the-Loop Gate</p>
+
+  <div id="proposals-container">
+    <div class="empty-state">
+      <div class="icon">🕊️</div>
+      <p>No pending proposals.</p>
+      <p style="font-size:0.8rem">Crow will propose prompt mutations when statistically significant patterns emerge.</p>
+    </div>
+  </div>
+
+  <div id="status" class="status-msg"></div>
+</div>
+
+<script>
+  // ============================================================
+  // Crow HITL Panel — connects to Crow MCP server via postMessage
+  // ============================================================
+
+  const vscode = typeof acquireVsCodeApi !== 'undefined'
+    ? acquireVsCodeApi()
+    : null;
+
+  let proposals = [];
+
+  function showStatus(message, type) {
+    const el = document.getElementById('status');
+    el.textContent = message;
+    el.className = `status-msg show ${type}`;
+    setTimeout(() => { el.className = 'status-msg'; }, 4000);
+  }
+
+  function renderProposals() {
+    const container = document.getElementById('proposals-container');
+    if (proposals.length === 0) {
+      container.innerHTML = `
+        <div class="empty-state">
+          <div class="icon">🕊️</div>
+          <p>No pending proposals.</p>
+          <p style="font-size:0.8rem">Crow will propose prompt mutations when
+          statistically significant patterns emerge.</p>
+        </div>`;
+      return;
+    }
+
+    container.innerHTML = proposals.map((p, i) => `
+      <div class="card proposal" id="proposal-${i}">
+        <h3>📋 Proposal #${i + 1} — ${p.register} register</h3>
+        <div class="confidence-bar">
+          <div class="confidence-fill" style="width:${(p.confidence * 100).toFixed(0)}%"></div>
+        </div>
+        <div class="rule">${escapeHtml(p.proposal)}</div>
+        <div class="meta">
+          Confidence: ${(p.confidence * 100).toFixed(0)}% ·
+          Occurrences: ${p.occurrences} ·
+          Register: ${p.register}
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-approve" onclick="approve(${i})">✅ Approve</button>
+          <button class="btn btn-reject" onclick="reject(${i})">❌ Reject</button>
+          <button class="btn btn-edit" onclick="edit(${i})">✏️ Edit</button>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  function approve(index) {
+    const card = document.getElementById(`proposal-${index}`);
+    if (card) card.classList.add('approved');
+    const btns = card.querySelectorAll('.btn');
+    btns.forEach(b => b.disabled = true);
+
+    postToHost('hitl_approve', proposals[index]);
+    proposals.splice(index, 1);
+    showStatus('Rule approved and added to system prompt.', 'success');
+    setTimeout(renderProposals, 800);
+  }
+
+  function reject(index) {
+    const card = document.getElementById(`proposal-${index}`);
+    if (card) card.classList.add('approved');
+    const btns = card.querySelectorAll('.btn');
+    btns.forEach(b => b.disabled = true);
+
+    postToHost('hitl_reject', proposals[index]);
+    proposals.splice(index, 1);
+    showStatus('Proposal rejected. Negative reinforcement applied.', 'error');
+    setTimeout(renderProposals, 800);
+  }
+
+  function edit(index) {
+    const p = proposals[index];
+    const newText = prompt('Edit the proposed rule:', p.proposal);
+    if (newText && newText.trim()) {
+      p.proposal = newText.trim();
+      p.edited = true;
+      renderProposals();
+      showStatus('Proposal edited. Ready for approval.', 'success');
+    }
+  }
+
+  function postToHost(action, data) {
+    if (vscode) {
+      vscode.postMessage({ action, data });
+    } else {
+      console.log(`[HITL ${action}]`, data);
+    }
+  }
+
+  // Listen for proposals from host (Zoo Code)
+  window.addEventListener('message', (event) => {
+    const msg = event.data;
+    if (msg && msg.type === 'crow_proposals') {
+      proposals = msg.proposals || [];
+      renderProposals();
+    } else if (msg && msg.type === 'crow_add_proposal') {
+      proposals.push(msg.proposal);
+      renderProposals();
+    }
+  });
+
+  // Initial render
+  renderProposals();
+
+  console.log('🐦‍⬛ Crow HITL Panel ready. Awaiting proposals...');
+</script>
+</body>
+</html>

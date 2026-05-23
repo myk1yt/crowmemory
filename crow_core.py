@@ -1,0 +1,717 @@
+#!/usr/bin/env python3
+"""
+crow_core.py — Crow Memory core engine (complete).
+Implements the 4-register synaptic weight matrix with Hebbian EMA updates,
+spectral clipping, FAISS-powered value bank retrieval, build hook integration,
+system prompt evolution, backup rotation, and drift auto-recovery.
+
+Design: Architecture document v1.0, Sections 3–7.
+"""
+
+import json
+import os
+import time
+import base64
+import warnings
+from typing import Optional
+
+import numpy as np
+from safetensors.numpy import load_file, save_file
+
+# ---------------------------------------------------------------------------
+# Constants
+# ---------------------------------------------------------------------------
+
+DIM = 4096
+EMBED_DIM = 768
+MAX_SV = 2.0
+NEG_DAMPEN = 0.6
+VALUE_BANK_MAX = 500
+
+REGISTERS: dict[str, tuple[int, int, float]] = {
+    "style":   (DIM, DIM,    0.9999),
+    "bug":     (2048, 2048,  0.9995),
+    "arch":    (2048, 2048,  0.9995),
+    "context": (2048, DIM,   0.9500),
+}
+
+
+# ---------------------------------------------------------------------------
+# CrowMemory
+# ---------------------------------------------------------------------------
+
+class CrowMemory:
+    """Fixed-size associative memory with 4 semantic registers."""
+
+    def __init__(self, path: str = "./memory/crow.bin"):
+        self.path = path
+        self.memory_dir = os.path.dirname(path) or "."
+        os.makedirs(self.memory_dir, exist_ok=True)
+
+        try:
+            self.data = load_file(path)
+        except (FileNotFoundError, ValueError):
+            self.data = self._init_blank()
+
+        self._encoder = None
+        self._proj_W: Optional[np.ndarray] = None
+        self._proj_b: Optional[np.ndarray] = None
+
+        self._value_bank: list[dict] = []
+        self._load_value_bank()
+
+        self._faiss_indexes: dict[str, object] = {}
+        self._faiss_vectors: dict[str, list[np.ndarray]] = {r: [] for r in REGISTERS}
+
+        self._recall_stats: dict[str, dict] = {}
+        self._load_recall_stats()
+
+    # ------------------------------------------------------------------
+    # Initialisation
+    # ------------------------------------------------------------------
+
+    def _init_blank(self) -> dict:
+        data: dict = {}
+        for name, (d_k, d_v, _) in REGISTERS.items():
+            data[f"{name}_S"] = np.zeros((d_k, d_v), dtype=np.float16)
+        rng = np.random.default_rng(42)
+        data["proj_W"] = (rng.normal(0, 0.01, (DIM, EMBED_DIM))
+                          .astype(np.float16))
+        data["proj_b"] = np.zeros(DIM, dtype=np.float16)
+        data["update_count"] = np.int64(0)
+        data["schema_version"] = np.int64(1)
+        return data
+
+    # ------------------------------------------------------------------
+    # Encoder (lazy-load)
+    # ------------------------------------------------------------------
+
+    @property
+    def encoder(self):
+        if self._encoder is None:
+            from sentence_transformers import SentenceTransformer
+            self._encoder = SentenceTransformer(
+                "nomic-ai/nomic-embed-text-v1.5",
+                trust_remote_code=True,
+            )
+        return self._encoder
+
+    @property
+    def proj_W(self) -> np.ndarray:
+        if self._proj_W is None:
+            self._proj_W = self.data["proj_W"].astype(np.float32)
+        return self._proj_W
+
+    @property
+    def proj_b(self) -> np.ndarray:
+        if self._proj_b is None:
+            self._proj_b = self.data["proj_b"].astype(np.float32)
+        return self._proj_b
+
+    def encode(self, text: str) -> np.ndarray:
+        vec = self.encoder.encode(text, normalize_embeddings=True)
+        projected = self.proj_W @ vec + self.proj_b
+        projected /= (np.linalg.norm(projected) + 1e-8)
+        return projected.astype(np.float16)
+
+    # ------------------------------------------------------------------
+    # Recall (Protocol Alpha)
+    # ------------------------------------------------------------------
+
+    def recall(self, query: str, register: str, top_k: int = 2) -> dict:
+        if register not in REGISTERS:
+            return {"hints": [], "confidence": 0.0, "register": register,
+                    "error": f"Unknown register: {register}"}
+
+        q = self.encode(query)
+        S = self.data[f"{register}_S"]
+        S_f32 = S.astype(np.float32)
+        q_f32 = q.astype(np.float32)
+        key_dim = REGISTERS[register][0]
+        r = S_f32.T @ q_f32[:key_dim]
+
+        S_norm = float(np.linalg.norm(S_f32))
+        r_norm = float(np.linalg.norm(r))
+        confidence = round(min(r_norm / (S_norm + 1e-8), 1.0), 4)
+
+        hints = self._nearest_hints(r, register, top_k)
+        self._track_recall(register, query, confidence, hints)
+
+        return {"hints": hints, "confidence": confidence, "register": register}
+
+    def _nearest_hints(self, r: np.ndarray, register: str, top_k: int) -> list[str]:
+        # Try FAISS first, fall back to numpy
+        ids, sims = self._faiss_search(r, register, top_k)
+
+        candidates = [e for e in self._value_bank if e.get("register") == register]
+        if not candidates:
+            return [f"Crow recalls a faint {register} bias. Few memories stored yet."]
+
+        hints = []
+        for idx, sim in zip(ids, sims):
+            if idx < len(candidates) and sim > 0.3:
+                entry = candidates[idx]
+                hints.append(
+                    f"[{register}] {entry['value'][:200]}"
+                    f" (sim={sim:.2f})"
+                )
+
+        if not hints:
+            hints = [f"Crow recalls a faint {register} bias. Few memories stored yet."]
+        return hints
+
+    # ------------------------------------------------------------------
+    # Ingest (Protocol Beta)
+    # ------------------------------------------------------------------
+
+    def ingest(self, key: str, value: str, polarity: float, register: str) -> dict:
+        if register not in REGISTERS:
+            return {"status": "error", "message": f"Unknown register: {register}"}
+
+        polarity = float(np.clip(polarity, -2.0, 2.0))
+        if polarity < 0:
+            polarity *= NEG_DAMPEN
+
+        key_dim, value_dim, lam = REGISTERS[register]
+        k = self.encode(key)
+        v = self.encode(value)[:value_dim]
+        S = self.data[f"{register}_S"]
+        S *= lam
+
+        k_trunc = k[:key_dim]
+        delta = np.outer(k_trunc.astype(np.float32),
+                         v.astype(np.float32)) * (1.0 - lam) * polarity
+        S += delta.astype(np.float16)
+
+        self.data["update_count"] = np.int64(int(self.data["update_count"]) + 1)
+        self._maybe_clip(register)
+        self._append_value_bank(key, value, v, register)
+        self._persist()
+
+        return {
+            "status": "ingested",
+            "register": register,
+            "polarity_applied": round(polarity, 2),
+            "update_count": int(self.data["update_count"]),
+        }
+
+    def _maybe_clip(self, register: str):
+        if int(self.data["update_count"]) % 1000 != 0:
+            return
+        S = self.data[f"{register}_S"]
+        if S.size == 0 or np.all(S == 0):
+            return
+        S_f32 = S.astype(np.float32)
+        try:
+            U, s, Vt = np.linalg.svd(S_f32, full_matrices=False)
+            s_clipped = np.clip(s, -MAX_SV, MAX_SV)
+            self.data[f"{register}_S"] = ((U * s_clipped) @ Vt).astype(np.float16)
+        except np.linalg.LinAlgError:
+            pass
+
+    # ------------------------------------------------------------------
+    # Evolve (Protocol Gamma)
+    # ------------------------------------------------------------------
+
+    def evolve_propose(self, min_confidence: float = 0.85,
+                       min_occurrences: int = 3) -> dict:
+        proposals = []
+        for register in REGISTERS:
+            stats = self._recall_stats.get(register, {})
+            for _query_hash, entry in stats.items():
+                occ = entry.get("occurrences", 0)
+                conf = entry.get("avg_confidence", 0.0)
+                last_hints = entry.get("last_hints", [])
+                if occ >= min_occurrences and conf >= min_confidence:
+                    for hint in last_hints:
+                        clean_hint = hint.split("] ", 1)[-1] if "] " in hint else hint
+                        if " (sim=" in clean_hint:
+                            clean_hint = clean_hint.rsplit(" (sim=", 1)[0]
+                        proposals.append({
+                            "register": register,
+                            "hint": clean_hint,
+                            "occurrences": occ,
+                            "avg_confidence": round(conf, 3),
+                        })
+        if not proposals:
+            return {
+                "proposal": None,
+                "message": "No statistically significant patterns detected yet.",
+                "requires_human_approval": True,
+            }
+        best = max(proposals, key=lambda p: p["avg_confidence"] * p["occurrences"])
+        proposal_text = (
+            f"RULE: When working with {best['register']}-related tasks, "
+            f"{best['hint'][:300]}"
+        )
+        return {
+            "proposal": proposal_text,
+            "confidence": best["avg_confidence"],
+            "occurrences": best["occurrences"],
+            "register": best["register"],
+            "requires_human_approval": True,
+        }
+
+    # ------------------------------------------------------------------
+    # Value Bank
+    # ------------------------------------------------------------------
+
+    def _append_value_bank(self, key: str, value: str, vector: np.ndarray,
+                           register: str):
+        entry = {
+            "key": key[:500],
+            "value": value[:1000],
+            "vector_b64": self._encode_vector(vector),
+            "register": register,
+            "timestamp": time.time(),
+        }
+        self._value_bank.append(entry)
+        while len(self._value_bank) > VALUE_BANK_MAX:
+            self._value_bank.pop(0)
+        self._faiss_vectors.setdefault(register, []).append(vector.astype(np.float32))
+        if len(self._faiss_vectors[register]) > VALUE_BANK_MAX:
+            self._faiss_vectors[register].pop(0)
+        self._faiss_indexes.pop(register, None)
+
+    def _load_value_bank(self):
+        vb_path = os.path.join(self.memory_dir, "value_bank.json")
+        try:
+            with open(vb_path, "r", encoding="utf-8") as f:
+                self._value_bank = json.load(f)
+        except (FileNotFoundError, json.JSONDecodeError):
+            self._value_bank = []
+
+    def _save_value_bank(self):
+        vb_path = os.path.join(self.memory_dir, "value_bank.json")
+        tmp_path = vb_path + ".tmp"
+        with open(tmp_path, "w", encoding="utf-8") as f:
+            json.dump(self._value_bank, f, ensure_ascii=False, indent=2)
+        os.replace(tmp_path, vb_path)
+
+    @staticmethod
+    def _encode_vector(vec: np.ndarray) -> str:
+        return base64.b64encode(vec.astype(np.float16).tobytes()).decode("ascii")
+
+    @staticmethod
+    def _decode_vector(b64: str) -> np.ndarray:
+        return np.frombuffer(base64.b64decode(b64), dtype=np.float16).astype(np.float32)
+
+    # ------------------------------------------------------------------
+    # Recall Stats
+    # ------------------------------------------------------------------
+
+    def _track_recall(self, register: str, query: str,
+                      confidence: float, hints: list[str]):
+        query_hash = str(hash(query))
+        stats = self._recall_stats.setdefault(register, {})
+        entry = stats.setdefault(query_hash, {
+            "occurrences": 0, "total_confidence": 0.0,
+            "avg_confidence": 0.0, "last_hints": [], "last_seen": 0.0,
+        })
+        entry["occurrences"] += 1
+        entry["total_confidence"] += confidence
+        entry["avg_confidence"] = entry["total_confidence"] / entry["occurrences"]
+        entry["last_hints"] = hints[:3]
+        entry["last_seen"] = time.time()
+        cutoff = time.time() - 7 * 86400
+        for reg in self._recall_stats:
+            self._recall_stats[reg] = {
+                k: v for k, v in self._recall_stats[reg].items()
+                if v["last_seen"] > cutoff
+            }
+        self._save_recall_stats()
+
+    def _load_recall_stats(self):
+        rs_path = os.path.join(self.memory_dir, "recall_stats.json")
+        try:
+            with open(rs_path, "r", encoding="utf-8") as f:
+                self._recall_stats = json.load(f)
+        except (FileNotFoundError, json.JSONDecodeError):
+            self._recall_stats = {}
+
+    def _save_recall_stats(self):
+        rs_path = os.path.join(self.memory_dir, "recall_stats.json")
+        tmp_path = rs_path + ".tmp"
+        with open(tmp_path, "w", encoding="utf-8") as f:
+            json.dump(self._recall_stats, f, ensure_ascii=False, indent=2)
+        os.replace(tmp_path, rs_path)
+
+    # ------------------------------------------------------------------
+    # Drift Detection
+    # ------------------------------------------------------------------
+
+    def check_drift(self, threshold: float = 0.5,
+                    consecutive_calls: int = 5) -> dict:
+        low_count = 0
+        for reg_stats in self._recall_stats.values():
+            for entry in reg_stats.values():
+                if entry["avg_confidence"] < threshold:
+                    low_count += 1
+        drift = low_count >= consecutive_calls
+        return {
+            "drift_detected": drift,
+            "consecutive_low_confidence": low_count,
+            "message": (
+                "Crow memory seems confused. Recent tasks may be too novel "
+                "or memory is saturated. Consider spectral reset or archiving."
+                if drift else "Memory confidence is healthy."
+            ),
+        }
+
+    # ------------------------------------------------------------------
+    # Maintenance
+    # ------------------------------------------------------------------
+
+    def spectral_reset(self, register: Optional[str] = None):
+        registers = [register] if register else list(REGISTERS.keys())
+        for reg in registers:
+            if reg in REGISTERS:
+                S = self.data[f"{reg}_S"]
+                if S.size > 0 and not np.all(S == 0):
+                    S_f32 = S.astype(np.float32)
+                    try:
+                        U, s, Vt = np.linalg.svd(S_f32, full_matrices=False)
+                        s_clipped = np.clip(s, -MAX_SV, MAX_SV)
+                        self.data[f"{reg}_S"] = ((U * s_clipped) @ Vt).astype(np.float16)
+                    except np.linalg.LinAlgError:
+                        pass
+        self._persist()
+
+    def archive_register(self, register: str):
+        if register not in REGISTERS:
+            return False
+        key_dim, value_dim, _ = REGISTERS[register]
+        bak_path = f"{self.path}.{register}.bak"
+        save_file({f"{register}_S": self.data[f"{register}_S"]}, bak_path)
+        self.data[f"{register}_S"] = np.zeros((key_dim, value_dim), dtype=np.float16)
+        self._persist()
+        return True
+
+    # ------------------------------------------------------------------
+    # Persistence
+    # ------------------------------------------------------------------
+
+    def _persist(self):
+        """Atomic save: write to .tmp then rename, with Windows retry."""
+        self._save_value_bank()
+        self._save_recall_stats()
+        tmp_path = self.path + ".tmp"
+        save_file(self.data, tmp_path)
+        for attempt in range(3):
+            try:
+                os.replace(tmp_path, self.path)
+                return
+            except PermissionError:
+                if attempt < 2:
+                    time.sleep(0.05 * (2 ** attempt))
+                else:
+                    try:
+                        os.remove(self.path)
+                        os.rename(tmp_path, self.path)
+                    except OSError:
+                        import shutil
+                        shutil.copy2(tmp_path, self.path)
+                        os.remove(tmp_path)
+
+    def persist(self):
+        self._persist()
+        return {"status": "persisted", "path": self.path}
+
+    # ------------------------------------------------------------------
+    # Diagnostics
+    # ------------------------------------------------------------------
+
+    def stats(self) -> dict:
+        result = {
+            "update_count": int(self.data["update_count"]),
+            "value_bank_size": len(self._value_bank),
+            "registers": {},
+        }
+        for name, (d_k, d_v, lam) in REGISTERS.items():
+            S = self.data[f"{name}_S"]
+            result["registers"][name] = {
+                "shape": [d_k, d_v],
+                "lambda": lam,
+                "norm": float(np.linalg.norm(S.astype(np.float32))),
+                "sparsity": float(np.mean(S == 0)),
+                "max_abs": float(np.max(np.abs(S.astype(np.float32)))),
+            }
+        return result
+
+    # ==================================================================
+    # PHASE 2: FAISS Acceleration
+    # ==================================================================
+
+    def build_faiss_index(self, register: str) -> Optional[object]:
+        """Build or rebuild a FAISS IndexFlatIP for a register's value_bank."""
+        try:
+            import faiss
+        except ImportError:
+            return None
+        entries = [e for e in self._value_bank if e.get("register") == register]
+        if len(entries) < 2:
+            return None
+        vectors = np.array(
+            [self._decode_vector(e["vector_b64"]).astype(np.float32)
+             for e in entries],
+            dtype=np.float32,
+        )
+        dim = vectors.shape[1]
+        index = faiss.IndexFlatIP(dim)
+        index.add(vectors)
+        self._faiss_indexes[register] = index
+        return index
+
+    def build_all_faiss_indexes(self) -> dict:
+        """Build FAISS indexes for all registers."""
+        results = {}
+        for reg in REGISTERS:
+            idx = self.build_faiss_index(reg)
+            results[reg] = idx is not None
+        return results
+
+    def _faiss_search(self, r: np.ndarray, register: str, top_k: int
+                      ) -> tuple[list[int], list[float]]:
+        """Search value_bank using FAISS index with numpy fallback."""
+        r_f32 = r.astype(np.float32)
+        r_norm = float(np.linalg.norm(r_f32))
+        if r_norm > 1e-8:
+            r_f32 = r_f32 / r_norm
+        r_query = r_f32.reshape(1, -1)
+
+        index = self._faiss_indexes.get(register)
+        if index is not None and index.ntotal >= top_k:
+            sims, ids = index.search(r_query, top_k)
+            return ids[0].tolist(), sims[0].tolist()
+
+        # Numpy fallback
+        entries = [e for e in self._value_bank if e.get("register") == register]
+        if not entries:
+            return [], []
+        cands = np.array([self._decode_vector(e["vector_b64"]).astype(np.float32)
+                          for e in entries], dtype=np.float32)
+        sims = cands @ r_query.T
+        order = np.argsort(sims.ravel())[::-1][:top_k]
+        return order.tolist(), sims.ravel()[order].tolist()
+
+    # ==================================================================
+    # PHASE 1: Build Hook Integration
+    # ==================================================================
+
+    def ingest_from_build(self, key: str, value: str, exit_code: int,
+                          user_edited: bool = False, register: str = "arch",
+                          explicit_polarity: Optional[float] = None) -> dict:
+        """
+        Auto-determine polarity from build result and user edit status.
+
+        Mapping (Section 4.2):
+        - Build success + user accepts unchanged → +1.5
+        - Build success + user edits slightly   → +0.5
+        - Build failure + user rewrites entirely → -1.0
+        - Explicit 'remember this' / 'never again' → +2.0 / -2.0
+        """
+        if explicit_polarity is not None:
+            polarity = float(np.clip(explicit_polarity, -2.0, 2.0))
+        else:
+            if exit_code == 0:
+                polarity = 0.5 if user_edited else 1.5
+            else:
+                polarity = -1.0 if user_edited else -0.5
+        return self.ingest(key, value, polarity, register)
+
+    # ==================================================================
+    # PHASE 3: System Prompt Evolution
+    # ==================================================================
+
+    def get_system_prompt(self) -> str:
+        """Read the current system_prompt.md file."""
+        prompt_path = os.path.join(self.memory_dir, "system_prompt.md")
+        try:
+            with open(prompt_path, "r", encoding="utf-8") as f:
+                return f.read()
+        except FileNotFoundError:
+            default = (
+                "# Crow Memory — System Prompt Rules\n\n"
+                "> These rules were evolved by Crow and approved by the user.\n"
+                "> They represent statistically significant coding biases.\n\n"
+            )
+            os.makedirs(self.memory_dir, exist_ok=True)
+            with open(prompt_path, "w", encoding="utf-8") as f:
+                f.write(default)
+            return default
+
+    def append_system_prompt(self, rule: str, auto_backup: bool = True) -> dict:
+        """Append an evolved rule to system_prompt.md with HITL audit trail."""
+        prompt_path = os.path.join(self.memory_dir, "system_prompt.md")
+        current = self.get_system_prompt()
+
+        if auto_backup and os.path.exists(prompt_path):
+            bak_path = prompt_path + ".bak"
+            with open(bak_path, "w", encoding="utf-8") as f:
+                f.write(current)
+
+        timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
+        rule_entry = f"\n<!-- adopted: {timestamp} -->\n{rule}\n"
+
+        with open(prompt_path, "a", encoding="utf-8") as f:
+            f.write(rule_entry)
+
+        return {
+            "status": "appended",
+            "rule": rule,
+            "backed_up": auto_backup,
+            "timestamp": timestamp,
+        }
+
+    def prompt_stats(self) -> dict:
+        """Return statistics about the system prompt."""
+        prompt = self.get_system_prompt()
+        lines = prompt.strip().split("\n")
+        rules = [l for l in lines if l.startswith("RULE:")]
+        return {
+            "total_lines": len(lines),
+            "total_chars": len(prompt),
+            "evolved_rules": len(rules),
+            "latest_rules": rules[-5:],
+        }
+
+    # ==================================================================
+    # PHASE 4: Backup Rotation
+    # ==================================================================
+
+    def create_backup(self, tag: str = "daily") -> str:
+        """Create a timestamped backup of crow.bin."""
+        import shutil
+        timestamp = time.strftime("%Y%m%d_%H%M%S")
+        bak_path = f"{self.path}.bak.{tag}.{timestamp}"
+        shutil.copy2(self.path, bak_path)
+        return bak_path
+
+    def rotate_backups(self, max_daily: int = 7, max_weekly: int = 4) -> dict:
+        """Rotate old backups, keeping the most recent ones."""
+        import glob as glob_mod
+
+        daily_pattern = f"{self.path}.bak.daily.*"
+        weekly_pattern = f"{self.path}.bak.weekly.*"
+
+        removed = []
+        for pattern, max_keep in [(daily_pattern, max_daily),
+                                   (weekly_pattern, max_weekly)]:
+            files = sorted(glob_mod.glob(pattern), reverse=True)
+            for old in files[max_keep:]:
+                os.remove(old)
+                removed.append(old)
+
+        return {"rotated": len(removed), "removed": removed}
+
+    def list_backups(self) -> list[str]:
+        """List all backup files for this memory."""
+        import glob as glob_mod
+        patterns = [
+            f"{self.path}.bak.*",
+            os.path.join(self.memory_dir, "system_prompt.md.bak"),
+        ]
+        results = []
+        for pat in patterns:
+            results.extend(sorted(glob_mod.glob(pat)))
+        return results
+
+    # ==================================================================
+    # PHASE 4: Drift Auto-Recovery
+    # ==================================================================
+
+    def recover_from_drift(self) -> dict:
+        """Attempt automatic recovery from memory drift."""
+        drift_status = self.check_drift()
+        if not drift_status["drift_detected"]:
+            return {"action": "none", "message": "No drift detected."}
+
+        actions = []
+
+        # 1. Spectral reset all registers
+        for register in REGISTERS:
+            self.spectral_reset(register)
+        actions.append("spectral_reset_all")
+
+        # 2. Prune recall stats older than 1 day
+        cutoff = time.time() - 86400
+        for reg in list(self._recall_stats.keys()):
+            self._recall_stats[reg] = {
+                k: v for k, v in self._recall_stats.get(reg, {}).items()
+                if v.get("last_seen", 0) > cutoff
+            }
+            if not self._recall_stats[reg]:
+                del self._recall_stats[reg]
+        actions.append("pruned_recall_stats")
+
+        # 3. Prune value_bank older than 30 days
+        cutoff_vb = time.time() - 30 * 86400
+        original_count = len(self._value_bank)
+        self._value_bank = [
+            e for e in self._value_bank
+            if e.get("timestamp", 0) > cutoff_vb
+        ]
+        if len(self._value_bank) < original_count:
+            actions.append(
+                f"pruned_value_bank:{original_count - len(self._value_bank)}"
+            )
+
+        self._persist()
+        actions.append("persisted")
+
+        return {
+            "action": "recovered",
+            "steps": actions,
+            "message": "Drift recovery complete. Registers reset, stale stats pruned.",
+        }
+
+    # ==================================================================
+    # PHASE 4: Multi-Project Isolation
+    # ==================================================================
+
+    @classmethod
+    def for_project(cls, project_name: str,
+                    base_dir: str = "./memory") -> "CrowMemory":
+        """Create a CrowMemory instance isolated to a specific project."""
+        safe_name = "".join(
+            c if c.isalnum() or c in "_-" else "_" for c in project_name
+        )
+        project_dir = os.path.join(base_dir, f"project_{safe_name}")
+        os.makedirs(project_dir, exist_ok=True)
+        return cls(os.path.join(project_dir, "crow.bin"))
+
+    @classmethod
+    def list_projects(cls, base_dir: str = "./memory") -> list[str]:
+        """List all projects that have isolated memory directories."""
+        projects = []
+        try:
+            for name in os.listdir(base_dir):
+                if name.startswith("project_") and os.path.isdir(
+                    os.path.join(base_dir, name)
+                ):
+                    crow_path = os.path.join(base_dir, name, "crow.bin")
+                    if os.path.exists(crow_path):
+                        projects.append(name[len("project_"):])
+        except FileNotFoundError:
+            pass
+        return sorted(projects)
+
+    # ==================================================================
+    # PHASE 1: User Bias Block Generation
+    # ==================================================================
+
+    def get_user_bias_block(self, query: str,
+                            registers: Optional[list[str]] = None) -> str:
+        """
+        Generate the [User Bias] block for injection into the system prompt.
+        Queries all specified registers and formats hints.
+        """
+        if registers is None:
+            registers = list(REGISTERS.keys())
+
+        lines = ["[User Bias -- retrieved from Crow Memory]"]
+        for reg in registers:
+            result = self.recall(query, reg, top_k=1)
+            for hint in result.get("hints", []):
+                lines.append(f"- {hint}")
+        return "\n".join(lines)

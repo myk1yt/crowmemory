@@ -1,0 +1,29 @@
+# Crow Memory — personal memory files (DO NOT SHARE)
+memory/crow.bin
+memory/crow.bin.tmp
+memory/*.bak*
+memory/value_bank.json
+memory/value_bank.json.tmp
+memory/recall_stats.json
+memory/recall_stats.json.tmp
+memory/system_prompt.md
+memory/system_prompt.md.bak
+memory/crow_test*
+memory/test_*/
+memory/demo_output.txt
+memory/project_*/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
