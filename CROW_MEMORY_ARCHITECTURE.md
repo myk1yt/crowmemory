@@ -1,7 +1,7 @@
 # Crow (까마귀) Memory Architecture
 ## A Synaptic State Cache for Recursive Agent Development
 
-**Version:** 1.1
+**Version:** 1.2
 **Date:** 2026-05-25
 **Author:** Stefano,Kim & AI Collaborative Design
 **Target Runtime:** Any MCP-compatible IDE + LLM API + Local Python MCP Server
@@ -87,7 +87,7 @@ The `crow.bin` file is forever fixed at ~80MB (configurable). It does not grow a
 |                                         |
 |                           +-------------v-------------+
 |                           |   crow.bin (safetensors)  |
-|                           |   4 Registers             |
+|   |   8 Registers             |
 |                           +---------------------------+
 +---------------------------------------------------------------------+
 ```
@@ -111,6 +111,7 @@ The `crow.bin` file is forever fixed at ~80MB (configurable). It does not grow a
 ```python
 # state.safetensors -- fixed-size, memory-mappable
 {
+    # ── Code Domain ──
     # Register 1: Coding Style (slow accumulation, high permanence)
     "style_S":        Tensor [4096, 4096]  float16,   # ~32 MB
 
@@ -120,8 +121,21 @@ The `crow.bin` file is forever fixed at ~80MB (configurable). It does not grow a
     # Register 3: Architecture Preference (medium accumulation)
     "arch_S":         Tensor [2048, 2048]  float16,   # ~8 MB
 
-    # Register 4: Recent Context (fast decay, high turnover)
+    # Register 4: Recent Code Context (fast decay, high turnover)
     "context_S":      Tensor [2048, 4096]  float16,   # ~16 MB
+
+    # ── Life Domain (v1.1+) ──
+    # Register 5: Personal Preferences (slow accumulation)
+    "life_pref_S":    Tensor [4096, 4096]  float16,   # ~32 MB
+
+    # Register 6: Life Avoidances (medium accumulation)
+    "life_avoid_S":   Tensor [2048, 2048]  float16,   # ~8 MB
+
+    # Register 7: Life Philosophy (medium accumulation)
+    "life_phil_S":    Tensor [2048, 2048]  float16,   # ~8 MB
+
+    # Register 8: Life Context (fast decay, high turnover)
+    "life_context_S": Tensor [2048, 4096]  float16,   # ~16 MB
 
     # Projection: Embedding space -> Register space
     "proj_W":         Tensor [4096, 768]   float16,   # ~6 MB  (768->4096)
@@ -129,15 +143,16 @@ The `crow.bin` file is forever fixed at ~80MB (configurable). It does not grow a
 
     # Metadata
     "update_count":   int64 scalar,
-    "lambda_map":     JSON string scalar,   # {"style": 0.9999, "bug": 0.9995, ...}
-    "schema_version": int64 scalar         # 1
+    "schema_version": int64 scalar         # 2
 }
-# Total: ~70 MB (compressed ~50 MB)
+# Total: ~140 MB (compressed ~100 MB)
 ```
 
-### 3.2 Why 4 Registers?
+### 3.2 Why 8 Registers?
 
 Interference is the enemy. If "JSDoc style preference" and "PDF encoding bug" share the same 4096x4096 matrix, they corrupt each other. Separation by semantic domain preserves fidelity.
+
+**Code Domain**
 
 | Register | Dimensions | lambda (EMA decay) | Capacity (patterns) | Use Case |
 |----------|------------|---------------------|-----------------------|----------|
@@ -145,6 +160,15 @@ Interference is the enemy. If "JSDoc style preference" and "PDF encoding bug" sh
 | `bug` | 2048^2 | 0.9995 (~1,400 updates to halve) | ~800 | Abstract bug families, not exact fixes |
 | `arch` | 2048^2 | 0.9995 | ~800 | Early-return vs deep-nesting, error-handling philosophy |
 | `context` | 2048x4096 | 0.9500 (~14 updates to halve) | ~400 | Recent conversation topics, active file context |
+
+**Life Domain** (v1.1+)
+
+| Register | Dimensions | lambda (EMA decay) | Capacity (patterns) | Use Case |
+|----------|------------|---------------------|-----------------------|----------|
+| `life_pref` | 4096^2 | 0.9999 | ~2,000 | Personal taste, preferred environments, habits |
+| `life_avoid` | 2048^2 | 0.9995 | ~800 | Situations to avoid, dislikes, past mistakes |
+| `life_phil` | 2048^2 | 0.9995 | ~800 | Life philosophy, decision principles, values |
+| `life_context` | 2048x4096 | 0.9500 | ~400 | Current plans, recent events, ongoing concerns |
 
 **Capacity estimation:** Based on Modern Hopfield Network theory, a d-dimensional register stores O(d) orthogonal patterns. For dense real-world vectors, practical capacity is ~0.3d to 0.5d.
 
@@ -315,8 +339,8 @@ This is the exact schema exposed by the local Python MCP server. The LLM sees th
           },
           "register": {
             "type": "string",
-            "enum": ["style", "bug", "arch", "context"],
-            "description": "Which memory register to query. Use 'bug' for error fixing, 'style' for code aesthetics, 'arch' for structural decisions, 'context' for recent conversation topics."
+            "enum": ["style", "bug", "arch", "context", "life_pref", "life_avoid", "life_phil", "life_context"],
+            "description": "Which memory register to query. Code: style/bug/arch/context. Life: life_pref/life_avoid/life_phil/life_context."
           },
           "top_k": {
             "type": "integer",
@@ -595,10 +619,16 @@ from mcp.server.stdio import stdio_server
 
 DIM = 4096
 REGISTERS = {
-    "style": (DIM, DIM, 0.9999),
-    "bug":   (2048, 2048, 0.9995),
-    "arch":  (2048, 2048, 0.9995),
-    "context": (2048, DIM, 0.9500),
+    # Code domain
+    "style":   (DIM, DIM,    0.9999),
+    "bug":     (2048, 2048,  0.9995),
+    "arch":    (2048, 2048,  0.9995),
+    "context": (2048, DIM,   0.9500),
+    # Life domain (v1.1+)
+    "life_pref":    (DIM, DIM,    0.9999),
+    "life_avoid":   (2048, 2048,  0.9995),
+    "life_phil":    (2048, 2048,  0.9995),
+    "life_context": (2048, DIM,   0.9500),
 }
 
 class CrowMemory:

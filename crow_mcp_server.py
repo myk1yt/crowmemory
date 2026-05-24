@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 """
-crow_mcp_server.py — Crow Memory MCP stdio server (complete).
-Exposes 9 tools: recall, ingest, evolve_propose, diagnostics, check_drift,
-ingest_from_build, get_user_bias, manage_prompt, manage_backup.
+crow_mcp_server.py — Crow Memory MCP server (stdio + SSE transport).
+Exposes 10 tools: recall, ingest, evolve_propose, diagnostics, check_drift,
+ingest_from_build, get_user_bias, manage_prompt, manage_backup, project_info.
 
 Usage:
     python crow_mcp_server.py
     python crow_mcp_server.py --state ./memory/crow.bin
+    python crow_mcp_server.py --transport sse --port 9020
 """
 
 import asyncio
@@ -91,7 +92,7 @@ TOOL_DEFINITIONS = [
             "type": "object",
             "properties": {
                 "threshold": {"type": "number", "default": 0.5},
-                "consecutive_calls": {"type": "integer", "default": 5},
+                "min_low_confidence_count": {"type": "integer", "default": 5},
             },
         },
     },
@@ -182,7 +183,7 @@ TOOL_DEFINITIONS = [
 def create_server(state_path: str) -> Server:
     server = Server(
         name="crow_memory",
-        version="1.1.1",
+        version="1.2.0",
         instructions=(
             "Crow Memory — External synaptic memory for AI coding agents. "
             "Stores your coding style, bug intuition, and architectural "
@@ -191,6 +192,7 @@ def create_server(state_path: str) -> Server:
     )
 
     crow = CrowMemory(state_path)
+    crow.prewarm_encoder()
 
     @server.list_tools()
     async def handle_list_tools() -> list:
@@ -318,7 +320,7 @@ def _diagnostics(crow: CrowMemory, _args: dict) -> list:
 def _drift(crow: CrowMemory, args: dict) -> list:
     result = crow.check_drift(
         float(args.get("threshold", 0.5)),
-        int(args.get("consecutive_calls", 5)),
+        int(args.get("min_low_confidence_count", 5)),
     )
     return _ok(result)
 

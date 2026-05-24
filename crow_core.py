@@ -10,13 +10,82 @@ Design: Architecture document v1.0, Sections 3–7.
 
 import json
 import os
+import sys
 import time
 import base64
+import hashlib
+import logging
+import threading
+import atexit
 import warnings
 from typing import Optional
 
 import numpy as np
 from safetensors.numpy import load_file, save_file
+
+# ---------------------------------------------------------------------------
+# Logging
+# ---------------------------------------------------------------------------
+
+logger = logging.getLogger("crow_core")
+
+# ---------------------------------------------------------------------------
+# File Lock (cross-platform advisory lock via lockfile + PID)
+# ---------------------------------------------------------------------------
+
+def _acquire_file_lock(bin_path: str) -> bool:
+    """Try to acquire an exclusive advisory lock on crow.bin.
+    Returns True if lock acquired, False if another live process holds it."""
+    lock_path = bin_path + ".lock"
+    my_pid = os.getpid()
+    try:
+        if os.path.exists(lock_path):
+            with open(lock_path, "r") as f:
+                stale_pid_str = f.read().strip()
+            try:
+                stale_pid = int(stale_pid_str)
+                if sys.platform == "win32":
+                    import ctypes
+                    kernel32 = ctypes.windll.kernel32
+                    handle = kernel32.OpenProcess(0x0400, False, stale_pid)
+                    if handle:
+                        exit_code = ctypes.c_ulong()
+                        kernel32.GetExitCodeProcess(handle, ctypes.byref(exit_code))
+                        kernel32.CloseHandle(handle)
+                        if exit_code.value == 259:
+                            logger.warning("crow.bin locked by live process PID %s", stale_pid)
+                            return False
+                else:
+                    try:
+                        os.kill(stale_pid, 0)
+                        logger.warning("crow.bin locked by live process PID %s", stale_pid)
+                        return False
+                    except OSError:
+                        pass
+            except (ValueError, OSError):
+                pass
+            try:
+                os.remove(lock_path)
+            except OSError:
+                pass
+        with open(lock_path, "w") as f:
+            f.write(str(my_pid))
+        atexit.register(_release_file_lock, lock_path)
+        return True
+    except OSError as exc:
+        logger.warning("Could not acquire lock on crow.bin: %s", exc)
+        return False
+
+def _release_file_lock(lock_path: str):
+    """Release the advisory lock file if we own it."""
+    try:
+        if os.path.exists(lock_path):
+            with open(lock_path, "r") as f:
+                pid_str = f.read().strip()
+            if pid_str == str(os.getpid()):
+                os.remove(lock_path)
+    except OSError:
+        pass
 
 # ---------------------------------------------------------------------------
 # Constants
@@ -56,12 +125,15 @@ LIFE_REGISTERS = DOMAINS["life"]
 # ---------------------------------------------------------------------------
 
 class CrowMemory:
-    """Fixed-size associative memory with 4 semantic registers."""
+    """Fixed-size associative memory with 8 semantic registers (4 code + 4 life)."""
 
     def __init__(self, path: str = "./memory/crow.bin"):
         self.path = path
         self.memory_dir = os.path.dirname(path) or "."
         os.makedirs(self.memory_dir, exist_ok=True)
+
+        # Acquire advisory file lock before touching crow.bin
+        _acquire_file_lock(path)
 
         try:
             self.data = load_file(path)
@@ -70,8 +142,25 @@ class CrowMemory:
                 key = f"{name}_S"
                 if key not in self.data:
                     self.data[key] = np.zeros((d_k, d_v), dtype=np.float16)
-        except (FileNotFoundError, ValueError):
+        except FileNotFoundError:
             self.data = self._init_blank()
+        except ValueError:
+            logger.error("crow.bin is corrupted (ValueError). Attempting backup recovery...")
+            # Try to recover from the most recent backup
+            import glob as _glob
+            backups = sorted(_glob.glob(path + ".bak.*"), reverse=True)
+            if backups:
+                logger.warning("Recovering from backup: %s", backups[0])
+                self.data = load_file(backups[0])
+                for name, (d_k, d_v, _) in REGISTERS.items():
+                    key = f"{name}_S"
+                    if key not in self.data:
+                        self.data[key] = np.zeros((d_k, d_v), dtype=np.float16)
+            else:
+                raise RuntimeError(
+                    f"crow.bin is corrupted and no backup found at {path}. "
+                    f"Please restore from a manual backup or remove the corrupted file to start fresh."
+                ) from None
 
         self._encoder = None
         self._proj_W: Optional[np.ndarray] = None
@@ -128,11 +217,34 @@ class CrowMemory:
             self._proj_b = self.data["proj_b"].astype(np.float32)
         return self._proj_b
 
+    # LRU embedding cache (avoids re-encoding identical strings)
+    _encode_cache: dict[str, np.ndarray] = {}
+    _encode_cache_max = 1024
+
     def encode(self, text: str) -> np.ndarray:
+        cache_key = text[:200]  # Use first 200 chars as cache key
+        cached = self._encode_cache.get(cache_key)
+        if cached is not None:
+            return cached
         vec = self.encoder.encode(text, normalize_embeddings=True)
         projected = self.proj_W @ vec + self.proj_b
         projected /= (np.linalg.norm(projected) + 1e-8)
-        return projected.astype(np.float16)
+        result = projected.astype(np.float16)
+        # LRU eviction: if cache is full, remove oldest (first key)
+        if len(self._encode_cache) >= self._encode_cache_max:
+            first_key = next(iter(self._encode_cache))
+            del self._encode_cache[first_key]
+        self._encode_cache[cache_key] = result
+        return result
+
+    def prewarm_encoder(self):
+        """Pre-load the embedding model in a background thread so first
+        recall/ingest is fast. Call this right after construction."""
+        def _load():
+            _ = self.encoder  # triggers SentenceTransformer download/load
+            logger.info("Encoder pre-warmed.")
+        t = threading.Thread(target=_load, daemon=True)
+        t.start()
 
     # ------------------------------------------------------------------
     # Recall (Protocol Alpha)
@@ -227,7 +339,9 @@ class CrowMemory:
             s_clipped = np.clip(s, -MAX_SV, MAX_SV)
             self.data[f"{register}_S"] = ((U * s_clipped) @ Vt).astype(np.float16)
         except np.linalg.LinAlgError:
-            pass
+            logger.warning("SVD clipping failed for register %s — falling back to norm clipping.", register)
+            # Fallback: simple per-element clipping
+            np.clip(S, -MAX_SV, MAX_SV, out=S)
 
     # ------------------------------------------------------------------
     # Evolve (Protocol Gamma)
@@ -322,7 +436,7 @@ class CrowMemory:
 
     def _track_recall(self, register: str, query: str,
                       confidence: float, hints: list[str]):
-        query_hash = str(hash(query))
+        query_hash = hashlib.md5(query.encode("utf-8")).hexdigest()
         stats = self._recall_stats.setdefault(register, {})
         entry = stats.setdefault(query_hash, {
             "occurrences": 0, "total_confidence": 0.0,
@@ -361,16 +475,16 @@ class CrowMemory:
     # ------------------------------------------------------------------
 
     def check_drift(self, threshold: float = 0.5,
-                    consecutive_calls: int = 5) -> dict:
+                    min_low_confidence_count: int = 5) -> dict:
         low_count = 0
         for reg_stats in self._recall_stats.values():
             for entry in reg_stats.values():
                 if entry["avg_confidence"] < threshold:
                     low_count += 1
-        drift = low_count >= consecutive_calls
+        drift = low_count >= min_low_confidence_count
         return {
             "drift_detected": drift,
-            "consecutive_low_confidence": low_count,
+            "low_confidence_record_count": low_count,
             "message": (
                 "Crow memory seems confused. Recent tasks may be too novel "
                 "or memory is saturated. Consider spectral reset or archiving."

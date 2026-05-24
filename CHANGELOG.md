@@ -7,6 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.2.0] — 2026-05-25
+
+### Added
+- **File locking**: Advisory lock (`crow.bin.lock` + PID check) prevents silent data corruption from concurrent MCP server processes.
+- **Encoder pre-warm**: Background thread loads SentenceTransformer at server startup, eliminating 30-60s cold-start latency on first request.
+- **LRU embedding cache**: 1024-entry cache in `encode()` avoids re-encoding identical/similar strings.
+- **Backup auto-recovery**: Corrupted `crow.bin` (`ValueError`) now attempts recovery from the most recent `.bak.*` file instead of silently initializing blank.
+- **`patch_kimi_code.py` append mode**: Can now inject Crow Memory into clean Kimi Code installations (no existing Crow section required).
+
+### Changed
+- **SVD clipping fallback**: On `LinAlgError`, falls back to per-element norm clipping instead of silently passing (prevented singular value explosion).
+- **`check_drift()` parameter**: Renamed `consecutive_calls` → `min_low_confidence_count` to match actual behavior.
+- **`_track_recall()` hash**: Replaced non-portable `hash(query)` with stable `hashlib.md5(query.encode())`.
+- **`install.py` / `install.ps1`**: Now generate `Crow_Memory_SSE.bat` with absolute paths (fixes auto-start failure when copied to Startup folder).
+- **`install.py` custom mode merge**: Preserves existing user modes instead of overwriting `custom_modes.yaml`.
+- **`install.ps1` step numbering**: Unified to `[1/5]`–`[5/5]`.
+- **Architecture doc**: Updated to 8-register specification (code + life domains), bumped to v1.2.
+
+### Fixed
+- **`crow_core.py` docstring**: Class now correctly states "8 semantic registers".
+- **`crow_mcp_server.py` docstring**: Corrected from "9 tools" to "10 tools" (includes `crow_project_info`).
+- **Dead code removal**: Removed unused `ORIGINAL_CROW_MARKER` from `patch_kimi_code.py`.
+
+---
+
 ## [1.1.1] — 2026-05-25
 
 ### Changed

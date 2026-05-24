@@ -66,10 +66,6 @@ After the user rewrites your code, call `crow_ingest` with negative polarity to 
 
 Crow is not a database — it stores inductive biases. Use it as your intuition, not your encyclopedia."""
 
-# The original (unpatched) Crow Memory section — used to detect if patch is needed
-ORIGINAL_CROW_MARKER = "After the user accepts your solution without edits, call `crow_ingest` or `crow_ingest_from_build` to reinforce successful patterns into long-term memory."
-
-
 # ── Functions ──────────────────────────────────────────────────────────────
 
 
@@ -107,10 +103,13 @@ def apply_patch():
     end_idx = content.find(end_marker)
 
     if start_idx == -1 or end_idx == -1:
-        print("  [Error] Could not locate Crow Memory section in system.md")
-        print(f"  start_marker found: {start_idx != -1}")
-        print(f"  end_marker found: {end_idx != -1}")
-        sys.exit(1)
+        # Clean installation — no existing Crow section. Append to end.
+        print("  [Info] No existing Crow section found. Appending to end of system.md...")
+        new_content = content.rstrip() + "\n\n" + CROW_SECTION + "\n"
+        SYSTEM_MD.write_text(new_content, encoding="utf-8")
+        print("  [Done] Crow Memory section appended successfully.")
+        print(f"  [Path] {SYSTEM_MD}")
+        return
 
     # end_marker includes the line itself, so advance to end of that line
     end_idx = content.find("\n", end_idx)

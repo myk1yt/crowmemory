@@ -236,6 +236,49 @@ crowsmemory/
 
 ---
 
+## 2026-05-25 — v1.2.0: 코드 리뷰 기반 전면 개선
+
+### 작업 내용
+
+#### 1순위 — 데이터 무결성
+- **파일 잠금**: `crow.bin.lock` + PID 체크 방식의 어드바이저리 락 추가. 동시 프로세스 접근 시 경고 후 거부.
+- **손상 복구**: `crow.bin` `ValueError` 발생 시 가장 최근 `.bak.*` 백업에서 자동 복구 시도. 백업 없으면 명시적 `RuntimeError`.
+- **`start_crow_sse.bat` 버그 수정**: `install.py`/`install.ps1`이 절대경로를 하드코딩한 배치 파일을 동적 생성하도록 변경.
+
+#### 2순위 — 문서 동기화
+- **`CROW_MEMORY_ARCHITECTURE.md`**: 8레지스터(코드4+라이프4) 전체 반영 — Physical Spec, Register Table, Tool Schema enum, Appendix C 코드. 버전 1.1→1.2.
+- **`CrowMemory` 클래스 docstring**: "4 semantic registers" → "8 semantic registers".
+
+#### 3순위 — 성능
+- **인코더 프리웜**: `CrowMemory.prewarm_encoder()` — 백그라운드 스레드로 SentenceTransformer 사전 로딩.
+- **임베딩 LRU 캐시**: `encode()`에 1024엔트리 캐시 추가.
+
+#### 4순위 — 안정성
+- **SVD 클리핑 폴백**: `LinAlgError` 발생 시 요소별 노름 클리핑으로 대체.
+- **`hash()` → `hashlib.md5()`**: `_track_recall()`의 쿼리 해시를 이식 가능하게 변경.
+- **`check_drift()` 파라미터명**: `consecutive_calls` → `min_low_confidence_count`.
+
+#### 5순위 — 설치 경험
+- **`install.ps1`**: 단계 번호 `[1/5]`~`[5/5]`로 통일.
+- **`custom_modes.yaml` 병합**: 기존 사용자 모드 보존.
+- **`patch_kimi_code.py`**: 신규 설치 append 모드 + `ORIGINAL_CROW_MARKER` dead code 제거.
+
+#### 6순위 — 문서화
+- **`crow_mcp_server.py`**: docstring "9 tools" → "10 tools", `prewarm_encoder()` 호출 추가.
+- **`CHANGELOG.md`**: v1.2.0 항목 추가.
+
+### 결정 사항
+
+- 파일 잠금은 플랫폼 독립적 lockfile+PID 방식 채택 (Windows `OpenProcess`, Unix `os.kill`).
+- `_persist()` 증분 저장은 복잡도 대비 이득이 적어 이번 릴리스에서는 보류.
+- FAISS 인덱스 백그라운드 재구축도 numpy 폴백이 있으므로 보류.
+
+### 다음 단계
+
+- [x] GitHub 업로드 (v1.2.0)
+
+---
+
 ## 기록 템플릿
 
 ```markdown
