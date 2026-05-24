@@ -197,6 +197,48 @@ def create_server(state_path: str) -> Server:
         from mcp.types import Tool
         return [Tool(**td) for td in TOOL_DEFINITIONS]
 
+    # ---- MCP Prompts (auto-loaded by host at session start) ----
+
+    @server.list_prompts()
+    async def handle_list_prompts() -> list:
+        from mcp.types import Prompt
+        return [
+            Prompt(
+                name="crow_memory_bias",
+                description="Auto-injected Crow Memory bias block. Contains your coding style, preferences, and evolved rules. The host should load this at session start.",
+                arguments=[],
+            ),
+            Prompt(
+                name="crow_evolved_rules",
+                description="Permanent evolved rules from Crow's system_prompt.md. These are statistically significant patterns approved via HITL.",
+                arguments=[],
+            ),
+        ]
+
+    @server.get_prompt()
+    async def handle_get_prompt(name: str, arguments: dict):
+        if name == "crow_memory_bias":
+            bias = crow.get_user_bias_block("General context and preferences")
+            evolved = crow.get_system_prompt()
+            rules = [l for l in evolved.split("\n") if l.startswith("RULE:")]
+            rules_text = "\n".join(f"- {r}" for r in rules[-10:]) if rules else "- No evolved rules yet."
+            return [
+                {"type": "text", "text": (
+                    "=== Crow Memory — Auto-Injected Context ===\n\n"
+                    "[Permanent Evolved Rules]\n"
+                    f"{rules_text}\n\n"
+                    "[Recent Memory Hints]\n"
+                    f"{bias}\n\n"
+                    "The above context represents your learned preferences and style. "
+                    "Use it to guide your responses. To learn more, call crow_recall with "
+                    "a specific query and register (style/bug/arch/context/life_pref/life_avoid/life_phil/life_context)."
+                )},
+            ]
+        elif name == "crow_evolved_rules":
+            prompt = crow.get_system_prompt()
+            return [{"type": "text", "text": prompt}]
+        return _error(f"Unknown prompt: {name}")
+
     @server.call_tool()
     async def handle_call_tool(name: str, arguments: dict):
         try:
