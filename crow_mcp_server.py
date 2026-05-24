@@ -183,7 +183,7 @@ TOOL_DEFINITIONS = [
 def create_server(state_path: str) -> Server:
     server = Server(
         name="crow_memory",
-        version="1.2.0",
+        version="1.2.1",
         instructions=(
             "Crow Memory — External synaptic memory for AI coding agents. "
             "Stores your coding style, bug intuition, and architectural "

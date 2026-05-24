@@ -20,6 +20,8 @@ import atexit
 import warnings
 from typing import Optional
 
+from collections import OrderedDict
+
 import numpy as np
 from safetensors.numpy import load_file, save_file
 
@@ -133,7 +135,11 @@ class CrowMemory:
         os.makedirs(self.memory_dir, exist_ok=True)
 
         # Acquire advisory file lock before touching crow.bin
-        _acquire_file_lock(path)
+        if not _acquire_file_lock(path):
+            raise RuntimeError(
+                f"crow.bin is locked by another live process. "
+                f"Ensure only one MCP server (preferably SSE) is running."
+            )
 
         try:
             self.data = load_file(path)
@@ -217,23 +223,24 @@ class CrowMemory:
             self._proj_b = self.data["proj_b"].astype(np.float32)
         return self._proj_b
 
-    # LRU embedding cache (avoids re-encoding identical strings)
-    _encode_cache: dict[str, np.ndarray] = {}
     _encode_cache_max = 1024
 
     def encode(self, text: str) -> np.ndarray:
-        cache_key = text[:200]  # Use first 200 chars as cache key
-        cached = self._encode_cache.get(cache_key)
-        if cached is not None:
-            return cached
-        vec = self.encoder.encode(text, normalize_embeddings=True)
+        # Instance-level true LRU cache (initialized lazily)
+        if not hasattr(self, '_encode_cache'):
+            self._encode_cache: OrderedDict[str, np.ndarray] = OrderedDict()
+        # Truncate long inputs — nomic-embed-text-v1.5 works on sentence/paragraph level
+        truncated = text[:2000]
+        cache_key = truncated[:200]
+        if cache_key in self._encode_cache:
+            self._encode_cache.move_to_end(cache_key)
+            return self._encode_cache[cache_key]
+        vec = self.encoder.encode(truncated, normalize_embeddings=True)
         projected = self.proj_W @ vec + self.proj_b
         projected /= (np.linalg.norm(projected) + 1e-8)
         result = projected.astype(np.float16)
-        # LRU eviction: if cache is full, remove oldest (first key)
         if len(self._encode_cache) >= self._encode_cache_max:
-            first_key = next(iter(self._encode_cache))
-            del self._encode_cache[first_key]
+            self._encode_cache.popitem(last=False)  # Remove oldest (LRU)
         self._encode_cache[cache_key] = result
         return result
 
@@ -434,6 +441,9 @@ class CrowMemory:
     # Recall Stats
     # ------------------------------------------------------------------
 
+    _last_recall_prune: float = 0.0
+    _recall_stats_max_per_register = 1000
+
     def _track_recall(self, register: str, query: str,
                       confidence: float, hints: list[str]):
         query_hash = hashlib.md5(query.encode("utf-8")).hexdigest()
@@ -447,13 +457,29 @@ class CrowMemory:
         entry["avg_confidence"] = entry["total_confidence"] / entry["occurrences"]
         entry["last_hints"] = hints[:3]
         entry["last_seen"] = time.time()
-        cutoff = time.time() - 7 * 86400
-        for reg in self._recall_stats:
-            self._recall_stats[reg] = {
-                k: v for k, v in self._recall_stats[reg].items()
-                if v["last_seen"] > cutoff
-            }
-        self._save_recall_stats()
+
+        # Enforce per-register max entries (remove oldest first)
+        max_entries = self._recall_stats_max_per_register
+        if len(stats) > max_entries:
+            oldest = sorted(stats.items(), key=lambda kv: kv[1]["last_seen"])[:len(stats) - max_entries]
+            for k, _ in oldest:
+                del stats[k]
+
+        # Lazy prune: only run TTL cleanup + persist every 3600 seconds
+        now = time.time()
+        if now - self._last_recall_prune > 3600:
+            cutoff = now - 7 * 86400
+            for reg in list(self._recall_stats.keys()):
+                pruned = {
+                    k: v for k, v in self._recall_stats[reg].items()
+                    if v["last_seen"] > cutoff
+                }
+                if pruned:
+                    self._recall_stats[reg] = pruned
+                else:
+                    del self._recall_stats[reg]
+            self._save_recall_stats()
+            self._last_recall_prune = now
 
     def _load_recall_stats(self):
         rs_path = os.path.join(self.memory_dir, "recall_stats.json")
@@ -508,7 +534,8 @@ class CrowMemory:
                         s_clipped = np.clip(s, -MAX_SV, MAX_SV)
                         self.data[f"{reg}_S"] = ((U * s_clipped) @ Vt).astype(np.float16)
                     except np.linalg.LinAlgError:
-                        pass
+                        logger.warning("SVD clipping failed for register %s in spectral_reset — using norm fallback.", reg)
+                        np.clip(S, -MAX_SV, MAX_SV, out=S)
         self._persist()
 
     def archive_register(self, register: str):

@@ -99,7 +99,7 @@ The `crow.bin` file is forever fixed at ~80MB (configurable). It does not grow a
 | **Zoo Code** | Local Electron/Node | Orchestrates the agent loop, captures build exit codes, renders HITL UI |
 | **LLM Agent** | Cloud/On-prem API | Inference engine, generates code, proposes prompt mutations, decides tool calls |
 | **MCP Server** | Local Python | Serves `crow.bin` I/O, embedding encoding, weight math, FAISS nearest-neighbor lookup |
-| **`crow.bin`** | Local SSD | Fixed-size `safetensors` file containing 4 weight matrices + projection layer |
+| **`crow.bin`** | Local SSD | Fixed-size `safetensors` file containing 8 weight matrices + projection layer |
 | **Build Hook** | Local Node | Captures `npm run build`, test results, linter output; emits JSON to MCP server |
 
 ---
@@ -470,7 +470,7 @@ The loop is **recursive but bounded**:
 
 ### 7.2 Drift Detection
 
-If `crow_recall` returns hints with confidence <0.5 for 5 consecutive calls, the system enters **drift alert**:
+If `crow_recall` returns hints with confidence <0.5 for `min_low_confidence_count` (default 5) or more stat records across all registers, the system enters **drift alert**:
 1. Pause auto-ingest
 2. Notify user: "Crow memory seems confused. Recent tasks are too novel or memory is saturated."
 3. Offer: **Spectral reset** (soft: clip singular values) or **Register archive** (move old `style_S` to `style_S.bak` and initialize fresh)

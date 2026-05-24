@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.2.1] — 2026-05-25
+
+### Fixed
+- **Lock acquisition silently ignored**: `__init__` now raises `RuntimeError` when `_acquire_file_lock()` returns `False` (another live process holds the lock).
+- **`_encode_cache` class variable → instance-level true LRU**: Changed from class-level dict (shared across all `CrowMemory` instances, FIFO eviction) to per-instance `OrderedDict` with `move_to_end()` for genuine LRU behavior.
+- **`_track_recall()` O(n) overhead**: Lazy pruning — 7-day TTL cleanup and `recall_stats.json` persist now runs at most once per hour instead of every recall call. Added per-register max 1000 entries.
+- **`spectral_reset()` LinAlgError silently passed**: Now falls back to per-element norm clipping (same as `_maybe_clip`).
+- **`encode()` unbounded input**: Truncates text to 2000 chars before SentenceTransformer encoding.
+- **`requirements.txt` missing uvicorn + PyYAML**: Added `uvicorn>=0.29.0` (required for SSE transport) and `PyYAML>=6.0` (required for `install.py` custom_modes merge).
+
+### Changed
+- **Architecture doc §2.2**: "4 weight matrices" → "8 weight matrices".
+- **Architecture doc §7.2**: "5 consecutive calls" → accurate description of `min_low_confidence_count` behavior.
+- **README Single-Client Setup**: Clarified SSE is default, stdio is advanced option.
+
+---
+
 ## [1.2.0] — 2026-05-25
 
 ### Added

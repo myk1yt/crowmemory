@@ -279,6 +279,41 @@ crowsmemory/
 
 ---
 
+## 2026-05-25 — v1.2.1: 교차 검증 기반 잔여 문제 해결
+
+### 작업 내용
+
+#### 치명적 수정
+- **락 획득 실패 시 예외 발생**: `_acquire_file_lock()`이 `False` 반환 시 `RuntimeError`로 진행 차단.
+- **`requirements.txt`**: 누락된 `uvicorn`(SSE 필수)과 `PyYAML`(install.py custom_modes merge) 추가.
+
+#### 캐시 개선
+- **진짜 LRU 캐시**: `_encode_cache`를 클래스 변수(dict, FIFO) → 인스턴스 변수(`OrderedDict`, `move_to_end()`)로 변경.
+- **인코딩 입력 제한**: `text[:2000]` truncate로 긴 입력의 메모리 부담 완화.
+
+#### 성능 최적화
+- **`_track_recall()` 지연 pruning**: 7일 TTL 정리 + JSON 저장을 1시간에 한 번만 수행.
+- **레지스터당 최대 1000엔트리 제한**: stats 무한 성장 방지.
+
+#### 잔여 버그
+- **`spectral_reset()` SVD 폴백**: `_maybe_clip`과 동일하게 요소별 노름 클리핑 적용.
+
+#### 문서 동기화
+- **아키텍처 문서 §2.2**: "4 weight matrices" → "8 weight matrices"
+- **아키텍처 문서 §7.2**: "5 consecutive calls" → 실제 `min_low_confidence_count` 동작 설명
+- **README Single-Client Setup**: SSE 모드가 기본임을 명시
+
+### 결정 사항
+
+- `check_drift` 증분 카운트, `_persist` 비동기화, FAISS 백그라운드 재구축은 복잡도 대비 이득이 적어 v1.3+로 보류.
+- `build_faiss_index` 예외 처리는 이미 `except ImportError`로 감싸져 있어 추가 수정 불필요.
+
+### 다음 단계
+
+- [x] GitHub 업로드 (v1.2.1)
+
+---
+
 ## 기록 템플릿
 
 ```markdown
