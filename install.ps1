@@ -45,6 +45,10 @@ $McpConfig = @{
                 "--state",
                 "$CrowDir\memory\crow.bin"
             )
+            cwd = "$CrowDir"
+            env = @{
+                PYTHONUNBUFFERED = "1"
+            }
             description = "Crow Memory - External synaptic memory for AI coding agents."
         }
     }
