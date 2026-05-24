@@ -329,7 +329,7 @@ This is the exact schema exposed by the local Python MCP server. The LLM sees th
   "tools": [
     {
       "name": "crow_recall",
-      "description": "Recall user-specific coding style, bug intuition, or architectural preference from the Crow synaptic memory. Call this BEFORE generating code to align with user's inductive bias.",
+      "description": "Recall user-specific coding style, bug intuition, architectural preference, or personal context from the Crow synaptic memory. Call this BEFORE every response to align with user's inductive bias.",
       "parameters": {
         "type": "object",
         "properties": {

@@ -2,7 +2,8 @@
 # Copy this to: %APPDATA%/Code/User/globalStorage/zoocodeorganization.zoo-code/settings/custom_modes.yaml
 #
 # This mode includes Crow Memory system prompt instructions
-# so the LLM automatically calls crow_recall before generating code.
+# so the LLM automatically calls crow_recall before EVERY response
+# and crow_ingest after EVERY response — fully autonomous memory.
 
 customModes:
   - slug: code-crow

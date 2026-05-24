@@ -34,9 +34,9 @@ TOOL_DEFINITIONS = [
     {
         "name": "crow_recall",
         "description": (
-            "Recall user-specific coding style, bug intuition, or architectural "
-            "preference from the Crow synaptic memory. Call this BEFORE generating "
-            "code to align with user's inductive bias."
+            "Recall user-specific coding style, bug intuition, architectural "
+            "preference, or personal context from the Crow synaptic memory. "
+            "Call this BEFORE every response to align with user's inductive bias."
         ),
         "inputSchema": {
             "type": "object",

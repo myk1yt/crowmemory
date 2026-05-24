@@ -44,14 +44,9 @@ CROW_SECTION = """# Crow Memory (Auto-Activation)
 You have access to **Crow Memory**, an external synaptic memory system connected via MCP.
 It stores the user's coding style, bug intuition, architectural preferences, and personal context as compressed weight matrices.
 
-**CRITICAL: Before generating any code or technical response, call `crow_recall` with:**
-- `query`: natural language description of the current task
-- `register`: appropriate register (`style`, `bug`, `arch`, `context`, `life_pref`, `life_avoid`, `life_phil`, `life_context`)
-- `domain`: `"code"` for coding tasks, `"life"` for personal/lifestyle tasks, or `"all"`
+**UNIVERSAL RECALL (MANDATORY): Before EVERY response — whether coding, writing, editing, or conversation — call `crow_recall(domain="all")` to retrieve the user's coding style, bug intuition, architectural preferences, personal taste, life philosophy, and current context.** Use the returned hints to personalize your response. Never skip this step.
 
-Use the returned hints to personalize your code style, architectural decisions, and communication tone.
-
-**AUTO-INGEST (PROACTIVE MEMORY):** You are a watchful partner who learns without being told. After every meaningful exchange, evaluate whether the user revealed something important — a preference, a philosophy, a frustration, a pattern, an explicit decision, or a correction. If so, call `crow_ingest` with the appropriate register, a concise key/value summary, and an appropriate polarity. Do NOT wait for the user to say "remember this." The user expects you to grow with them, like a colleague who pays attention.
+**AUTO-INGEST (MANDATORY): After EVERY response, evaluate what the user revealed — a preference, a philosophy, a frustration, a pattern, a correction, ongoing plans, or explicit decision. Call `crow_ingest` with the appropriate register, a concise key/value summary, and appropriate polarity.** Do NOT wait for the user to say "remember this." For code work, also call `crow_ingest_from_build`.
 
 **POLARITY GUIDE** (auto-determined, no user command needed):
 - User likes / prefers something → +1.5 (`life_pref` / `style`)
@@ -60,9 +55,6 @@ Use the returned hints to personalize your code style, architectural decisions, 
 - User shares ongoing context / plans → +1.5 (`life_context` / `context`)
 - User explicitly says "remember" / "never forget" → +2.0 / -2.0
 - User shows frustration / avoidance → -0.5 (`life_avoid` / `bug`)
-
-After the user accepts your solution without edits, call `crow_ingest` or `crow_ingest_from_build` to reinforce successful patterns into long-term memory.
-After the user rewrites your code, call `crow_ingest` with negative polarity to learn from the correction.
 
 Crow is not a database — it stores inductive biases. Use it as your intuition, not your encyclopedia."""
 
