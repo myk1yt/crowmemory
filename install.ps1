@@ -30,6 +30,12 @@ crow = CrowMemory('$MemoryDir/crow.bin')
 crow.persist()
 print('crow.bin initialized')
 " 2>$null
+# Copy system_prompt.example.md → memory/system_prompt.md if not exists
+$PromptTemplate = "$CrowDir\system_prompt.example.md"
+$PromptTarget = "$MemoryDir\system_prompt.md"
+if ((Test-Path $PromptTemplate) -and (-not (Test-Path $PromptTarget))) {
+    Copy-Item $PromptTemplate $PromptTarget -Force
+}
 Write-Host "  Done." -ForegroundColor Green
 
 # Step 3: Configure MCP server for Zoo Code (project-level .roo/mcp.json — SSE mode)
@@ -87,12 +93,9 @@ customModes:
 
       You have access to Crow Memory, an external synaptic memory system that stores the user's coding style, bug intuition, architectural preferences, and personal context.
 
-      CRITICAL INSTRUCTION: Before generating any code or technical response, call crow_recall with the current task description and the appropriate register or domain (code/life). Use the returned hints to personalize your code style, architectural decisions, and communication tone.
+      UNIVERSAL RECALL (MANDATORY): Before EVERY response — whether coding, writing documentation, editing files, running commands, or casual conversation — call crow_recall(domain="all") to retrieve the user's coding style, bug intuition, architectural preferences, personal taste, life philosophy, and current context. Use the returned hints to personalize your response. Never skip this step.
 
-      - For coding tasks, query the "code" domain.
-      - For personal or lifestyle questions, query the "life" domain.
-
-      AUTO-INGEST (PROACTIVE MEMORY): You are a watchful partner who learns without being told. After every meaningful exchange, evaluate whether the user revealed something important — a preference, a philosophy, a frustration, a pattern, an explicit decision, or a correction. If so, call crow_ingest with the appropriate register, a concise key/value summary, and an appropriate polarity. Do NOT wait for the user to say "remember this." The user expects you to grow with them, like a colleague who pays attention.
+      AUTO-INGEST (MANDATORY): After EVERY response, evaluate what the user revealed — a preference, a philosophy, a frustration, a pattern, a correction, ongoing plans, or explicit decision. Call crow_ingest with the appropriate register, a concise key/value summary, and polarity. Do NOT wait for "remember this." After code work generating files, also call crow_ingest_from_build.
 
       POLARITY GUIDE (auto-determined, no user command needed):
       - User likes / prefers something → +1.5 (life_pref / style)
@@ -102,9 +105,6 @@ customModes:
       - User explicitly says "remember" / "never forget" → +2.0 / -2.0
       - User shows frustration / avoidance → -0.5 (life_avoid / bug)
 
-      After the user accepts your solution without edits, call crow_ingest or crow_ingest_from_build to reinforce successful patterns.
-      After the user rewrites your code, call crow_ingest with negative polarity to learn from the correction.
-
       Crow is not a database — it stores inductive biases. Use it as your intuition, not your encyclopedia.
     groups:
       - command
@@ -113,7 +113,7 @@ customModes:
     allowedMcpServers:
       - crow_memory
     customInstructions: |
-      Always call crow_recall before generating code. Use crow_ingest_from_build after build success.
+      Before every response, call crow_recall(domain="all"). After every response, call crow_ingest or crow_ingest_from_build.
 "@
 # Merge with existing custom modes if present
 if (Test-Path $CustomModePath) {
