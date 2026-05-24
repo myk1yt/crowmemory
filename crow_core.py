@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 crow_core.py — Crow Memory core engine (complete).
-Implements the 4-register synaptic weight matrix with Hebbian EMA updates,
+Implements the 8-register synaptic weight matrix with Hebbian EMA updates,
 spectral clipping, FAISS-powered value bank retrieval, build hook integration,
 system prompt evolution, backup rotation, and drift auto-recovery.
 

@@ -1,8 +1,8 @@
 # Crow (까마귀) Memory Architecture
 ## A Synaptic State Cache for Recursive Agent Development
 
-**Version:** 1.0
-**Date:** 2026-05-24
+**Version:** 1.1
+**Date:** 2026-05-25
 **Author:** Stefano,Kim & AI Collaborative Design
 **Target Runtime:** Any MCP-compatible IDE + LLM API + Local Python MCP Server
 
@@ -10,9 +10,9 @@
 
 ## 0. Executive Summary
 
-**Crow** is a fixed-size, weight-based associative memory system designed to be plugged into cloud LLM agents (specifically DeepSeek V4 Pro via API) as an external long-term memory chip. Unlike text-based journals or vector databases, Crow stores experience as compressed synaptic weights inside a `crow.bin` matrix. It does not remember *what* you did--it remembers *how* you think.
+**Crow** is a fixed-size, weight-based associative memory system designed to be plugged into any MCP-compatible LLM agent as an external long-term memory chip. Unlike text-based journals or vector databases, Crow stores experience as compressed synaptic weights inside a `crow.bin` matrix. It does not remember *what* you did--it remembers *how* you think.
 
-The name "Crow (까마귀)" is deliberate. Crows possess episodic-like memory, tool-crafting intelligence, and social learning: they observe, remember, and adapt their behavior based on past outcomes without rewriting their DNA. Crow Memory does the same for an AI agent. It cannot modify DeepSeek V4's base weights, but it can sculpt the prompt environment and tool-use bias so effectively that the agent *behaves* as if it has evolved.
+The name "Crow (까마귀)" is deliberate. Crows possess episodic-like memory, tool-crafting intelligence, and social learning: they observe, remember, and adapt their behavior based on past outcomes without rewriting their DNA. Crow Memory does the same for an AI agent. It cannot modify the LLM's base weights, but it can sculpt the prompt environment and tool-use bias so effectively that the agent *behaves* as if it has evolved.
 
 **Key Constraint (Non-Negotiable):**  
 > Crow is **not** a database. It does not store exact text. It stores *inductive biases*--the gravitational pull of your coding style, your architectural instincts, your bug-hunting reflexes. Exact facts (API specs, file paths, syntax) remain in RAG, SQLite, or markdown. Crow handles the *vibe*.
@@ -29,7 +29,7 @@ Every coding agent needs two distinct knowledge organs:
 | **Hippocampus** | Markdown, SQLite, RAG | Lossless | Exact facts, specs, file trees | **None** |
 | **Neocortex Bias** | `crow.bin` weight matrix | Lossy & Associative | Style, instinct, architectural gravity | **Everything** |
 
-Crow occupies the second layer. It ensures that when DeepSeek V4 Pro writes code for you, it feels *your* hand--not generic best practices, not Stack Overflow averages, but *your* early-return reflex, *your* JSDoc verbosity, *your* terror of unhandled Windows encodings.
+Crow occupies the second layer. It ensures that when the LLM writes code for you, it feels *your* hand--not generic best practices, not Stack Overflow averages, but *your* early-return reflex, *your* JSDoc verbosity, *your* terror of unhandled Windows encodings.
 
 ### 1.2 Hebbian Episodicity
 Crow's write protocol mimics Hebbian plasticity: neurons that fire together, wire together. But unlike biological brains, Crow uses **Exponential Moving Average (EMA) decay** to prevent catastrophic interference. New memories do not erase old ones--they gently push the weight landscape, like wind reshaping a dune rather than a bulldozer flattening it.
@@ -38,7 +38,7 @@ Crow's write protocol mimics Hebbian plasticity: neurons that fire together, wir
 Crow learns not from what the model *generates*, but from what the *user accepts*. A generated snippet that passes `npm run build` and is accepted without human edit is a **positive reinforcement** (+1.5). A snippet that the user immediately rewrites is a **negative reinforcement** (-0.8). The model is not the teacher; the user is.
 
 ### 1.4 Prompt Evolution as Phenotype
-While Crow cannot rewrite DeepSeek V4's genotype (base weights), it can rewrite its **phenotype** (system prompt and tool-call behavior). Crow's `evolve_prompt` protocol proposes prompt mutations. These mutations are **suggestions only**--a Human-in-the-Loop (HITL) gate must approve them. This mimics evolutionary selection: mutations arise freely, but only the fittest survive human curation.
+While Crow cannot rewrite the LLM's genotype (base weights), it can rewrite its **phenotype** (system prompt and tool-call behavior). Crow's `evolve_prompt` protocol proposes prompt mutations. These mutations are **suggestions only**--a Human-in-the-Loop (HITL) gate must approve them. This mimics evolutionary selection: mutations arise freely, but only the fittest survive human curation.
 
 ### 1.5 Fixed-Size Immortality
 The `crow.bin` file is forever fixed at ~80MB (configurable). It does not grow as you accumulate projects. This is not a limitation; it is a *feature*. It forces the system to compress, abstract, and generalize--exactly what human long-term memory does. You do not remember every line of code you wrote in 2003; you remember *that you preferred monolithic classes back then*.
@@ -60,10 +60,10 @@ The `crow.bin` file is forever fixed at ~80MB (configurable). It does not grow a
 |           +--------------------+-----------+-----------+          |
 |                                            |                      |
 |                              +-------------v-------------+        |
-|                              |   DeepSeek V4 Pro API     |        |
-|                              |   (Cloud Inference)       |        |
+|                              |      LLM API              |        |
+|                              |   (Cloud / On-prem)       |        |
 |                              |   - Base weights: RO      |        |
-|                              |   - Context window: 128K  |        |
+|                              |   - Large context window  |        |
 |                              |   - Tool use: Enabled     |        |
 |                              +-------------+-------------+        |
 |                                            |                      |
@@ -97,7 +97,7 @@ The `crow.bin` file is forever fixed at ~80MB (configurable). It does not grow a
 | Component | Runtime | Responsibility |
 |-----------|---------|----------------|
 | **Zoo Code** | Local Electron/Node | Orchestrates the agent loop, captures build exit codes, renders HITL UI |
-| **DeepSeek V4 Pro** | Cloud API | Inference engine, generates code, proposes prompt mutations, decides tool calls |
+| **LLM Agent** | Cloud/On-prem API | Inference engine, generates code, proposes prompt mutations, decides tool calls |
 | **MCP Server** | Local Python | Serves `crow.bin` I/O, embedding encoding, weight math, FAISS nearest-neighbor lookup |
 | **`crow.bin`** | Local SSD | Fixed-size `safetensors` file containing 4 weight matrices + projection layer |
 | **Build Hook** | Local Node | Captures `npm run build`, test results, linter output; emits JSON to MCP server |
@@ -181,11 +181,11 @@ class CrowState:
 
 ### 4.1 Protocol Alpha -- `recall` (Read)
 
-**Purpose:** Inject user-specific inductive bias into DeepSeek V4's prompt context.
+**Purpose:** Inject user-specific inductive bias into the LLM's prompt context.
 
 **Flow:**
-1. DeepSeek V4 receives user query: *"Fix the memory leak in this PDF worker"*
-2. V4 decides to call `crow_recall(query="PDF worker memory leak", register="bug")`
+1. The LLM receives user query: *"Fix the memory leak in this PDF worker"*
+2. The agent decides to call `crow_recall(query="PDF worker memory leak", register="bug")`
 3. MCP Server encodes query -> embedding -> projection -> query vector `q`
 4. Computes `r = S.T @ q` (recalled vector)
 5. Looks up `value_bank` for nearest neighbors to `r`
@@ -203,7 +203,7 @@ class CrowState:
 }
 ```
 
-**V4 Prompt Injection:**
+**LLM Prompt Injection:**
 These hints are prepended to the system prompt as a `[User Bias]` block:
 ```
 [System Prompt]
@@ -282,9 +282,9 @@ def _clip_spectrum(self, register: str, max_sv: float):
 
 **Flow:**
 1. Crow MCP server emits candidate rule to Zoo Code
-2. Zoo Code forwards it to DeepSeek V4 with special meta-prompt:
+2. Zoo Code forwards it to the LLM with special meta-prompt:
    > "You are the Prompt Architect. Based on this observed user bias, draft a concise system prompt addition."
-3. V4 generates a proposed prompt fragment (<=100 tokens)
+3. The LLM generates a proposed prompt fragment (<=100 tokens)
 4. Zoo Code renders HITL UI: **"Adopt this bias as permanent prompt rule?"**
 5. User approves -> appended to `system_prompt.md` (text file, version-controlled)
 6. User rejects -> `ingest(polarity=-0.3)` to suppress future similar proposals
@@ -296,9 +296,9 @@ def _clip_spectrum(self, register: str, max_sv: float):
 
 ---
 
-## 5. MCP Tool Schema (DeepSeek V4 Interface)
+## 5. MCP Tool Schema (LLM Interface)
 
-This is the exact schema exposed by the local Python MCP server. DeepSeek V4 sees these as native tools.
+This is the exact schema exposed by the local Python MCP server. The LLM sees these as native tools.
 
 ```json
 {
@@ -388,12 +388,12 @@ This is the exact schema exposed by the local Python MCP server. DeepSeek V4 see
 | Step 1: User submits task in Zoo Code                              |
 |         "Implement EPUB metadata extraction in Bookviewer"        |
 +------------------------------------------------------------------+
-| Step 2: DeepSeek V4 calls crow_recall(register="arch")             |
+| Step 2: The LLM calls crow_recall(register="arch")                  |
 |         -> Returns: "User prefers early validation + fail-fast     |
 |            for file format parsers. Always check magic bytes       |
 |            before full read."                                     |
 +------------------------------------------------------------------+
-| Step 3: V4 generates code with bias injected into prompt            |
+| Step 3: The LLM generates code with bias injected into prompt       |
 +------------------------------------------------------------------+
 | Step 4: Zoo Code runs npm run build + tests                        |
 |         -> Exit 0, user accepts without edits                      |
@@ -406,7 +406,7 @@ This is the exact schema exposed by the local Python MCP server. DeepSeek V4 see
 | Step 6: Crow detects this pattern has hit confidence 0.91 over     |
 |         4 sessions. Emits candidate rule to Zoo Code.              |
 +------------------------------------------------------------------+
-| Step 7: V4 (via crow_evolve_propose) drafts:                       |
+| Step 7: The LLM (via crow_evolve_propose) drafts:                  |
 |         "RULE: For all binary format parsers, validate magic      |
 |          bytes in the first 8 bytes and early-return on mismatch" |
 +------------------------------------------------------------------+
@@ -414,7 +414,7 @@ This is the exact schema exposed by the local Python MCP server. DeepSeek V4 see
 |         "Adopt 'magic-byte validation' as permanent prompt rule?"   |
 |         -> User clicks [YES]                                       |
 +------------------------------------------------------------------+
-| Step 9: Rule appended to system_prompt.md. Next cycle, V4           |
+| Step 9: Rule appended to system_prompt.md. Next cycle, the LLM      |
 |         receives this rule natively, no recall needed.            |
 +------------------------------------------------------------------+
                               |
@@ -424,7 +424,7 @@ This is the exact schema exposed by the local Python MCP server. DeepSeek V4 see
 ### 6.2 Boundedness -- Why This Is Not AGI
 
 The loop is **recursive but bounded**:
-- **Upper bound:** DeepSeek V4's base capability. Crow cannot make V4 smarter than V4 is.
+- **Upper bound:** The LLM's base capability. Crow cannot make the LLM smarter than it is.
 - **Convergence:** Prompt space has diminishing returns. After ~20 high-quality rules, marginal utility drops.
 - **Cost cap:** Each `evolve_propose` consumes API tokens. Hard limit: 1 proposal per day, max 5 API calls per cycle.
 - **Human veto:** Every prompt mutation requires human approval. The agent cannot modify its own genotype.
@@ -484,7 +484,7 @@ Every `evolve` adoption triggers atomic backup. User can rollback to any previou
 ### Phase 1: Zoo Code Hook (Day 2-3)
 - [ ] Capture `npm run build` exit code in Zoo Code extension
 - [ ] Auto-trigger `crow_ingest` on build success/failure
-- [ ] Inject `[User Bias]` block into DeepSeek V4 system prompt before generation
+- [ ] Inject `[User Bias]` block into the LLM system prompt before generation
 
 ### Phase 2: Feedback Loop (Week 1)
 - [ ] Track user edit distance (accepted vs rewritten)

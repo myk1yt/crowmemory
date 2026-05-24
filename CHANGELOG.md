@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.1.1] — 2026-05-25
+
+### Changed
+- **Generic LLM terminology**: Replaced all vendor-specific references ("DeepSeek V4 Pro", "DeepSeek V4", "V4") in [`CROW_MEMORY_ARCHITECTURE.md`](CROW_MEMORY_ARCHITECTURE.md) and [`journal.md`](journal.md) with generic expressions ("the LLM", "the agent", "MCP-compatible LLM"). Crow Memory is provider-agnostic by design — the architecture now reflects that.
+- **Docstring fix**: [`crow_core.py`](crow_core.py) now correctly states "8-register" instead of the old "4-register".
+
+### Fixed
+- **Architecture document vendor lock-in**: The architecture spec previously assumed DeepSeek V4 Pro as the sole inference backend. Now correctly describes any MCP-compatible LLM.
+
+---
+
 ## [1.1.0] — 2026-05-24
 
 ### Fixed

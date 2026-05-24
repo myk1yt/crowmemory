@@ -9,7 +9,7 @@
 ### 초기화
 
 - **프로젝트명:** Crow Memory (까마귀 메모리)
-- **목표:** Zoo Code + DeepSeek V4 Pro에 연결되는 외부 시냅스 기억 장치 구축
+- **목표:** Zoo Code + MCP 호환 LLM에 연결되는 외부 시냅스 기억 장치 구축
 - **메모리 파일명:** [`crow.bin`](memory/crow.bin) (원래 문서의 `state.bin`에서 변경)
 - **아키텍처 문서:** [`CROW_MEMORY_ARCHITECTURE.md`](CROW_MEMORY_ARCHITECTURE.md) v1.0 기준
 
@@ -209,7 +209,30 @@ crowsmemory/
 - [x] 모든 Phase 구현 완료
 - [x] MCP 서버 Zoo Code 연결 설정 완료
 - [x] 통합 테스트 37/37 통과
-- [ ] Zoo Code에서 실제 MCP 연결 및 라이브 테스트
+- [x] Zoo Code에서 실제 MCP 연결 및 라이브 테스트
+
+---
+
+## 2026-05-25 — 문서 범용화 (DeepSeek 참조 제거)
+
+### 작업 내용
+
+- **[`CROW_MEMORY_ARCHITECTURE.md`](CROW_MEMORY_ARCHITECTURE.md)**: 문서 전체에서 특정 LLM 모델명("DeepSeek V4 Pro", "DeepSeek V4", "V4")을 범용 표현("LLM", "the LLM agent", "the agent")으로 교체 (총 15곳)
+  - Executive Summary, Two-Brain Doctrine, Prompt Evolution, Topology 다이어그램, Component Responsibilities, Protocol Alpha/Beta/Gamma, MCP Tool Schema, Agent Loop, Boundedness, Roadmap
+  - 버전 1.0 → 1.1, 날짜 갱신
+- **[`journal.md`](journal.md)**: "DeepSeek V4 Pro에 연결되는" → "MCP 호환 LLM에 연결되는"으로 변경
+- **[`crow_core.py`](crow_core.py)**: docstring 수정 (4-register → 8-register)
+- **[`CHANGELOG.md`](CHANGELOG.md)**: v1.1.1 항목 추가
+
+### 결정 사항
+
+- Crow Memory는 특정 LLM 제공자에 종속되지 않는 범용 시스템임을 명확히 함
+- README.md의 "Claude, GPT, DeepSeek, Gemini, etc." 표현은 이미 범용적이므로 유지
+- 아키텍처 문서 내 모델명을 "the LLM" / "the agent"로 통일
+
+### 다음 단계
+
+- [x] GitHub 업로드 (v1.1.1)
 
 ---
 
