@@ -165,6 +165,40 @@ The included `.gitignore` automatically excludes all personal memory files.
 
 ---
 
+## Multi-Client Setup (Zoo Code + Kimi Code + others)
+
+### ⚠️ Critical: One crow.bin = One MCP Server
+
+If you use Crow with **multiple AI clients simultaneously** (e.g., Zoo Code + Kimi Code), never let each client spawn its own `crow_mcp_server.py` process. Two processes writing to the same `crow.bin` will cause **silent data loss** (last-write-wins race condition).
+
+### ✅ Safe: Shared SSE Server
+
+Run **one** SSE server and point all clients to it:
+
+```bash
+# Start the shared SSE server (once)
+python crow_mcp_server.py --transport sse --port 9020
+```
+
+Then configure all clients to use the same URL:
+
+```json
+{
+  "type": "sse",
+  "url": "http://127.0.0.1:9020/sse",
+  "disabled": false,
+  "alwaysAllow": ["crow_recall", "crow_ingest", ...]
+}
+```
+
+The server serializes all requests internally — no data corruption, no race conditions.
+
+### Single-Client Setup
+
+If you only use one client (e.g., only Zoo Code), the default `command` mode in `.roo/mcp.json` is simpler — Zoo Code spawns the server automatically.
+
+---
+
 ## Troubleshooting
 
 ### Crow tools don't appear in Zoo Code

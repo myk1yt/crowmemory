@@ -21,6 +21,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **`allowedMcpServers` in custom mode config**: Added `allowedMcpServers: ["crow_memory"]` to all `custom_modes.yaml` templates so Zoo Code exposes Crow tools to the AI.
 - **`patch_kimi_code.py`**: Patching tool for Kimi Code CLI to inject Crow Memory auto-ingest rules into its system prompt.
 - **`CHANGELOG.md`**: This file.
+- **Multi-Client Safety Guide**: Documented in README — one `crow.bin` must only be accessed by a single MCP server process. Use SSE shared server for multiple AI clients.
+
+### Security
+- **Concurrency warning**: Simultaneous writes to `crow.bin` from multiple processes cause silent data loss (last-write-wins). Single SSE server serializes all access safely.
 
 ### Changed
 - Updated `custom_modes.yaml` (active Zoo Code config) with AUTO-INGEST rule, polarity guide, and `allowedMcpServers`.
