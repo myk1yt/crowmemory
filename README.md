@@ -101,17 +101,20 @@ User query → LLM (via MCP)
 
 ### How Crow Remembers (Without Being Asked)
 
-The core challenge: LLMs don't spontaneously call tools. Crow solves this with three layers:
+The core challenge: LLMs don't spontaneously call tools. Crow solves this with four layers:
 
 | Layer | Mechanism | When |
 |-------|-----------|------|
+| **AUTO-INGEST** | AI proactively evaluates every exchange and calls `crow_ingest` when it detects preferences, philosophy, corrections, or context. No "remember this" needed. | Every exchange |
 | **MCP Prompt** | `crow_memory_bias` is auto-loaded by the LLM host at session start. No tool call needed. | Every session |
 | **Auto-Inject** | [`crow_auto_inject.py`](crow_auto_inject.py) pre-generates a `[User Bias]` block for manual injection. | Pre-task hook |
 | **Evolved Rules** | Statistically significant patterns promoted to `system_prompt.md` via HITL approval. | Permanent |
 
 ---
 
-## 11 MCP Tools + 2 Prompts
+## 10 MCP Tools + 1 Script + 2 Prompts
+
+### MCP Tools (auto-connected via Zoo Code)
 
 | Tool | Description |
 |------|-------------|
@@ -125,7 +128,12 @@ The core challenge: LLMs don't spontaneously call tools. Crow solves this with t
 | `crow_manage_prompt` | Read / append to `system_prompt.md` |
 | `crow_manage_backup` | Create / rotate / list / recover backups |
 | `crow_project_info` | Multi-project memory isolation |
-| `crow_auto_inject` | *(Script)* Generate `[User Bias]` block for manual prompt injection |
+
+### Standalone Script
+
+| Script | Description |
+|--------|-------------|
+| [`crow_auto_inject.py`](crow_auto_inject.py) | Generate `[User Bias]` block for manual prompt injection (no MCP needed) |
 
 ### MCP Prompts (Auto-Loaded by Host)
 
@@ -158,13 +166,18 @@ The included `.gitignore` automatically excludes all personal memory files.
 
 ## Troubleshooting
 
-### Crow tools don't appear
-- Restart Zoo Code
+### Crow tools don't appear in Zoo Code
+- **Restart Zoo Code** — MCP settings are read at startup only.
 - First launch downloads `nomic-embed-text-v1.5` model (~30-60s). Subsequent launches are fast (~5-10s).
 - Verify Python is in PATH: `python --version`
+- Check that `alwaysAllow` is configured — open Zoo Code MCP settings, click `crow_memory`, and ensure all tools are toggled ON (the installer does this automatically).
+
+### Windows: MCP server silent / no response
+- `crow_mcp_server.py` v1.1+ includes `WindowsSelectorEventLoopPolicy` patch. If you're on an older version, update from the repo.
 
 ### Recall returns only "Few memories stored yet"
 - Normal! Crow needs 20-30+ ingestions before meaningful hints emerge. Keep coding.
+- Enable AUTO-INGEST by switching to "Code + Crow Memory" mode — the AI will learn proactively.
 
 ### PermissionError on Windows
 - `crow_core.py` v1.0+ includes automatic retry with exponential backoff.
@@ -183,5 +196,5 @@ MIT License — see [`LICENSE`](LICENSE) for details.
 
 ---
 
-*Crow Memory v1.0 — May 2026*  
+*Crow Memory v1.1 — May 2026*
 *Co-designed by Stefano,Kim & AI*
