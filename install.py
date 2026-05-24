@@ -53,7 +53,7 @@ YAML_MODE = """customModes:
 def step(msg):
     print(f"  [{step.count}/{step.total}] {msg}...", end=" ", flush=True)
 step.count = 0
-step.total = 4
+step.total = 5
 
 def ok():
     print("\033[92mDone.\033[0m")
@@ -79,23 +79,15 @@ def main():
     crow.persist()
     ok()
 
-    # Step 3: MCP config (project-level .roo/mcp.json)
-    step.count += 1; step("Configuring Zoo Code MCP server (.roo/mcp.json)")
+    # Step 3: MCP config (project-level .roo/mcp.json — SSE mode)
+    step.count += 1; step("Configuring Zoo Code MCP server (.roo/mcp.json, SSE mode)")
     roo_dir = CROW_DIR / ".roo"
     roo_dir.mkdir(parents=True, exist_ok=True)
     mcp_config = {
         "mcpServers": {
             "crow_memory": {
-                "command": "python",
-                "args": [
-                    str(CROW_DIR / "crow_mcp_server.py"),
-                    "--state",
-                    str(MEMORY_DIR / "crow.bin"),
-                ],
-                "cwd": str(CROW_DIR),
-                "env": {
-                    "PYTHONUNBUFFERED": "1",
-                },
+                "type": "sse",
+                "url": "http://127.0.0.1:9020/sse",
                 "disabled": False,
                 "alwaysAllow": [
                     "crow_recall",
@@ -131,15 +123,39 @@ def main():
         f.write(YAML_MODE)
     ok()
 
+    # Step 5: Start SSE server + auto-start registration
+    step.count += 1; step("Starting Crow SSE server + auto-start")
+    # Start SSE server now
+    subprocess.Popen(
+        [sys.executable, str(CROW_DIR / "crow_mcp_server.py"),
+         "--state", str(MEMORY_DIR / "crow.bin"),
+         "--transport", "sse", "--port", "9020"],
+        cwd=str(CROW_DIR),
+        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+    )
+    # Register auto-start via Windows Startup folder
+    if os.name == "nt":
+        import shutil
+        startup_dir = Path(os.environ.get("APPDATA", "")) / "Microsoft" / "Windows" / "Start Menu" / "Programs" / "Startup"
+        bat_src = CROW_DIR / "start_crow_sse.bat"
+        if bat_src.exists() and startup_dir.exists():
+            bat_dst = startup_dir / "Crow_Memory_SSE.bat"
+            shutil.copy2(bat_src, bat_dst)
+            print(f"\n  [Auto-start] Registered in Startup: {bat_dst}")
+    ok()
+
     print()
     print("\033[92m============================================\033[0m")
     print("\033[92m  Crow Memory installation complete!\033[0m")
     print("\033[92m============================================\033[0m")
     print()
+    print("  SSE server running on http://127.0.0.1:9020/sse")
+    print()
     print("  Next steps:")
     print("  1. Restart Zoo Code")
     print('  2. Switch mode to "Code + Crow Memory"')
-    print("  3. Crow will auto-activate on every response")
+    print("  3. Crow auto-activates — no manual setup needed")
+    print("  4. SSE server auto-starts with Windows (registered in Startup)")
     print()
 
 if __name__ == "__main__":

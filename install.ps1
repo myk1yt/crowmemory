@@ -32,24 +32,16 @@ print('crow.bin initialized')
 " 2>$null
 Write-Host "  Done." -ForegroundColor Green
 
-# Step 3: Configure MCP server for Zoo Code (project-level .roo/mcp.json)
-Write-Host "[3/4] Configuring Zoo Code MCP server (.roo/mcp.json)..." -ForegroundColor Yellow
+# Step 3: Configure MCP server for Zoo Code (project-level .roo/mcp.json — SSE mode)
+Write-Host "[3/5] Configuring Zoo Code MCP server (.roo/mcp.json, SSE mode)..." -ForegroundColor Yellow
 $RooDir = "$CrowDir\.roo"
 if (-not (Test-Path $RooDir)) { New-Item -ItemType Directory -Path $RooDir -Force | Out-Null }
 
 $McpConfig = @{
     mcpServers = @{
         crow_memory = @{
-            command = "python"
-            args = @(
-                "$CrowDir\crow_mcp_server.py",
-                "--state",
-                "$CrowDir\memory\crow.bin"
-            )
-            cwd = "$CrowDir"
-            env = @{
-                PYTHONUNBUFFERED = "1"
-            }
+            type = "sse"
+            url = "http://127.0.0.1:9020/sse"
             disabled = $false
             alwaysAllow = @(
                 "crow_recall",
@@ -68,7 +60,6 @@ $McpConfig = @{
 }
 
 $McpConfigPath = "$RooDir\mcp.json"
-# Merge with existing config if present
 if (Test-Path $McpConfigPath) {
     try {
         $Existing = Get-Content $McpConfigPath -Raw | ConvertFrom-Json
@@ -85,7 +76,7 @@ if (Test-Path $McpConfigPath) {
 Write-Host "  Done." -ForegroundColor Green
 
 # Step 4: Configure Zoo Code custom mode (auto-activates Crow)
-Write-Host "[4/4] Configuring Zoo Code auto-activation mode..." -ForegroundColor Yellow
+Write-Host "[4/5] Configuring Zoo Code auto-activation mode..." -ForegroundColor Yellow
 $CustomModePath = "$ZooSettings\custom_modes.yaml"
 $CustomModeContent = @"
 customModes:
@@ -127,14 +118,30 @@ customModes:
 $CustomModeContent | Set-Content $CustomModePath -Encoding UTF8
 Write-Host "  Done." -ForegroundColor Green
 
+# Step 5: Start SSE server + auto-start registration
+Write-Host "[5/5] Starting Crow SSE server + auto-start registration..." -ForegroundColor Yellow
+$BatPath = "$CrowDir\start_crow_sse.bat"
+# Start SSE server now
+Start-Process -FilePath "python" -ArgumentList "crow_mcp_server.py", "--state", "$CrowDir\memory\crow.bin", "--transport", "sse", "--port", "9020" -WorkingDirectory $CrowDir -NoNewWindow
+# Register auto-start
+$StartupDir = [Environment]::GetFolderPath("Startup")
+if (Test-Path $BatPath) {
+    Copy-Item $BatPath "$StartupDir\Crow_Memory_SSE.bat" -Force
+    Write-Host "  [Auto-start] Registered in Startup folder" -ForegroundColor DarkGreen
+}
+Write-Host "  Done." -ForegroundColor Green
+
 # Done
 Write-Host ""
 Write-Host "============================================" -ForegroundColor Green
 Write-Host "  Crow Memory installation complete!" -ForegroundColor Green
 Write-Host "============================================" -ForegroundColor Green
 Write-Host ""
+Write-Host "  SSE server running on http://127.0.0.1:9020/sse" -ForegroundColor Cyan
+Write-Host ""
 Write-Host "  Next steps:" -ForegroundColor White
 Write-Host "  1. Restart Zoo Code" -ForegroundColor White
 Write-Host "  2. Switch mode to 'Code + Crow Memory'" -ForegroundColor White
-Write-Host "  3. Crow will auto-activate on every response" -ForegroundColor White
+Write-Host "  3. Crow auto-activates — no manual setup needed" -ForegroundColor White
+Write-Host "  4. SSE server auto-starts with Windows (registered in Startup)" -ForegroundColor White
 Write-Host ""
