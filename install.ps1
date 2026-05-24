@@ -50,6 +50,18 @@ $McpConfig = @{
                 PYTHONUNBUFFERED = "1"
             }
             description = "Crow Memory - External synaptic memory for AI coding agents."
+            alwaysAllow = @(
+                "crow_recall",
+                "crow_ingest",
+                "crow_ingest_from_build",
+                "crow_evolve_propose",
+                "crow_diagnostics",
+                "crow_check_drift",
+                "crow_get_user_bias",
+                "crow_manage_prompt",
+                "crow_manage_backup",
+                "crow_project_info"
+            )
         }
     }
 }
