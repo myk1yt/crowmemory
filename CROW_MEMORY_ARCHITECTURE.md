@@ -3,8 +3,8 @@
 
 **Version:** 1.0
 **Date:** 2026-05-24
-**Author:** Stefano,Kim & DeepSeek V4 Pro Collaborative Design
-**Target Runtime:** Zoo Code + DeepSeek V4 Pro API + Local Python MCP Server
+**Author:** Stefano,Kim & AI Collaborative Design
+**Target Runtime:** Any MCP-compatible IDE + LLM API + Local Python MCP Server
 
 ---
 

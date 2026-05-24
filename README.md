@@ -2,7 +2,7 @@
 
 > *"Crow remembers not the code, but the hand that wrote it."*
 
-**Crow** is an external synaptic memory chip for AI coding agents (DeepSeek V4 Pro). It stores your coding style, bug intuition, and architectural preferences as compressed weight matrices inside a fixed-size `crow.bin` file, and retrieves them via natural language queries.
+**Crow** is an external synaptic memory system for LLM-powered AI assistants. It plugs into any MCP-compatible coding agent (Claude, GPT, DeepSeek, Gemini, etc.) and stores your coding style, bug intuition, architectural preferences, and personal context as compressed weight matrices inside a fixed-size `crow.bin` file. Think of it as long-term muscle memory for your AI pair programmer.
 
 ---
 
@@ -12,7 +12,7 @@
 
 - **Python 3.10+**
 - **Zoo Code** (VS Code extension)
-- **DeepSeek V4 Pro API** access
+- An **MCP-compatible AI coding agent** (Zoo Code, Claude Code, Cline, GitHub Copilot, etc.)
 
 ### 2. Installation
 
@@ -58,15 +58,15 @@ If Crow is alive, diagnostics will be returned.
 ## How It Works
 
 ```
-User query → DeepSeek V4 Pro
+User query → LLM (via MCP)
                 ↓ crow_recall("query", "style")
            Crow MCP Server (stdio)
                 ↓ encode() → Sᵀ @ q → nearest neighbor
-           crow.bin (4-register weight matrix)
+           crow.bin (8-register weight matrix)
                 ↓
-           [User Bias] hints returned → prepended to system prompt
+           [User Bias] hints returned → injected into context
                 ↓
-           DeepSeek V4 Pro generates code in your style
+           LLM generates response aligned with your preferences
 ```
 
 ### The 4 Registers
@@ -145,4 +145,4 @@ MIT License — see [`LICENSE`](LICENSE) for details.
 ---
 
 *Crow Memory v1.0 — May 2026*  
-*Co-designed by Stefano,Kim & DeepSeek V4 Pro*
+*Co-designed by Stefano,Kim & AI*
