@@ -78,6 +78,10 @@ def main():
                     "--state",
                     str(MEMORY_DIR / "crow.bin"),
                 ],
+                "cwd": str(CROW_DIR),
+                "env": {
+                    "PYTHONUNBUFFERED": "1",
+                },
                 "description": "Crow Memory - External synaptic memory for AI coding agents.",
             }
         }
