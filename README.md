@@ -234,5 +234,5 @@ MIT License — see [`LICENSE`](LICENSE) for details.
 
 ---
 
-*Crow Memory v1.1 — May 2026*
+*Crow Memory v1.1.1 — May 2026*
 *Co-designed by Stefano,Kim & AI*
