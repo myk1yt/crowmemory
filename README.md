@@ -153,7 +153,6 @@ The core challenge: LLMs don't spontaneously call tools. Crow solves this with f
 | `crow_mcp_server.py` | ✅ Yes | MCP server |
 | `backup_manager.py` | ✅ Yes | Backup utility |
 | `hitl_panel.html` | ✅ Yes | HITL UI |
-| `test_*.py` | ✅ Yes | Tests |
 | `requirements.txt` | ✅ Yes | Dependencies |
 | `mcp_config.json` | ✅ Yes | Config example |
 | **`memory/crow.bin`** | ❌ **No** | Your personal synaptic memories |

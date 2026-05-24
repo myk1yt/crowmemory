@@ -13,6 +13,11 @@ memory/test_*/
 memory/demo_output.txt
 memory/project_*/
 
+# Test files (outdated, not for end users)
+test_crow.py
+test_integration.py
+test_mcp_manual.py
+
 # Python
 __pycache__/
 *.pyc
