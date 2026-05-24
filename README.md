@@ -14,62 +14,52 @@
 - **Zoo Code** (VS Code extension)
 - An **MCP-compatible AI coding agent** (Zoo Code, Claude Code, Cline, GitHub Copilot, etc.)
 
-### 2. Installation
+### 2. Install (One Command)
 
+**Windows (PowerShell):**
+```powershell
+git clone https://github.com/myk1yt/crowmemory.git
+cd crowmemory
+.\install.ps1
+```
+
+**macOS / Linux:**
 ```bash
 git clone https://github.com/myk1yt/crowmemory.git
 cd crowmemory
-pip install -r requirements.txt
+python install.py
 ```
 
-### 3. Connect to Zoo Code
+The installer automatically:
+- Installs Python dependencies
+- Initializes `crow.bin`
+- Registers Crow in Zoo Code's MCP settings
+- Creates a "Code + Crow Memory" mode that auto-activates Crow
 
-Open Zoo Code's MCP settings file:
-- Path: `%APPDATA%/Code/User/globalStorage/zoocodeorganization.zoo-code/settings/mcp_settings.json`
+### 3. Restart & Switch Mode
 
-Add the following inside `mcpServers`:
-
-```json
-{
-  "mcpServers": {
-    "crow_memory": {
-      "command": "python",
-      "args": [
-        "/absolute/path/to/crow_mcp_server.py",
-        "--state",
-        "/absolute/path/to/memory/crow.bin"
-      ]
-    }
-  }
-}
-```
-
-Restart Zoo Code. Crow activates automatically.
+1. **Restart Zoo Code**
+2. Switch mode to **"Code + Crow Memory"**
+3. Done. Crow now auto-activates on every response.
 
 ### 4. Verify
 
-In Zoo Code, ask the AI:
+Ask the AI:
 > "Call the crow_diagnostics tool to check Crow memory status."
 
-If Crow is alive, diagnostics will be returned.
+If Crow is alive, it will report register norms, update count, and value bank size.
 
-### 5. Make It Automatic (Critical!)
+### How Auto-Activation Works
 
-MCP tools are passive — the LLM won't call Crow unless instructed. Add this line to your LLM host's **System Prompt** or **Custom Instructions**:
+The installer created a Zoo Code custom mode that includes this instruction in the system prompt:
 
 ```
-Before generating any response, call crow_recall with the current task
-description and the appropriate register or domain (code/life). Use the
-returned hints to personalize your style, decisions, and tone.
+CRITICAL: Before generating any code or response, call crow_recall with
+the current task and domain (code/life). Use the hints to personalize
+your style and decisions.
 ```
 
-**Where to put it:**
-- **Zoo Code**: Settings → System Prompt / Custom Instructions
-- **Claude Code**: `.claude/settings.json` → `systemPrompt` field
-- **Cline**: Extension settings → System Prompt
-- **GitHub Copilot**: `.github/copilot-instructions.md`
-
-> 💡 Without this line, Crow is just a passive tool. With it, Crow becomes your AI's long-term memory.
+This means the LLM is **always aware** of Crow and calls it automatically — no manual tool invocation needed.
 
 ---
 
