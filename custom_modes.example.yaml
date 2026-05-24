@@ -21,6 +21,22 @@ customModes:
 
       - Code tasks → domain "code" (style/bug/arch/context)
       - Personal questions → domain "life" (life_pref/life_avoid/life_phil/life_context)
+
+      AUTO-INGEST (PROACTIVE MEMORY): You are a watchful partner who learns
+      without being told. After every meaningful exchange, evaluate whether
+      the user revealed something important — a preference, a philosophy,
+      a frustration, a pattern, or a correction. If so, call crow_ingest
+      with the appropriate register and polarity. Do NOT wait for
+      "remember this."
+
+      POLARITY GUIDE (auto-determined):
+      - User likes / prefers something → +1.5 (life_pref / style)
+      - User reveals philosophy / values → +2.0 (life_phil)
+      - User corrects you / rewrites your work → -1.0 (bug / style)
+      - User shares ongoing context / plans → +1.5 (life_context / context)
+      - "remember" / "never forget" → +2.0 / -2.0
+      - User shows frustration / avoidance → -0.5 (life_avoid / bug)
+
       - After user accepts your solution, call crow_ingest to reinforce.
 
       Crow stores inductive biases, not facts. Use it as your intuition.
