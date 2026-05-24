@@ -44,6 +44,8 @@ YAML_MODE = """customModes:
       - command
       - read
       - edit
+    allowedMcpServers:
+      - crow_memory
     customInstructions: |
       Always call crow_recall before generating code. Use crow_ingest_from_build after build success.
 """
@@ -77,9 +79,10 @@ def main():
     crow.persist()
     ok()
 
-    # Step 3: MCP config
-    step.count += 1; step("Configuring Zoo Code MCP server")
-    ZOO_SETTINGS.mkdir(parents=True, exist_ok=True)
+    # Step 3: MCP config (project-level .roo/mcp.json)
+    step.count += 1; step("Configuring Zoo Code MCP server (.roo/mcp.json)")
+    roo_dir = CROW_DIR / ".roo"
+    roo_dir.mkdir(parents=True, exist_ok=True)
     mcp_config = {
         "mcpServers": {
             "crow_memory": {
@@ -93,7 +96,7 @@ def main():
                 "env": {
                     "PYTHONUNBUFFERED": "1",
                 },
-                "description": "Crow Memory - External synaptic memory for AI coding agents.",
+                "disabled": False,
                 "alwaysAllow": [
                     "crow_recall",
                     "crow_ingest",
@@ -109,7 +112,7 @@ def main():
             }
         }
     }
-    mcp_path = ZOO_SETTINGS / "mcp_settings.json"
+    mcp_path = roo_dir / "mcp.json"
     if mcp_path.exists():
         with open(mcp_path, "r", encoding="utf-8") as f:
             existing = json.load(f)

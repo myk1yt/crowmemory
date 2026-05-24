@@ -33,8 +33,9 @@ python install.py
 The installer automatically:
 - Installs Python dependencies
 - Initializes `crow.bin`
-- Registers Crow in Zoo Code's MCP settings
-- Creates a "Code + Crow Memory" mode that auto-activates Crow
+- Creates `.roo/mcp.json` with Crow MCP server config (project-level)
+- Creates a "Code + Crow Memory" custom mode with `allowedMcpServers` + AUTO-INGEST
+- Pre-authorizes all 10 Crow tools (`alwaysAllow`)
 
 ### 3. Restart & Switch Mode
 
@@ -170,10 +171,13 @@ The included `.gitignore` automatically excludes all personal memory files.
 - **Restart Zoo Code** — MCP settings are read at startup only.
 - First launch downloads `nomic-embed-text-v1.5` model (~30-60s). Subsequent launches are fast (~5-10s).
 - Verify Python is in PATH: `python --version`
-- Check that `alwaysAllow` is configured — open Zoo Code MCP settings, click `crow_memory`, and ensure all tools are toggled ON (the installer does this automatically).
+- Check that `.roo/mcp.json` exists in your project root with `crow_memory` configured.
+- Verify `custom_modes.yaml` has `allowedMcpServers: ["crow_memory"]` for your mode.
+- Check that `alwaysAllow` is configured — open Zoo Code MCP settings, click `crow_memory`, ensure tools are toggled ON.
 
 ### Windows: MCP server silent / no response
-- `crow_mcp_server.py` v1.1+ includes `WindowsSelectorEventLoopPolicy` patch. If you're on an older version, update from the repo.
+- `crow_mcp_server.py` v1.1+ includes `WindowsSelectorEventLoopPolicy` patch.
+- As an alternative, use SSE transport: `python crow_mcp_server.py --transport sse --port 9020` then set `"type": "sse", "url": "http://127.0.0.1:9020/sse"` in `.roo/mcp.json`.
 
 ### Recall returns only "Few memories stored yet"
 - Normal! Crow needs 20-30+ ingestions before meaningful hints emerge. Keep coding.

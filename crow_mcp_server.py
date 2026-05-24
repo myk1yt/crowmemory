@@ -396,16 +396,65 @@ async def main():
     parser = argparse.ArgumentParser(description="Crow Memory MCP Server")
     parser.add_argument("--state", default=DEFAULT_STATE_PATH,
                         help=f"Path to crow.bin (default: {DEFAULT_STATE_PATH})")
+    parser.add_argument("--transport", choices=["stdio", "sse"], default="stdio",
+                        help="Transport protocol (default: stdio)")
+    parser.add_argument("--port", type=int, default=9020,
+                        help="Port for SSE transport (default: 9020)")
+    parser.add_argument("--host", default="127.0.0.1",
+                        help="Host for SSE transport (default: 127.0.0.1)")
     args = parser.parse_args()
 
     state_path = str(Path(args.state).resolve())
     server = create_server(state_path)
 
-    async with stdio_server() as (read_stream, write_stream):
-        await server.run(
-            read_stream, write_stream,
-            server.create_initialization_options(),
-        )
+    if args.transport == "sse":
+        await _run_sse(server, args.host, args.port)
+    else:
+        async with stdio_server() as (read_stream, write_stream):
+            await server.run(
+                read_stream, write_stream,
+                server.create_initialization_options(),
+            )
+
+
+async def _run_sse(server, host: str, port: int):
+    """Run Crow MCP server over SSE (HTTP) transport."""
+    from mcp.server.sse import SseServerTransport
+    import uvicorn
+
+    sse = SseServerTransport("/messages/")
+
+    async def app(scope, receive, send):
+        if scope["type"] == "lifespan":
+            return
+        if scope["path"] == "/sse":
+            async with sse.connect_sse(scope, receive, send) as (read_stream, write_stream):
+                await server.run(
+                    read_stream, write_stream,
+                    server.create_initialization_options(),
+                )
+        elif scope["path"].startswith("/messages/"):
+            await sse.handle_post_message(scope, receive, send)
+        else:
+            # Health check / root
+            body = b"Crow Memory MCP SSE Server"
+            await send({
+                "type": "http.response.start",
+                "status": 200,
+                "headers": [[b"content-type", b"text/plain"]],
+            })
+            await send({
+                "type": "http.response.body",
+                "body": body,
+            })
+
+    config = uvicorn.Config(
+        app, host=host, port=port,
+        log_level="warning",
+    )
+    http_server = uvicorn.Server(config)
+    print(f"Crow Memory MCP SSE server listening on http://{host}:{port}/sse")
+    await http_server.serve()
 
 
 if __name__ == "__main__":

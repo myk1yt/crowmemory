@@ -32,9 +32,10 @@ print('crow.bin initialized')
 " 2>$null
 Write-Host "  Done." -ForegroundColor Green
 
-# Step 3: Configure MCP server for Zoo Code
-Write-Host "[3/4] Configuring Zoo Code MCP server..." -ForegroundColor Yellow
-if (-not (Test-Path $ZooSettings)) { New-Item -ItemType Directory -Path $ZooSettings -Force | Out-Null }
+# Step 3: Configure MCP server for Zoo Code (project-level .roo/mcp.json)
+Write-Host "[3/4] Configuring Zoo Code MCP server (.roo/mcp.json)..." -ForegroundColor Yellow
+$RooDir = "$CrowDir\.roo"
+if (-not (Test-Path $RooDir)) { New-Item -ItemType Directory -Path $RooDir -Force | Out-Null }
 
 $McpConfig = @{
     mcpServers = @{
@@ -49,7 +50,7 @@ $McpConfig = @{
             env = @{
                 PYTHONUNBUFFERED = "1"
             }
-            description = "Crow Memory - External synaptic memory for AI coding agents."
+            disabled = $false
             alwaysAllow = @(
                 "crow_recall",
                 "crow_ingest",
@@ -66,7 +67,7 @@ $McpConfig = @{
     }
 }
 
-$McpConfigPath = "$ZooSettings\mcp_settings.json"
+$McpConfigPath = "$RooDir\mcp.json"
 # Merge with existing config if present
 if (Test-Path $McpConfigPath) {
     try {
@@ -118,6 +119,8 @@ customModes:
       - command
       - read
       - edit
+    allowedMcpServers:
+      - crow_memory
     customInstructions: |
       Always call crow_recall before generating code. Use crow_ingest_from_build after build success.
 "@

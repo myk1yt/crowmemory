@@ -11,7 +11,7 @@
       "env": {
         "PYTHONUNBUFFERED": "1"
       },
-      "description": "Crow Memory - External synaptic memory for AI coding agents. Stores your coding style, bug intuition, and architectural preferences as compressed weight matrices.",
+      "disabled": false,
       "alwaysAllow": [
         "crow_recall",
         "crow_ingest",
