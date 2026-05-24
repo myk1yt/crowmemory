@@ -55,12 +55,12 @@ If Crow is alive, it will report register norms, update count, and value bank si
 The installer created a Zoo Code custom mode that includes this instruction in the system prompt:
 
 ```
-CRITICAL: Before generating any code or response, call crow_recall with
-the current task and domain (code/life). Use the hints to personalize
-your style and decisions.
+UNIVERSAL RECALL (MANDATORY): Before EVERY response, call
+crow_recall(domain="all"). Use the hints to personalize your response.
+AUTO-INGEST (MANDATORY): After EVERY response, call crow_ingest.
 ```
 
-This means the LLM is **always aware** of Crow and calls it automatically — no manual tool invocation needed.
+The installer also copies [`system_prompt.example.md`](system_prompt.example.md) → `memory/system_prompt.md` with 3 pre-evolved rules. This means the LLM is **always aware** of Crow and calls it automatically for every response — coding, writing, or conversation — no manual tool invocation needed.
 
 ---
 
@@ -158,7 +158,9 @@ The core challenge: LLMs don't spontaneously call tools. Crow solves this with f
 | **`memory/crow.bin`** | ❌ **No** | Your personal synaptic memories |
 | **`memory/value_bank.json`** | ❌ **No** | Your experience data |
 | **`memory/recall_stats.json`** | ❌ **No** | Your recall statistics |
-| **`memory/system_prompt.md`** | ❌ **No** | Your evolved rules |
+| `system_prompt.example.md` | ✅ Yes | Evolved rules template (copied to memory/ on install) |
+| `install.py` / `install.ps1` | ✅ Yes | One-command installers |
+| **`memory/system_prompt.md`** | ❌ **No** | Your evolved rules (auto-copied from template) |
 
 The included `.gitignore` automatically excludes all personal memory files.
 
