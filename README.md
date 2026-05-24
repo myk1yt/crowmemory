@@ -53,6 +53,24 @@ In Zoo Code, ask the AI:
 
 If Crow is alive, diagnostics will be returned.
 
+### 5. Make It Automatic (Critical!)
+
+MCP tools are passive — the LLM won't call Crow unless instructed. Add this line to your LLM host's **System Prompt** or **Custom Instructions**:
+
+```
+Before generating any response, call crow_recall with the current task
+description and the appropriate register or domain (code/life). Use the
+returned hints to personalize your style, decisions, and tone.
+```
+
+**Where to put it:**
+- **Zoo Code**: Settings → System Prompt / Custom Instructions
+- **Claude Code**: `.claude/settings.json` → `systemPrompt` field
+- **Cline**: Extension settings → System Prompt
+- **GitHub Copilot**: `.github/copilot-instructions.md`
+
+> 💡 Without this line, Crow is just a passive tool. With it, Crow becomes your AI's long-term memory.
+
 ---
 
 ## How It Works
