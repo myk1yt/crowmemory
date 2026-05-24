@@ -24,6 +24,13 @@ venv/
 .vscode/
 .idea/
 
+# Zoo Code local config
+.roo/
+
+# Logs
+debug.log
+sse_server.log
+
 # OS
 .DS_Store
 Thumbs.db
