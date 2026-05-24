@@ -69,18 +69,41 @@ User query → LLM (via MCP)
            LLM generates response aligned with your preferences
 ```
 
-### The 4 Registers
+### The 8 Registers (Hybrid: Code + Life)
+
+**Code Domain**
 
 | Register | Dimensions | λ (EMA decay) | Capacity | Domain |
 |----------|-----------|----------------|----------|--------|
 | `style` | 4096×4096 | 0.9999 (~7K to halve) | ~2,000 patterns | Variable naming, comment style, folder aesthetics |
 | `bug` | 2048×2048 | 0.9995 (~1.4K to halve) | ~800 patterns | Abstract bug families, not exact fixes |
 | `arch` | 2048×2048 | 0.9995 | ~800 patterns | Early-return vs deep-nesting, error-handling philosophy |
-| `context` | 2048×4096 | 0.9500 (~14 to halve) | ~400 patterns | Recent conversation topics, active file context |
+| `context` | 2048×4096 | 0.9500 (~14 to halve) | ~400 patterns | Recent project context, active file context |
+
+**Life Domain** (NEW)
+
+| Register | Dimensions | λ (EMA decay) | Capacity | Domain |
+|----------|-----------|----------------|----------|--------|
+| `life_pref` | 4096×4096 | 0.9999 | ~2,000 | Personal taste, preferred environments, habits |
+| `life_avoid` | 2048×2048 | 0.9995 | ~800 | Situations to avoid, dislikes, past mistakes |
+| `life_phil` | 2048×2048 | 0.9995 | ~800 | Life philosophy, decision principles, values |
+| `life_context` | 2048×4096 | 0.9500 | ~400 | Current plans, recent events, ongoing concerns |
+
+> **Backward compatible**: `style`, `bug`, `arch`, `context` still work as before.
+
+### How Crow Remembers (Without Being Asked)
+
+The core challenge: LLMs don't spontaneously call tools. Crow solves this with three layers:
+
+| Layer | Mechanism | When |
+|-------|-----------|------|
+| **MCP Prompt** | `crow_memory_bias` is auto-loaded by the LLM host at session start. No tool call needed. | Every session |
+| **Auto-Inject** | [`crow_auto_inject.py`](crow_auto_inject.py) pre-generates a `[User Bias]` block for manual injection. | Pre-task hook |
+| **Evolved Rules** | Statistically significant patterns promoted to `system_prompt.md` via HITL approval. | Permanent |
 
 ---
 
-## 10 MCP Tools
+## 11 MCP Tools + 2 Prompts
 
 | Tool | Description |
 |------|-------------|
@@ -94,6 +117,14 @@ User query → LLM (via MCP)
 | `crow_manage_prompt` | Read / append to `system_prompt.md` |
 | `crow_manage_backup` | Create / rotate / list / recover backups |
 | `crow_project_info` | Multi-project memory isolation |
+| `crow_auto_inject` | *(Script)* Generate `[User Bias]` block for manual prompt injection |
+
+### MCP Prompts (Auto-Loaded by Host)
+
+| Prompt | Description |
+|--------|-------------|
+| `crow_memory_bias` | Full context: evolved rules + recent memory hints. Loaded automatically at session start. |
+| `crow_evolved_rules` | Permanent rules from `system_prompt.md`. |
 
 ---
 
