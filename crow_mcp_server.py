@@ -392,10 +392,10 @@ def _project_info(crow: CrowMemory, args: dict) -> list:
     return _error(f"Unknown project action: {action}")
 
 def _ok(data) -> list:
-    return [{"type": "text", "text": json.dumps(data, ensure_ascii=False)}]
+    return [{"type": "text", "text": json.dumps(data, ensure_ascii=True)}]
 
 def _error(message: str) -> list:
-    return [{"type": "text", "text": json.dumps({"error": message})}]
+    return [{"type": "text", "text": json.dumps({"error": message}, ensure_ascii=True)}]
 
 
 # ---------------------------------------------------------------------------
