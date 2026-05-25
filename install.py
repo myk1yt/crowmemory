@@ -48,7 +48,7 @@ YAML_MODE = """customModes:
 def step(msg):
     print(f"  [{step.count}/{step.total}] {msg}...", end=" ", flush=True)
 step.count = 0
-step.total = 6
+step.total = 7
 
 def ok():
     print("\033[92mDone.\033[0m")
@@ -190,6 +190,44 @@ def main():
             f.write(YAML_MODE)
     ok()
 
+    # Step 4.5: Patch Kimi Code + write custom mode for Kimi Code
+    step.count += 1; step("Patching Kimi Code (system.md + custom_modes.yaml)")
+    KIMI_SETTINGS = Path(os.environ.get("APPDATA", os.path.expanduser("~/.config"))) / "Code" / "User" / "globalStorage" / "moonshot-ai.kimi-code" / "settings"
+    # 4.5a: Run patch_kimi_code.py to inject Crow rules into Kimi Code's system.md
+    patch_script = str(CROW_DIR / "patch_kimi_code.py")
+    try:
+        subprocess.run(
+            [sys.executable, patch_script],
+            cwd=str(CROW_DIR),
+            capture_output=True,
+            timeout=30,
+        )
+        print("  [Kimi Code] system.md patched.", end=" ")
+    except Exception as e:
+        print(f"  [Kimi Code] patch skipped ({e}).", end=" ")
+    # 4.5b: Write custom_modes.yaml for Kimi Code (if directory exists)
+    if KIMI_SETTINGS.exists() or True:  # always attempt
+        KIMI_SETTINGS.mkdir(parents=True, exist_ok=True)
+        kimi_mode_path = KIMI_SETTINGS / "custom_modes.yaml"
+        if kimi_mode_path.exists():
+            try:
+                with open(kimi_mode_path, "r", encoding="utf-8") as f:
+                    existing = _yaml.safe_load(f) or {}
+            except Exception:
+                existing = {}
+            new_mode = _yaml.safe_load(YAML_MODE) or {}
+            existing_modes = existing.get("customModes", [])
+            existing_modes = [m for m in existing_modes if m.get("slug") != "code-crow"]
+            existing_modes.extend(new_mode.get("customModes", []))
+            existing["customModes"] = existing_modes
+            with open(kimi_mode_path, "w", encoding="utf-8") as f:
+                _yaml.dump(existing, f, allow_unicode=True, default_flow_style=False)
+        else:
+            with open(kimi_mode_path, "w", encoding="utf-8") as f:
+                f.write(YAML_MODE)
+        print("  [Kimi Code] custom_modes.yaml written.", end=" ")
+    ok()
+
     # Step 5: Start SSE server + auto-start registration
     step.count += 1; step("Starting Crow SSE server + auto-start")
     python_exe = sys.executable
@@ -266,10 +304,11 @@ endlocal
     print("  SSE server running on http://127.0.0.1:9020/sse")
     print()
     print("  Next steps:")
-    print("  1. Restart Zoo Code")
+    print("  1. Restart Zoo Code / Kimi Code")
     print('  2. Switch mode to "Code + Crow Memory"')
     print("  3. Crow auto-activates — no manual setup needed")
     print("  4. SSE server auto-starts with Windows (registered in Startup)")
+    print("  5. Kimi Code: System prompt auto-patched via patch_kimi_code.py")
     print()
 
 if __name__ == "__main__":

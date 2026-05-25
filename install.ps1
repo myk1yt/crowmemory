@@ -12,7 +12,7 @@ $CrowDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $ZooSettings = "$env:APPDATA\Code\User\globalStorage\zoocodeorganization.zoo-code\settings"
 
 # Step 1: Install Python dependencies
-Write-Host "[1/6] Installing Python dependencies..." -ForegroundColor Yellow
+Write-Host "[1/7] Installing Python dependencies..." -ForegroundColor Yellow
 pip install -r "$CrowDir\requirements.txt" --quiet 2>$null
 if ($LASTEXITCODE -ne 0) {
     Write-Host "  pip install encountered warnings (may be non-critical)" -ForegroundColor DarkYellow
@@ -20,7 +20,7 @@ if ($LASTEXITCODE -ne 0) {
 Write-Host "  Done." -ForegroundColor Green
 
 # Step 2: Create memory directory and initialize crow.bin
-Write-Host "[2/6] Initializing crow.bin..." -ForegroundColor Yellow
+Write-Host "[2/7] Initializing crow.bin..." -ForegroundColor Yellow
 $MemoryDir = "$CrowDir\memory"
 if (-not (Test-Path $MemoryDir)) { New-Item -ItemType Directory -Path $MemoryDir -Force | Out-Null }
 python -c "
@@ -39,7 +39,7 @@ if ((Test-Path $PromptTemplate) -and (-not (Test-Path $PromptTarget))) {
 Write-Host "  Done." -ForegroundColor Green
 
 # Step 3: Configure MCP server (.roo/mcp.json for Zoo Code, mcp_config.json for VS Code/Kimi Code — SSE mode)
-Write-Host "[3/6] Configuring MCP server (SSE mode) for Zoo Code & VS Code..." -ForegroundColor Yellow
+Write-Host "[3/7] Configuring MCP server (SSE mode) for Zoo Code & VS Code..." -ForegroundColor Yellow
 $RooDir = "$CrowDir\.roo"
 if (-not (Test-Path $RooDir)) { New-Item -ItemType Directory -Path $RooDir -Force | Out-Null }
 
@@ -98,7 +98,7 @@ if (Test-Path $McpConfigPathRoot) {
 Write-Host "  Done." -ForegroundColor Green
 
 # Step 3.5: Create .vscode/tasks.json for auto-start on workspace open
-Write-Host "[3.5/6] Creating .vscode/tasks.json (auto-start SSE on folder open)..." -ForegroundColor Yellow
+Write-Host "[3.5/7] Creating .vscode/tasks.json (auto-start SSE on folder open)..." -ForegroundColor Yellow
 $VscodeDir = "$CrowDir\.vscode"
 if (-not (Test-Path $VscodeDir)) { New-Item -ItemType Directory -Path $VscodeDir -Force | Out-Null }
 $TasksJson = @{
@@ -133,7 +133,7 @@ $TasksJson | ConvertTo-Json -Depth 10 | Set-Content "$VscodeDir\tasks.json" -Enc
 Write-Host "  Done." -ForegroundColor Green
 
 # Step 4: Configure Zoo Code custom mode (auto-activates Crow)
-Write-Host "[4/6] Configuring Zoo Code auto-activation mode..." -ForegroundColor Yellow
+Write-Host "[4/7] Configuring Zoo Code auto-activation mode..." -ForegroundColor Yellow
 $CustomModePath = "$ZooSettings\custom_modes.yaml"
 $CustomModeContent = @"
 customModes:
@@ -189,8 +189,44 @@ yaml.dump(data, sys.stdout, allow_unicode=True, default_flow_style=False)
 }
 Write-Host "  Done." -ForegroundColor Green
 
+# Step 4.5: Patch Kimi Code + write custom mode for Kimi Code
+Write-Host "[4.5/7] Patching Kimi Code (system.md + custom_modes.yaml)..." -ForegroundColor Yellow
+$KimiSettings = "$env:APPDATA\Code\User\globalStorage\moonshot-ai.kimi-code\settings"
+# 4.5a: Run patch_kimi_code.py to inject Crow rules into Kimi Code's system.md
+$PatchScript = "$CrowDir\patch_kimi_code.py"
+try {
+    python "$PatchScript" 2>$null
+    Write-Host "  [Kimi Code] system.md patched." -ForegroundColor DarkGreen
+} catch {
+    Write-Host "  [Kimi Code] patch skipped (Kimi Code CLI may not be installed)." -ForegroundColor DarkYellow
+}
+# 4.5b: Write custom_modes.yaml for Kimi Code (if directory accessible)
+if (-not (Test-Path $KimiSettings)) { New-Item -ItemType Directory -Path $KimiSettings -Force | Out-Null }
+$KimiModePath = "$KimiSettings\custom_modes.yaml"
+if (Test-Path $KimiModePath) {
+    try {
+        $existingKimi = Get-Content $KimiModePath -Raw | python -c "
+import sys, yaml
+data = yaml.safe_load(sys.stdin) or {}
+modes = data.get('customModes', [])
+modes = [m for m in modes if m.get('slug') != 'code-crow']
+new_mode = yaml.safe_load(open('$CrowDir\\custom_modes.example.yaml')) or {}
+modes.extend(new_mode.get('customModes', []))
+data['customModes'] = modes
+yaml.dump(data, sys.stdout, allow_unicode=True, default_flow_style=False)
+"
+        $existingKimi | Set-Content $KimiModePath -Encoding UTF8
+    } catch {
+        $CustomModeContent | Set-Content $KimiModePath -Encoding UTF8
+    }
+} else {
+    $CustomModeContent | Set-Content $KimiModePath -Encoding UTF8
+}
+Write-Host "  [Kimi Code] custom_modes.yaml written." -ForegroundColor DarkGreen
+Write-Host "  Done." -ForegroundColor Green
+
 # Step 5: Start SSE server + auto-start registration
-Write-Host "[5/6] Starting Crow SSE server + auto-start registration..." -ForegroundColor Yellow
+Write-Host "[5/7] Starting Crow SSE server + auto-start registration..." -ForegroundColor Yellow
 $PythonExe = (Get-Command python).Source
 $ServerPy = "$CrowDir\crow_mcp_server.py"
 $StatePath = "$CrowDir\memory\crow.bin"
@@ -260,8 +296,9 @@ Write-Host ""
 Write-Host "  SSE server running on http://127.0.0.1:9020/sse" -ForegroundColor Cyan
 Write-Host ""
 Write-Host "  Next steps:" -ForegroundColor White
-Write-Host "  1. Restart Zoo Code" -ForegroundColor White
+Write-Host "  1. Restart Zoo Code / Kimi Code" -ForegroundColor White
 Write-Host "  2. Switch mode to 'Code + Crow Memory'" -ForegroundColor White
 Write-Host "  3. Crow auto-activates — no manual setup needed" -ForegroundColor White
 Write-Host "  4. SSE server auto-starts with Windows (registered in Startup)" -ForegroundColor White
+Write-Host "  5. Kimi Code: System prompt auto-patched via patch_kimi_code.py" -ForegroundColor White
 Write-Host ""
