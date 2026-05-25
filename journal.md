@@ -314,6 +314,44 @@ crowsmemory/
 
 ---
 
+## 2026-05-25 — SSE 자동 시작 인프라 구축 및 GitHub 편의성 강화
+
+### 작업 내용
+
+#### 근본 문제 진단
+- **SSE 서버가 VS Code 재시작 시 자동으로 켜지지 않는 문제**: `install.py`/`install.ps1`의 자동 시작 메커니즘이 Windows Startup 폴더에만 의존하고 있었음. Startup은 Windows 부팅 시에만 트리거되므로, VS Code를 껐다 켜는 일반적인 워크플로우에서는 SSE 서버가 시작되지 않았음.
+- **`mcp_config.json`이 stdio에서 SSE로 변경된 후 연결 두절**: config는 SSE인데 서버는 죽어있는 상태.
+
+#### 핵심 수정
+- **`.vscode/tasks.json` 생성**: `runOn: folderOpen` 태스크로 워크스페이스 열 때 [`start_crow_sse.bat`](start_crow_sse.bat) 자동 실행. Zoo Code, Kimi Code 모든 VS Code 기반 에디터에서 동작.
+- **`start_crow_sse.bat` 전면 개선**:
+  - 포트 9020 중복 실행 감지 (이미 실행 중이면 건너뜀)
+  - Stale lock 파일 자동 정리 (PID 생존 확인 후 삭제)
+  - 시작 후 3초 대기 → 포트 리스닝 검증
+- **`install.py` / `install.ps1` 업데이트**:
+  - Step 3.5 추가: `.vscode/tasks.json` 자동 생성
+  - Step 3 확장: `.roo/mcp.json` + `mcp_config.json` 둘 다 생성 (크로스 에디터 지원)
+  - Step 5: robust bat 생성 + Startup 폴더에 복사 (단일 소스)
+  - Step total: 5 → 6
+
+#### GitHub 편의성 강화
+- **`.gitignore` 수정**: `.vscode/tasks.json`과 `.roo/mcp.json`을 공유하도록 변경. 클론 후 별도 설정 없이 즉시 SSE 서버 자동 시작.
+- **`README.md` 전면 개편**: SSE-first 아키텍처로 문서 재작성, Multi-Client 다이어그램 추가, Troubleshooting에 SSE 관련 항목 추가.
+- **`CHANGELOG.md`**: [Unreleased] 항목 추가.
+- **`CROW_MEMORY_ARCHITECTURE.md`**: 토폴로지 다이어그램 SSE 반영, Component 표 업데이트.
+
+### 결과
+- `git clone` → `install.ps1` → VS Code 열기 → **즉시 Crow 사용 가능**
+- Kimi Code + Zoo Code 양쪽에서 하나의 `crow.bin` 공유 (SSE 서버가 직렬화)
+- Stale lock, 중복 실행, 포트 충돌 등 엣지 케이스 자동 처리
+
+### 결정 사항
+- SSE 모드를 유일한 기본값으로 확정. stdio는 단일 클라이언트 고급 사용자용 옵션으로만 유지.
+- `.vscode/tasks.json`을 Git에 포함시키기로 결정 (제로컨피그 철학).
+- Startup `.bat`은 `start_crow_sse.bat`의 복사본으로 통일 (코드 중복 제거).
+
+---
+
 ## 기록 템플릿
 
 ```markdown

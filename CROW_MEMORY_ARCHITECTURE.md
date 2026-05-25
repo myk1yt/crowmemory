@@ -51,7 +51,7 @@ The `crow.bin` file is forever fixed at ~80MB (configurable). It does not grow a
 
 ```
 +---------------------------------------------------------------------+
-|                        ZOO CODE IDE (Local)                         |
+|                   VS CODE-BASED IDE (Zoo Code / Kimi Code)           |
 |  +-----------------+  +------------------+  +---------------------+ |
 |  |  User Editor    |  |  Build/Test Hook |  |  HITL Gate (UI)     | |
 |  |  (TypeScript)   |  |  (Node.js)       |  |  (Approve/Reject)   | |
@@ -80,14 +80,16 @@ The `crow.bin` file is forever fixed at ~80MB (configurable). It does not grow a
 |                                         |
 |                           +-------------v-------------+
 |                           |  Local Python MCP Server  |
-|                           |  (FastAPI / stdio)        |
-|                           |  - Port: 6274 (default)   |
+|                           |  (SSE HTTP, port 9020)    |
+|                           |  - Auto-started by        |
+|                           |    .vscode/tasks.json     |
 |                           |  - Memory-mapped I/O      |
+|                           |  - Multi-client safe      |
 |                           +-------------+-------------+
 |                                         |
 |                           +-------------v-------------+
 |                           |   crow.bin (safetensors)  |
-|   |   8 Registers             |
+|                           |   8 Registers             |
 |                           +---------------------------+
 +---------------------------------------------------------------------+
 ```
@@ -96,9 +98,9 @@ The `crow.bin` file is forever fixed at ~80MB (configurable). It does not grow a
 
 | Component | Runtime | Responsibility |
 |-----------|---------|----------------|
-| **Zoo Code** | Local Electron/Node | Orchestrates the agent loop, captures build exit codes, renders HITL UI |
+| **VS Code IDE** | Local Electron/Node | Orchestrates the agent loop, captures build exit codes, renders HITL UI. Auto-starts SSE server on workspace open via `.vscode/tasks.json`. |
 | **LLM Agent** | Cloud/On-prem API | Inference engine, generates code, proposes prompt mutations, decides tool calls |
-| **MCP Server** | Local Python | Serves `crow.bin` I/O, embedding encoding, weight math, FAISS nearest-neighbor lookup |
+| **MCP Server (SSE)** | Local Python | Serves `crow.bin` I/O over HTTP (port 9020). Embedding encoding, weight math, FAISS nearest-neighbor lookup. Serializes all multi-client access. |
 | **`crow.bin`** | Local SSD | Fixed-size `safetensors` file containing 8 weight matrices + projection layer |
 | **Build Hook** | Local Node | Captures `npm run build`, test results, linter output; emits JSON to MCP server |
 

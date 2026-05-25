@@ -31,8 +31,8 @@ Forgetting is not a bug. Crow's fixed-size weight matrices and λ (decay rate) i
 ### 1. Requirements
 
 - **Python 3.10+**
-- **Zoo Code** (VS Code extension)
-- An **MCP-compatible AI coding agent** (Zoo Code, Claude Code, Cline, GitHub Copilot, etc.)
+- **Zoo Code** or **Kimi Code** (or any MCP-compatible AI coding agent)
+- Git (to clone the repository)
 
 ### 2. Install (One Command)
 
@@ -52,16 +52,21 @@ python install.py
 
 The installer automatically:
 - Installs Python dependencies
-- Initializes `crow.bin`
-- Creates `.roo/mcp.json` with Crow MCP server config (project-level)
+- Initializes `crow.bin` (140MB fixed-size weight matrix)
+- Creates `.roo/mcp.json` **and** `mcp_config.json` with SSE MCP server config — works for both Zoo Code and Kimi Code
+- Creates `.vscode/tasks.json` — **auto-starts the SSE server when you open the workspace** (no manual commands needed)
 - Creates a "Code + Crow Memory" custom mode with `allowedMcpServers` + AUTO-INGEST
+- Registers a Startup `.bat` so the SSE server also starts with Windows
 - Pre-authorizes all 10 Crow tools (`alwaysAllow`)
+
+> ⚡ **That's it.** No manual server commands. The SSE server starts automatically when you open VS Code.
 
 ### 3. Restart & Switch Mode
 
-1. **Restart Zoo Code**
-2. Switch mode to **"Code + Crow Memory"**
-3. Done. Crow now auto-activates on every response.
+1. **Restart Zoo Code / Kimi Code**
+2. Open the `crowsmemory` workspace folder
+3. Switch mode to **"Code + Crow Memory"**
+4. Done. The SSE server auto-starts. Crow activates on every response.
 
 ### 4. Verify
 
@@ -72,30 +77,32 @@ If Crow is alive, it will report register norms, update count, and value bank si
 
 ### How Auto-Activation Works
 
-The installer created a Zoo Code custom mode that includes this instruction in the system prompt:
+Three layers ensure Crow is always active:
 
-```
-UNIVERSAL RECALL (MANDATORY): Before EVERY response, call
-crow_recall(domain="all"). Use the hints to personalize your response.
-AUTO-INGEST (MANDATORY): After EVERY response, call crow_ingest.
-```
+| Layer | Mechanism | When |
+|-------|-----------|------|
+| **SSE Auto-Start** | [`.vscode/tasks.json`](.vscode/tasks.json) with `runOn: folderOpen` starts the SSE server when you open the workspace | VS Code launch |
+| **UNIVERSAL RECALL** | Custom mode system prompt instructs the AI to call `crow_recall(domain="all")` before every response | Every exchange |
+| **AUTO-INGEST** | Custom mode system prompt instructs the AI to call `crow_ingest` after detecting preferences, corrections, or context | Every exchange |
 
-The installer also copies [`system_prompt.example.md`](system_prompt.example.md) → `memory/system_prompt.md` with 3 pre-evolved rules. This means the LLM is **always aware** of Crow and calls it automatically for every response — coding, writing, or conversation — no manual tool invocation needed.
+The installer copies [`system_prompt.example.md`](system_prompt.example.md) → `memory/system_prompt.md` with 3 pre-evolved rules. This means the LLM is **always aware** of Crow — no manual tool invocation needed.
 
 ---
 
 ## How It Works
 
 ```
-User query → LLM (via MCP)
+User query → LLM (via MCP over SSE)
                 ↓ crow_recall("query", "style")
-           Crow MCP Server (stdio)
+           Crow MCP Server (SSE, port 9020)
                 ↓ encode() → Sᵀ @ q → nearest neighbor
            crow.bin (8-register weight matrix)
                 ↓
            [User Bias] hints returned → injected into context
                 ↓
            LLM generates response aligned with your preferences
+
+Multi-client safe: One SSE server → many AI clients share one crow.bin
 ```
 
 ### The 8 Registers (Hybrid: Code + Life)
@@ -188,58 +195,77 @@ The included `.gitignore` automatically excludes all personal memory files.
 
 ## Multi-Client Setup (Zoo Code + Kimi Code + others)
 
-### ⚠️ Critical: One crow.bin = One MCP Server
+### ✅ Default: Shared SSE Server (Auto-Start)
 
-If you use Crow with **multiple AI clients simultaneously** (e.g., Zoo Code + Kimi Code), never let each client spawn its own `crow_mcp_server.py` process. Two processes writing to the same `crow.bin` will cause **silent data loss** (last-write-wins race condition).
+The installer configures everything for SSE mode by default. This is the only safe way to share `crow.bin` across multiple AI clients:
 
-### ✅ Safe: Shared SSE Server
-
-Run **one** SSE server and point all clients to it:
-
-```bash
-# Start the shared SSE server (once)
-python crow_mcp_server.py --transport sse --port 9020
+```
+┌──────────────┐     ┌──────────────┐
+│  Zoo Code    │     │  Kimi Code   │
+│  (SSE MCP)   │     │  (SSE MCP)   │
+└──────┬───────┘     └──────┬───────┘
+       │                    │
+       └────────┬───────────┘
+                │ http://127.0.0.1:9020/sse
+       ┌────────┴───────────┐
+       │  Crow MCP Server   │
+       │  (SSE, port 9020)  │
+       │  Auto-started by   │
+       │  .vscode/tasks.json│
+       └────────┬───────────┘
+                │
+       ┌────────┴───────────┐
+       │     crow.bin       │
+       │  (single source)   │
+       └────────────────────┘
 ```
 
-Then configure all clients to use the same URL:
+**How it works:**
+1. You open the `crowsmemory` workspace in **any** VS Code-based editor
+2. [`.vscode/tasks.json`](.vscode/tasks.json) auto-runs [`start_crow_sse.bat`](start_crow_sse.bat) — starts the SSE server if not already running
+3. All AI clients (Zoo Code, Kimi Code, etc.) connect to `http://127.0.0.1:9020/sse`
+4. The single SSE server serializes all reads/writes — **no race conditions, no data corruption**
 
-```json
-{
-  "type": "sse",
-  "url": "http://127.0.0.1:9020/sse",
-  "disabled": false,
-  "alwaysAllow": ["crow_recall", "crow_ingest", ...]
-}
-```
+### ⚠️ Warning: stdio Mode
 
-The server serializes all requests internally — no data corruption, no race conditions.
+If you manually switch to `"type": "stdio"` (command mode), each VS Code instance spawns its own `crow_mcp_server.py` process. **Two processes writing to the same `crow.bin` will cause silent data loss.** Only use stdio mode if you run exactly one AI client.
 
-### Single-Client Setup
+### Cross-Editor Compatibility
 
-If you only use one client (e.g., only Zoo Code), you can use the SSE mode (default, as generated by the installer). For advanced users who prefer Zoo Code to spawn the server automatically, switch `.roo/mcp.json` to `command` mode (see [`mcp_config.json`](mcp_config.json) for the stdio config template).
+| Client | Config File | Auto-Generated by Installer |
+|--------|-------------|----------------------------|
+| Zoo Code | `.roo/mcp.json` | ✅ Yes |
+| Kimi Code / VS Code | `mcp_config.json` | ✅ Yes |
+| Cline / Roo Code | `.roo/mcp.json` | ✅ Yes |
 
 ---
 
 ## Troubleshooting
 
-### Crow tools don't appear in Zoo Code
-- **Restart Zoo Code** — MCP settings are read at startup only.
+### Crow tools don't appear
+- **Restart your editor** — MCP settings are read at startup only.
 - First launch downloads `nomic-embed-text-v1.5` model (~30-60s). Subsequent launches are fast (~5-10s).
 - Verify Python is in PATH: `python --version`
-- Check that `.roo/mcp.json` exists in your project root with `crow_memory` configured.
-- Verify `custom_modes.yaml` has `allowedMcpServers: ["crow_memory"]` for your mode.
-- Check that `alwaysAllow` is configured — open Zoo Code MCP settings, click `crow_memory`, ensure tools are toggled ON.
+- Check the SSE server is running: visit `http://127.0.0.1:9020/` in a browser — should show "Crow Memory MCP SSE Server"
+- Verify `.roo/mcp.json` (Zoo Code) or `mcp_config.json` (VS Code/Kimi Code) has `crow_memory` configured for SSE.
 
-### Windows: MCP server silent / no response
-- `crow_mcp_server.py` v1.1+ includes `WindowsSelectorEventLoopPolicy` patch.
-- As an alternative, use SSE transport: `python crow_mcp_server.py --transport sse --port 9020` then set `"type": "sse", "url": "http://127.0.0.1:9020/sse"` in `.roo/mcp.json`.
+### SSE server not auto-starting
+- Verify [`.vscode/tasks.json`](.vscode/tasks.json) exists in the workspace root
+- Run manually once: `python crow_mcp_server.py --transport sse --port 9020`
+- Check `sse_server.log` for error messages
+- Ensure no other process is using port 9020: `netstat -ano | findstr :9020`
+
+### Port 9020 already in use
+- [`start_crow_sse.bat`](start_crow_sse.bat) detects this and skips duplicate starts automatically
+- To force restart: kill the process on port 9020, delete `memory\crow.bin.lock`, then re-open the workspace
 
 ### Recall returns only "Few memories stored yet"
 - Normal! Crow needs 20-30+ ingestions before meaningful hints emerge. Keep coding.
 - Enable AUTO-INGEST by switching to "Code + Crow Memory" mode — the AI will learn proactively.
 
-### PermissionError on Windows
-- `crow_core.py` v1.0+ includes automatic retry with exponential backoff.
+### PermissionError / lock file issues
+- Delete stale lock: `del memory\crow.bin.lock` (Windows) or `rm memory/crow.bin.lock` (macOS/Linux)
+- [`start_crow_sse.bat`](start_crow_sse.bat) automatically cleans stale locks before starting
 
 ---
 

@@ -1,0 +1,33 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Crow SSE Server — Auto Start",
+      "detail": "Starts the Crow Memory SSE server on port 9020 when this workspace is opened. Both Zoo Code and Kimi Code connect via SSE to share crow.bin.",
+      "type": "shell",
+      "command": "cmd /c \"${workspaceFolder}\\start_crow_sse.bat\"",
+      "isBackground": true,
+      "problemMatcher": [],
+      "runOptions": {
+        "runOn": "folderOpen"
+      },
+      "presentation": {
+        "reveal": "silent",
+        "panel": "dedicated",
+        "showReuseMessage": false,
+        "clear": true
+      }
+    },
+    {
+      "label": "Crow SSE Server — Stop",
+      "detail": "Stops the Crow Memory SSE server by killing the process on port 9020.",
+      "type": "shell",
+      "command": "for /f \"tokens=5\" %a in ('netstat -ano ^| findstr :9020.*LISTENING') do @taskkill /PID %a /F 2>nul",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      }
+    }
+  ]
+}

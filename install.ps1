@@ -12,7 +12,7 @@ $CrowDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $ZooSettings = "$env:APPDATA\Code\User\globalStorage\zoocodeorganization.zoo-code\settings"
 
 # Step 1: Install Python dependencies
-Write-Host "[1/5] Installing Python dependencies..." -ForegroundColor Yellow
+Write-Host "[1/6] Installing Python dependencies..." -ForegroundColor Yellow
 pip install -r "$CrowDir\requirements.txt" --quiet 2>$null
 if ($LASTEXITCODE -ne 0) {
     Write-Host "  pip install encountered warnings (may be non-critical)" -ForegroundColor DarkYellow
@@ -20,7 +20,7 @@ if ($LASTEXITCODE -ne 0) {
 Write-Host "  Done." -ForegroundColor Green
 
 # Step 2: Create memory directory and initialize crow.bin
-Write-Host "[2/5] Initializing crow.bin..." -ForegroundColor Yellow
+Write-Host "[2/6] Initializing crow.bin..." -ForegroundColor Yellow
 $MemoryDir = "$CrowDir\memory"
 if (-not (Test-Path $MemoryDir)) { New-Item -ItemType Directory -Path $MemoryDir -Force | Out-Null }
 python -c "
@@ -38,8 +38,8 @@ if ((Test-Path $PromptTemplate) -and (-not (Test-Path $PromptTarget))) {
 }
 Write-Host "  Done." -ForegroundColor Green
 
-# Step 3: Configure MCP server for Zoo Code (project-level .roo/mcp.json — SSE mode)
-Write-Host "[3/5] Configuring Zoo Code MCP server (.roo/mcp.json, SSE mode)..." -ForegroundColor Yellow
+# Step 3: Configure MCP server (.roo/mcp.json for Zoo Code, mcp_config.json for VS Code/Kimi Code — SSE mode)
+Write-Host "[3/6] Configuring MCP server (SSE mode) for Zoo Code & VS Code..." -ForegroundColor Yellow
 $RooDir = "$CrowDir\.roo"
 if (-not (Test-Path $RooDir)) { New-Item -ItemType Directory -Path $RooDir -Force | Out-Null }
 
@@ -65,24 +65,75 @@ $McpConfig = @{
     }
 }
 
-$McpConfigPath = "$RooDir\mcp.json"
-if (Test-Path $McpConfigPath) {
+# Write .roo/mcp.json (Zoo Code)
+$McpConfigPathRoo = "$RooDir\mcp.json"
+if (Test-Path $McpConfigPathRoo) {
     try {
-        $Existing = Get-Content $McpConfigPath -Raw | ConvertFrom-Json
+        $Existing = Get-Content $McpConfigPathRoo -Raw | ConvertFrom-Json
         if ($Existing.mcpServers) {
             $Existing.mcpServers | Add-Member -Name "crow_memory" -Value $McpConfig.mcpServers.crow_memory -MemberType NoteProperty -Force
         }
-        $Existing | ConvertTo-Json -Depth 10 | Set-Content $McpConfigPath -Encoding UTF8
+        $Existing | ConvertTo-Json -Depth 10 | Set-Content $McpConfigPathRoo -Encoding UTF8
     } catch {
-        $McpConfig | ConvertTo-Json -Depth 10 | Set-Content $McpConfigPath -Encoding UTF8
+        $McpConfig | ConvertTo-Json -Depth 10 | Set-Content $McpConfigPathRoo -Encoding UTF8
     }
 } else {
-    $McpConfig | ConvertTo-Json -Depth 10 | Set-Content $McpConfigPath -Encoding UTF8
+    $McpConfig | ConvertTo-Json -Depth 10 | Set-Content $McpConfigPathRoo -Encoding UTF8
+}
+# Write workspace-root mcp_config.json (VS Code / Kimi Code)
+$McpConfigPathRoot = "$CrowDir\mcp_config.json"
+if (Test-Path $McpConfigPathRoot) {
+    try {
+        $ExistingRoot = Get-Content $McpConfigPathRoot -Raw | ConvertFrom-Json
+        if ($ExistingRoot.mcpServers) {
+            $ExistingRoot.mcpServers | Add-Member -Name "crow_memory" -Value $McpConfig.mcpServers.crow_memory -MemberType NoteProperty -Force
+        }
+        $ExistingRoot | ConvertTo-Json -Depth 10 | Set-Content $McpConfigPathRoot -Encoding UTF8
+    } catch {
+        $McpConfig | ConvertTo-Json -Depth 10 | Set-Content $McpConfigPathRoot -Encoding UTF8
+    }
+} else {
+    $McpConfig | ConvertTo-Json -Depth 10 | Set-Content $McpConfigPathRoot -Encoding UTF8
 }
 Write-Host "  Done." -ForegroundColor Green
 
+# Step 3.5: Create .vscode/tasks.json for auto-start on workspace open
+Write-Host "[3.5/6] Creating .vscode/tasks.json (auto-start SSE on folder open)..." -ForegroundColor Yellow
+$VscodeDir = "$CrowDir\.vscode"
+if (-not (Test-Path $VscodeDir)) { New-Item -ItemType Directory -Path $VscodeDir -Force | Out-Null }
+$TasksJson = @{
+    version = "2.0.0"
+    tasks = @(
+        @{
+            label = "Crow SSE Server — Auto Start"
+            detail = "Starts the Crow Memory SSE server on port 9020 when this workspace is opened. Both Zoo Code and Kimi Code connect via SSE to share crow.bin."
+            type = "shell"
+            command = "cmd /c `"$CrowDir\start_crow_sse.bat`""
+            isBackground = $true
+            problemMatcher = @()
+            runOptions = @{ runOn = "folderOpen" }
+            presentation = @{
+                reveal = "silent"
+                panel = "dedicated"
+                showReuseMessage = $false
+                clear = $true
+            }
+        },
+        @{
+            label = "Crow SSE Server — Stop"
+            detail = "Stops the Crow Memory SSE server."
+            type = "shell"
+            command = 'for /f "tokens=5" %a in (''netstat -ano ^| findstr :9020.*LISTENING'') do @taskkill /PID %a /F 2>nul'
+            problemMatcher = @()
+            presentation = @{ reveal = "always"; panel = "dedicated" }
+        }
+    )
+}
+$TasksJson | ConvertTo-Json -Depth 10 | Set-Content "$VscodeDir\tasks.json" -Encoding UTF8
+Write-Host "  Done." -ForegroundColor Green
+
 # Step 4: Configure Zoo Code custom mode (auto-activates Crow)
-Write-Host "[4/5] Configuring Zoo Code auto-activation mode..." -ForegroundColor Yellow
+Write-Host "[4/6] Configuring Zoo Code auto-activation mode..." -ForegroundColor Yellow
 $CustomModePath = "$ZooSettings\custom_modes.yaml"
 $CustomModeContent = @"
 customModes:
@@ -139,23 +190,64 @@ yaml.dump(data, sys.stdout, allow_unicode=True, default_flow_style=False)
 Write-Host "  Done." -ForegroundColor Green
 
 # Step 5: Start SSE server + auto-start registration
-Write-Host "[5/5] Starting Crow SSE server + auto-start registration..." -ForegroundColor Yellow
+Write-Host "[5/6] Starting Crow SSE server + auto-start registration..." -ForegroundColor Yellow
 $PythonExe = (Get-Command python).Source
 $ServerPy = "$CrowDir\crow_mcp_server.py"
 $StatePath = "$CrowDir\memory\crow.bin"
-# Start SSE server now
-Start-Process -FilePath $PythonExe -ArgumentList $ServerPy, "--state", $StatePath, "--transport", "sse", "--port", "9020" -WorkingDirectory $CrowDir -NoNewWindow
-# Register auto-start (generate bat with absolute paths)
-$StartupDir = [Environment]::GetFolderPath("Startup")
-$BatDst = "$StartupDir\Crow_Memory_SSE.bat"
 $LogPath = "$CrowDir\sse_server.log"
+$BatPath = "$CrowDir\start_crow_sse.bat"
+
+# Generate robust start_crow_sse.bat (absolute paths, port check, stale lock cleanup)
 $BatContent = @"
 @echo off
-REM Crow Memory SSE Server — Auto-start (generated by install.ps1)
+REM Crow Memory SSE Server — Robust auto-start (generated by install.ps1)
+REM Checks port, cleans stale locks, starts server in background.
+setlocal enabledelayedexpansion
 cd /d "$CrowDir"
-start /b "" "$PythonExe" "$ServerPy" --state "$StatePath" --transport sse --port 9020 > "$LogPath" 2>&1
+set "PORT=9020"
+set "LOG_FILE=$LogPath"
+set "LOCK_FILE=$CrowDir\memory\crow.bin.lock"
+set "STATE_PATH=$StatePath"
+
+netstat -ano 2>nul | findstr ":%PORT% " | findstr "LISTENING" >nul 2>&1
+if !ERRORLEVEL! equ 0 (
+    echo [%date% %time%] Crow SSE server already running on port %PORT%. Skipping. >> "%LOG_FILE%"
+    exit /b 0
+)
+
+if exist "%LOCK_FILE%" (
+    set /p STALE_PID=<"%LOCK_FILE%"
+    tasklist /fi "PID eq !STALE_PID!" 2>nul | findstr "!STALE_PID!" >nul 2>&1
+    if !ERRORLEVEL! neq 0 (
+        echo [%date% %time%] Removing stale lock (PID !STALE_PID! dead). >> "%LOG_FILE%"
+        del "%LOCK_FILE%" 2>nul
+    ) else (
+        echo [%date% %time%] Lock held by live PID !STALE_PID!. Aborting. >> "%LOG_FILE%"
+        exit /b 1
+    )
+)
+
+echo [%date% %time%] Starting Crow Memory SSE server on port %PORT%... >> "%LOG_FILE%"
+start /b "" "$PythonExe" "$ServerPy" --state "$StatePath" --transport sse --port %PORT% >> "%LOG_FILE%" 2>&1
+
+timeout /t 3 /nobreak >nul
+netstat -ano 2>nul | findstr ":%PORT% " | findstr "LISTENING" >nul 2>&1
+if !ERRORLEVEL! equ 0 (
+    echo [%date% %time%] Crow SSE server started successfully. >> "%LOG_FILE%"
+) else (
+    echo [%date% %time%] WARNING: Server may not have started. Check sse_server.log. >> "%LOG_FILE%"
+)
+endlocal
 "@
-$BatContent | Set-Content $BatDst -Encoding ASCII
+$BatContent | Set-Content $BatPath -Encoding ASCII
+
+# Start SSE server now using the robust bat
+Start-Process -FilePath "cmd.exe" -ArgumentList "/c `"$BatPath`"" -WorkingDirectory $CrowDir -NoNewWindow
+
+# Register auto-start via Windows Startup folder (copy the robust bat)
+$StartupDir = [Environment]::GetFolderPath("Startup")
+$BatDst = "$StartupDir\Crow_Memory_SSE.bat"
+Copy-Item $BatPath $BatDst -Force
 Write-Host "  [Auto-start] Registered in Startup folder: $BatDst" -ForegroundColor DarkGreen
 Write-Host "  Done." -ForegroundColor Green
 
