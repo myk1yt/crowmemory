@@ -314,6 +314,33 @@ crowsmemory/
 
 ---
 
+## 2026-05-25 — v1.3.0: Kimi Code AGENTS.md 공식 지원 + 크로스 에디터 통합
+
+### 작업 내용
+
+#### Kimi Code 아키텍처 전환
+- **`AGENTS.md` → 공식 Kimi Code CLI 메커니즘**: `patch_kimi_code.py`로 `system.md`를 해킹하던 방식에서, Kimi Code CLI가 `${KIMI_AGENTS_MD}`로 자동 주입하는 `AGENTS.md` 방식으로 전환. 업데이트 내구성 확보.
+- **`~/.kimi/mcp.json` 생성**: Kimi Code CLI 표준 MCP 설정 위치에 Crow SSE 엔드포인트 등록. 프로젝트 무관하게 항상 연결됨.
+- **`custom_modes.yaml` Kimi Code 경로 제거**: Kimi Code CLI는 `custom_modes.yaml`을 지원하지 않음이 확인됨. Zoo Code 전용.
+- **`patch_kimi_code.py` → optional fallback**: AGENTS.md가 1차 메커니즘, patch는 구버전 CLI용 fallback으로 유지.
+
+#### 설치 스크립트 업데이트
+- `install.py` / `install.ps1` Step 4.5: AGENTS.md + ~/.kimi/mcp.json 생성
+- Step total: 6 → 7
+
+#### 문서 최신화
+- README: 4-layer auto-activation 표 (Zoo Code / Kimi Code 구분)
+- CHANGELOG: v1.3.0 항목
+- CROW_MEMORY_ARCHITECTURE: AGENTS.md 레이어 추가
+
+### 결과
+- `git clone` → `install` → VS Code 열기 → **Zoo Code + Kimi Code 양쪽 즉시 Crow 사용 가능**
+- Kimi Code: AGENTS.md 자동 주입 + ~/.kimi/mcp.json SSE 연결
+- Zoo Code: custom_modes.yaml + .roo/mcp.json SSE 연결
+- 양쪽 모두 하나의 crow.bin 공유
+
+---
+
 ## 2026-05-25 — SSE 자동 시작 인프라 구축 및 GitHub 편의성 강화
 
 ### 작업 내용

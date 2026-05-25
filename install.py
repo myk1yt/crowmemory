@@ -190,10 +190,59 @@ def main():
             f.write(YAML_MODE)
     ok()
 
-    # Step 4.5: Patch Kimi Code + write custom mode for Kimi Code
-    step.count += 1; step("Patching Kimi Code (system.md + custom_modes.yaml)")
-    KIMI_SETTINGS = Path(os.environ.get("APPDATA", os.path.expanduser("~/.config"))) / "Code" / "User" / "globalStorage" / "moonshot-ai.kimi-code" / "settings"
-    # 4.5a: Run patch_kimi_code.py to inject Crow rules into Kimi Code's system.md
+    # Step 4.5: Kimi Code setup (AGENTS.md + ~/.kimi/mcp.json)
+    step.count += 1; step("Setting up Kimi Code (AGENTS.md + ~/.kimi/mcp.json)")
+    # 4.5a: Write AGENTS.md — Kimi Code CLI auto-injects this via ${KIMI_AGENTS_MD}
+    agents_md_content = """# Crow Memory (Auto-Activation)
+
+You have access to **Crow Memory**, an external synaptic memory system connected via MCP.
+It stores the user's coding style, bug intuition, architectural preferences, and personal context as compressed weight matrices.
+
+**UNIVERSAL RECALL (MANDATORY): Before EVERY response — whether coding, writing, editing, or conversation — call `crow_recall(domain="all")` to retrieve the user's coding style, bug intuition, architectural preferences, personal taste, life philosophy, and current context.** Use the returned hints to personalize your response. Never skip this step.
+
+**AUTO-INGEST (MANDATORY): After EVERY response, evaluate what the user revealed — a preference, a philosophy, a frustration, a pattern, a correction, ongoing plans, or explicit decision. Call `crow_ingest` with the appropriate register, a concise key/value summary, and appropriate polarity.** Do NOT wait for the user to say "remember this." For code work, also call `crow_ingest_from_build`.
+
+**POLARITY GUIDE** (auto-determined, no user command needed):
+- User likes / prefers something → +1.5 (`life_pref` / `style`)
+- User reveals philosophy / values → +2.0 (`life_phil`)
+- User corrects you / rewrites your work → -1.0 (`bug` / `style`)
+- User shares ongoing context / plans → +1.5 (`life_context` / `context`)
+- User explicitly says "remember" / "never forget" → +2.0 / -2.0
+- User shows frustration / avoidance → -0.5 (`life_avoid` / `bug`)
+
+Crow is not a database — it stores inductive biases. Use it as your intuition, not your encyclopedia.
+"""
+    agents_path = CROW_DIR / "AGENTS.md"
+    with open(agents_path, "w", encoding="utf-8") as f:
+        f.write(agents_md_content)
+    print("  [Kimi Code] AGENTS.md written.", end=" ")
+    # 4.5b: Write ~/.kimi/mcp.json — Kimi Code CLI standard MCP config location
+    kimi_mcp_dir = Path.home() / ".kimi"
+    kimi_mcp_dir.mkdir(parents=True, exist_ok=True)
+    kimi_mcp_path = kimi_mcp_dir / "mcp.json"
+    kimi_mcp_config = {
+        "mcpServers": {
+            "crow_memory": {
+                "type": "sse",
+                "url": "http://127.0.0.1:9020/sse",
+                "disabled": False,
+            }
+        }
+    }
+    if kimi_mcp_path.exists():
+        with open(kimi_mcp_path, "r", encoding="utf-8") as f:
+            try:
+                existing_kimi = json.load(f)
+            except json.JSONDecodeError:
+                existing_kimi = {}
+        existing_kimi.setdefault("mcpServers", {})["crow_memory"] = kimi_mcp_config["mcpServers"]["crow_memory"]
+        with open(kimi_mcp_path, "w", encoding="utf-8") as f:
+            json.dump(existing_kimi, f, indent=2)
+    else:
+        with open(kimi_mcp_path, "w", encoding="utf-8") as f:
+            json.dump(kimi_mcp_config, f, indent=2)
+    print("  [Kimi Code] ~/.kimi/mcp.json written.", end=" ")
+    # 4.5c: Run patch_kimi_code.py as optional fallback (for Kimi Code CLI < v1.2)
     patch_script = str(CROW_DIR / "patch_kimi_code.py")
     try:
         subprocess.run(
@@ -202,30 +251,9 @@ def main():
             capture_output=True,
             timeout=30,
         )
-        print("  [Kimi Code] system.md patched.", end=" ")
-    except Exception as e:
-        print(f"  [Kimi Code] patch skipped ({e}).", end=" ")
-    # 4.5b: Write custom_modes.yaml for Kimi Code (if directory exists)
-    if KIMI_SETTINGS.exists() or True:  # always attempt
-        KIMI_SETTINGS.mkdir(parents=True, exist_ok=True)
-        kimi_mode_path = KIMI_SETTINGS / "custom_modes.yaml"
-        if kimi_mode_path.exists():
-            try:
-                with open(kimi_mode_path, "r", encoding="utf-8") as f:
-                    existing = _yaml.safe_load(f) or {}
-            except Exception:
-                existing = {}
-            new_mode = _yaml.safe_load(YAML_MODE) or {}
-            existing_modes = existing.get("customModes", [])
-            existing_modes = [m for m in existing_modes if m.get("slug") != "code-crow"]
-            existing_modes.extend(new_mode.get("customModes", []))
-            existing["customModes"] = existing_modes
-            with open(kimi_mode_path, "w", encoding="utf-8") as f:
-                _yaml.dump(existing, f, allow_unicode=True, default_flow_style=False)
-        else:
-            with open(kimi_mode_path, "w", encoding="utf-8") as f:
-                f.write(YAML_MODE)
-        print("  [Kimi Code] custom_modes.yaml written.", end=" ")
+        print("  [Kimi Code] system.md patched (fallback).", end=" ")
+    except Exception:
+        pass  # AGENTS.md is the primary mechanism; patch is optional
     ok()
 
     # Step 5: Start SSE server + auto-start registration

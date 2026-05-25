@@ -77,15 +77,16 @@ If Crow is alive, it will report register norms, update count, and value bank si
 
 ### How Auto-Activation Works
 
-Three layers ensure Crow is always active:
+Four layers ensure Crow is always active across all editors:
 
-| Layer | Mechanism | When |
-|-------|-----------|------|
-| **SSE Auto-Start** | [`.vscode/tasks.json`](.vscode/tasks.json) with `runOn: folderOpen` starts the SSE server when you open the workspace | VS Code launch |
-| **UNIVERSAL RECALL** | Custom mode system prompt instructs the AI to call `crow_recall(domain="all")` before every response | Every exchange |
-| **AUTO-INGEST** | Custom mode system prompt instructs the AI to call `crow_ingest` after detecting preferences, corrections, or context | Every exchange |
+| Layer | Mechanism | Zoo Code | Kimi Code |
+|-------|-----------|----------|-----------|
+| **SSE Auto-Start** | [`.vscode/tasks.json`](.vscode/tasks.json) with `runOn: folderOpen` | ✅ | ✅ |
+| **AGENTS.md** | Kimi Code CLI auto-injects via `${KIMI_AGENTS_MD}` | — | ✅ |
+| **UNIVERSAL RECALL** | Custom mode system prompt (`custom_modes.yaml` for Zoo Code, [`AGENTS.md`](AGENTS.md) for Kimi Code) | ✅ | ✅ |
+| **AUTO-INGEST** | Same as above — auto-detects preferences, corrections, context | ✅ | ✅ |
 
-The installer copies [`system_prompt.example.md`](system_prompt.example.md) → `memory/system_prompt.md` with 3 pre-evolved rules. This means the LLM is **always aware** of Crow — no manual tool invocation needed.
+The installer copies [`system_prompt.example.md`](system_prompt.example.md) → `memory/system_prompt.md` with 3 pre-evolved rules. Kimi Code users also get [`AGENTS.md`](AGENTS.md) at the project root — the CLI auto-injects these rules every session, no patching required, survives updates permanently.
 
 ---
 
@@ -281,5 +282,5 @@ MIT License — see [`LICENSE`](LICENSE) for details.
 
 ---
 
-*Crow Memory v1.2.1 — May 2026*
+*Crow Memory v1.3.0 — May 2026*
 *Co-designed by Stefano,Kim & AI*

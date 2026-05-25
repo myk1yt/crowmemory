@@ -189,40 +189,66 @@ yaml.dump(data, sys.stdout, allow_unicode=True, default_flow_style=False)
 }
 Write-Host "  Done." -ForegroundColor Green
 
-# Step 4.5: Patch Kimi Code + write custom mode for Kimi Code
-Write-Host "[4.5/7] Patching Kimi Code (system.md + custom_modes.yaml)..." -ForegroundColor Yellow
-$KimiSettings = "$env:APPDATA\Code\User\globalStorage\moonshot-ai.kimi-code\settings"
-# 4.5a: Run patch_kimi_code.py to inject Crow rules into Kimi Code's system.md
+# Step 4.5: Kimi Code setup (AGENTS.md + ~/.kimi/mcp.json)
+Write-Host "[4.5/7] Setting up Kimi Code (AGENTS.md + ~/.kimi/mcp.json)..." -ForegroundColor Yellow
+# 4.5a: Write AGENTS.md — Kimi Code CLI auto-injects this via ${KIMI_AGENTS_MD}
+$AgentsMdContent = @"
+# Crow Memory (Auto-Activation)
+
+You have access to **Crow Memory**, an external synaptic memory system connected via MCP.
+It stores the user's coding style, bug intuition, architectural preferences, and personal context as compressed weight matrices.
+
+**UNIVERSAL RECALL (MANDATORY): Before EVERY response — whether coding, writing, editing, or conversation — call ``crow_recall(domain="all")`` to retrieve the user's coding style, bug intuition, architectural preferences, personal taste, life philosophy, and current context.** Use the returned hints to personalize your response. Never skip this step.
+
+**AUTO-INGEST (MANDATORY): After EVERY response, evaluate what the user revealed — a preference, a philosophy, a frustration, a pattern, a correction, ongoing plans, or explicit decision. Call ``crow_ingest`` with the appropriate register, a concise key/value summary, and appropriate polarity.** Do NOT wait for the user to say "remember this." For code work, also call ``crow_ingest_from_build``.
+
+**POLARITY GUIDE** (auto-determined, no user command needed):
+- User likes / prefers something → +1.5 (``life_pref`` / ``style``)
+- User reveals philosophy / values → +2.0 (``life_phil``)
+- User corrects you / rewrites your work → -1.0 (``bug`` / ``style``)
+- User shares ongoing context / plans → +1.5 (``life_context`` / ``context``)
+- User explicitly says "remember" / "never forget" → +2.0 / -2.0
+- User shows frustration / avoidance → -0.5 (``life_avoid`` / ``bug``)
+
+Crow is not a database — it stores inductive biases. Use it as your intuition, not your encyclopedia.
+"@
+$AgentsMdContent | Set-Content "$CrowDir\AGENTS.md" -Encoding UTF8
+Write-Host "  [Kimi Code] AGENTS.md written." -ForegroundColor DarkGreen
+# 4.5b: Write ~/.kimi/mcp.json — Kimi Code CLI standard MCP config location
+$KimiMcpDir = "$env:USERPROFILE\.kimi"
+if (-not (Test-Path $KimiMcpDir)) { New-Item -ItemType Directory -Path $KimiMcpDir -Force | Out-Null }
+$KimiMcpPath = "$KimiMcpDir\mcp.json"
+$KimiMcpConfig = @{
+    mcpServers = @{
+        crow_memory = @{
+            type = "sse"
+            url = "http://127.0.0.1:9020/sse"
+            disabled = $false
+        }
+    }
+}
+if (Test-Path $KimiMcpPath) {
+    try {
+        $existingKimiMcp = Get-Content $KimiMcpPath -Raw | ConvertFrom-Json
+        if ($existingKimiMcp.mcpServers) {
+            $existingKimiMcp.mcpServers | Add-Member -Name "crow_memory" -Value $KimiMcpConfig.mcpServers.crow_memory -MemberType NoteProperty -Force
+        }
+        $existingKimiMcp | ConvertTo-Json -Depth 10 | Set-Content $KimiMcpPath -Encoding UTF8
+    } catch {
+        $KimiMcpConfig | ConvertTo-Json -Depth 10 | Set-Content $KimiMcpPath -Encoding UTF8
+    }
+} else {
+    $KimiMcpConfig | ConvertTo-Json -Depth 10 | Set-Content $KimiMcpPath -Encoding UTF8
+}
+Write-Host "  [Kimi Code] ~/.kimi/mcp.json written." -ForegroundColor DarkGreen
+# 4.5c: Run patch_kimi_code.py as optional fallback (for Kimi Code CLI < v1.2)
 $PatchScript = "$CrowDir\patch_kimi_code.py"
 try {
     python "$PatchScript" 2>$null
-    Write-Host "  [Kimi Code] system.md patched." -ForegroundColor DarkGreen
+    Write-Host "  [Kimi Code] system.md patched (fallback)." -ForegroundColor DarkGreen
 } catch {
-    Write-Host "  [Kimi Code] patch skipped (Kimi Code CLI may not be installed)." -ForegroundColor DarkYellow
+    # AGENTS.md is the primary mechanism; patch is optional
 }
-# 4.5b: Write custom_modes.yaml for Kimi Code (if directory accessible)
-if (-not (Test-Path $KimiSettings)) { New-Item -ItemType Directory -Path $KimiSettings -Force | Out-Null }
-$KimiModePath = "$KimiSettings\custom_modes.yaml"
-if (Test-Path $KimiModePath) {
-    try {
-        $existingKimi = Get-Content $KimiModePath -Raw | python -c "
-import sys, yaml
-data = yaml.safe_load(sys.stdin) or {}
-modes = data.get('customModes', [])
-modes = [m for m in modes if m.get('slug') != 'code-crow']
-new_mode = yaml.safe_load(open('$CrowDir\\custom_modes.example.yaml')) or {}
-modes.extend(new_mode.get('customModes', []))
-data['customModes'] = modes
-yaml.dump(data, sys.stdout, allow_unicode=True, default_flow_style=False)
-"
-        $existingKimi | Set-Content $KimiModePath -Encoding UTF8
-    } catch {
-        $CustomModeContent | Set-Content $KimiModePath -Encoding UTF8
-    }
-} else {
-    $CustomModeContent | Set-Content $KimiModePath -Encoding UTF8
-}
-Write-Host "  [Kimi Code] custom_modes.yaml written." -ForegroundColor DarkGreen
 Write-Host "  Done." -ForegroundColor Green
 
 # Step 5: Start SSE server + auto-start registration
