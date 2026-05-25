@@ -220,11 +220,15 @@ Crow is not a database — it stores inductive biases. Use it as your intuition,
     kimi_mcp_dir = Path.home() / ".kimi"
     kimi_mcp_dir.mkdir(parents=True, exist_ok=True)
     kimi_mcp_path = kimi_mcp_dir / "mcp.json"
+    # Kimi Code uses Streamable HTTP (port 9021) instead of SSE (port 9020)
+    # because Kimi Code CLI has a known bug: it does not recognize the
+    # MCP SSE "endpoint" event during handshake, causing infinite "Testing..." hang.
+    # Streamable HTTP on port 9021 works correctly with Kimi Code.
     kimi_mcp_config = {
         "mcpServers": {
             "crow_memory": {
-                "type": "sse",
-                "url": "http://127.0.0.1:9020/sse",
+                "type": "http",
+                "url": "http://127.0.0.1:9021/",
                 "disabled": False,
             }
         }

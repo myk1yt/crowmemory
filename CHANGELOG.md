@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - **`install.py` / `install.ps1` bat template**: Includes detached launch + health polling + `PYTHONUTF8=1` + `-X utf8`. Transport changed from `--transport sse` to `--transport dual` (SSE + Streamable HTTP).
+- **Kimi Code transport**: Changed from SSE (port 9020, `"type": "sse"`) to Streamable HTTP (port 9021, `"type": "http"`) in `~/.kimi/mcp.json` template. Kimi Code CLI has a known bug where it does not recognize the MCP SSE `event: endpoint` handshake message, causing infinite "Testing..." hang. Streamable HTTP avoids this. Both transports share the same `crow.bin` via the single `dual`-mode server process.
 - **`.gitignore`**: Added `.crow_ready`, `crow.bin.lock`, `*.log` patterns.
 
 ### Removed

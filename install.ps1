@@ -217,12 +217,15 @@ Write-Host "  [Kimi Code] AGENTS.md written." -ForegroundColor DarkGreen
 # 4.5b: Write ~/.kimi/mcp.json — Kimi Code CLI standard MCP config location
 $KimiMcpDir = "$env:USERPROFILE\.kimi"
 if (-not (Test-Path $KimiMcpDir)) { New-Item -ItemType Directory -Path $KimiMcpDir -Force | Out-Null }
+# Kimi Code uses Streamable HTTP (port 9021) instead of SSE (port 9020)
+# because Kimi Code CLI has a known bug: it does not recognize the
+# MCP SSE "endpoint" event during handshake, causing infinite "Testing..." hang.
 $KimiMcpPath = "$KimiMcpDir\mcp.json"
 $KimiMcpConfig = @{
     mcpServers = @{
         crow_memory = @{
-            type = "sse"
-            url = "http://127.0.0.1:9020/sse"
+            type = "http"
+            url = "http://127.0.0.1:9021/"
             disabled = $false
         }
     }
