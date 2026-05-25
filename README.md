@@ -1,3 +1,23 @@
+## Developer's Note / Philosophy
+
+### 1. Why the Name "Crow"?
+Crows use tools, recognize faces, possess long-term memory, and have the "situational awareness" to adapt to circumstances. "Crow Memory" was built upon this philosophy.
+
+### 2. Why This Technology?
+Transformer-based LLMs are frozen at training time — they cannot remember their users. Solutions based on RAG or SQLite accumulate information indefinitely and deliver 100% accurate recall like "notes in a notepad," but that is precisely the problem: it's a "jot it down and look it up later" approach. The human and animal brain doesn't work that way. Old habits fade, new patterns strengthen.
+
+Forgetting is not a bug. Crow's fixed-size weight matrices and λ (decay rate) implement this "creative forgetting." By sacrificing 100% accurate recall, an AI that remembers through Crow responds with biases closer to your *present* self. The goal is low-latency, real-time synaptic plasticity — something that feels alive.
+
+### 3. Who Is This For?
+- **Anyone** who wants an AI that remembers their habits and adapts to them
+- **Vibe coders** — those who want their AI to feel like a "colleague who knows them well"
+- **Multi-agent users** — those who switch between multiple AI agents yet share a single `crow.bin` to maintain a consistent "AI that knows you"
+- **Local-first advocates** — those who don't want to hand their personal data over to a cloud API
+
+*"If you share this philosophy and want to join me on this journey, you are always welcome."*
+
+---
+
 # Crow Memory (까마귀 메모리)
 
 > *"Crow remembers not the code, but the hand that wrote it."*
