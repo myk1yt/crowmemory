@@ -19,6 +19,7 @@ set "LOCK_FILE=%~dp0memory\crow.bin.lock"
 set "STATE_PATH=%~dp0memory\crow.bin"
 set "READY_FILE=%~dp0memory\.crow_ready"
 set "PYTHONIOENCODING=utf-8"
+set "PYTHONUTF8=1"
 
 REM ---- Check if already running on port 9020 ----
 netstat -ano 2>nul | findstr ":%PORT% " | findstr "LISTENING" >nul 2>&1
@@ -49,7 +50,7 @@ REM    that is NOT a child of this cmd.exe. The server will survive VS Code clos
 echo [%date% %time%] Starting Crow Memory SSE server (detached) on port %PORT%... >> "%LOG_FILE%"
 
 powershell -NoProfile -ExecutionPolicy Bypass -Command ^
-  "$p = Start-Process -FilePath 'python' -ArgumentList '\"%~dp0crow_mcp_server.py\" --state \"%STATE_PATH%\" --transport dual --port %PORT% --http-port %HTTP_PORT% --ready-file \"%READY_FILE%\"' -WindowStyle Hidden -PassThru; ^
+  "$p = Start-Process -FilePath 'python' -ArgumentList '-X utf8 \"%~dp0crow_mcp_server.py\" --state \"%STATE_PATH%\" --transport dual --port %PORT% --http-port %HTTP_PORT% --ready-file \"%READY_FILE%\"' -WindowStyle Hidden -PassThru; ^
    Write-Output $p.Id" >> "%LOG_FILE%" 2>&1
 
 REM ---- Poll health endpoint with exponential backoff (max 30s) ----

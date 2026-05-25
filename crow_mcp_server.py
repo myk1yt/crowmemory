@@ -19,9 +19,13 @@ import io
 from pathlib import Path
 
 # Fix Windows cp949 encoding issues with Unicode characters
-if sys.platform == "win32" and sys.stdout.encoding != "utf-8":
-    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
-    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8", errors="replace")
+if sys.platform == "win32":
+    os.environ.setdefault("PYTHONIOENCODING", "utf-8")
+    os.environ.setdefault("PYTHONUTF8", "1")
+    if sys.stdout.encoding != "utf-8":
+        sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
+    if sys.stderr.encoding != "utf-8":
+        sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8", errors="replace")
 
 from mcp.server import Server
 from mcp.server.stdio import stdio_server
@@ -511,6 +515,7 @@ async def _run_sse(server, host: str, port: int):
         log_level="warning",
     )
     http_server = uvicorn.Server(config)
+    # ASCII-only startup message to avoid cp949 issues in client parsers
     print(f"Crow Memory MCP SSE server listening on http://{host}:{port}/sse")
     _write_ready_file()
     await http_server.serve()

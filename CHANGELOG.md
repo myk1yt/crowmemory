@@ -10,14 +10,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.3.1] — 2026-05-25
 
 ### Fixed
-- **`ECONNREFUSED 127.0.0.1:9020` on VS Code restart**: Root cause — race condition between MCP client connecting and SSE server starting. MCP client reads `mcp_config.json` and connects immediately on workspace open, but the `folderOpen` task that launches `crow_mcp_server.py` takes 3–10 seconds (Python imports + `crow.bin` load + SentenceTransformer model warm-up). The server process was also a child of VS Code's task (`start /b`), meaning it died when VS Code closed, forcing a cold start every time.
-  - **Fix 1 — Detached process launch**: [`start_crow_sse.bat`](start_crow_sse.bat) now uses PowerShell `Start-Process -WindowStyle Hidden` instead of `start /b`. The Python server is fully detached from VS Code's process tree and survives IDE restarts.
-  - **Fix 2 — Health polling with exponential backoff**: Bat file polls `http://127.0.0.1:9020/sse` with backoff (0.5s → 1s → 2s → 4s → 8s cap, max 30s) to confirm server readiness before exiting.
-  - **Fix 3 — Ready file signal**: [`crow_mcp_server.py`](crow_mcp_server.py) now writes `memory/.crow_ready` when the server starts listening, deleted on shutdown. External scripts can poll this file as an alternative to HTTP health checks.
-  - **Result**: On first VS Code open after system boot, the bat file starts the server detached and waits for readiness. On subsequent VS Code restarts, the server is already running → bat file exits instantly → MCP client connects without error.
+- **`ECONNREFUSED 127.0.0.1:9020` on VS Code restart**: Race condition between MCP client connecting and SSE server starting. MCP client reads `mcp_config.json` and connects immediately on workspace open, but the `folderOpen` task that launches `crow_mcp_server.py` takes 3–10 seconds. Server was a child of VS Code's task (`start /b`), dying with the IDE.
+  - **Fix 1 — Detached process launch**: [`start_crow_sse.bat`](start_crow_sse.bat) uses PowerShell `Start-Process -WindowStyle Hidden`. Server survives VS Code restarts.
+  - **Fix 2 — Health polling with exponential backoff**: Bat file polls `/sse` with backoff (500ms→8s, max 30s).
+  - **Fix 3 — Ready file signal**: [`crow_mcp_server.py`](crow_mcp_server.py) writes `memory/.crow_ready` on listen, deleted on shutdown.
+- **Hotfix — `NameError: name 'os' is not defined`**: `_write_ready_file()` called `os.getpid()` but `import os` was missing from [`crow_mcp_server.py`](crow_mcp_server.py). Added import.
+- **Hotfix — Batch `SLEEP` decimal syntax error**: `SLEEP=0.5` caused `'. was unexpected at this time'` in batch parser and `timeout /t` failure. Changed to integer milliseconds (500, 1000, 2000, 4000, 8000).
+- **Hotfix — cp949 `UnicodeEncodeError` on Korean Windows**: MCP responses used `json.dumps(ensure_ascii=False)` which emitted raw Unicode characters (Korean text, checkmarks) that Kimi Code's cp949 codec could not encode. Changed to `ensure_ascii=True` in all MCP response handlers. Also cleaned a self-referential value_bank entry that stored a `✓` character in a "cp949 fix" memory.
+- **Encoding hardening**: Added `PYTHONUTF8=1` environment variable and `-X utf8` Python flag to [`start_crow_sse.bat`](start_crow_sse.bat) and installer templates. [`crow_mcp_server.py`](crow_mcp_server.py) enhanced to set `PYTHONIOENCODING`/`PYTHONUTF8` at module level before any imports.
 
 ### Changed
-- **`install.py` / `install.ps1` bat template**: Generated `start_crow_sse.bat` now includes detached launch + health polling logic. Transport changed from `--transport sse` to `--transport dual` (SSE + Streamable HTTP).
+- **`install.py` / `install.ps1` bat template**: Includes detached launch + health polling + `PYTHONUTF8=1` + `-X utf8`. Transport changed from `--transport sse` to `--transport dual` (SSE + Streamable HTTP).
+- **`.gitignore`**: Added `.crow_ready`, `crow.bin.lock`, `*.log` patterns.
+
+### Removed
+- **`DEEPSEEK_HANDOFF.md`**: Superseded by `AGENTS.md`.
+- **`$null`**: Garbage artifact from previous sessions.
+- **`sse_test.log`**: Test log artifact.
+
+### Documentation
+- **README.md**: Added "How Auto-Start Works" section, `UnicodeEncodeError` troubleshooting with Windows UTF-8 setup guide, affected languages table (Korean cp949, Japanese cp932, Chinese cp936/cp950, Thai cp874, etc.).
+- **CROW_MEMORY_ARCHITECTURE.md**: Updated topology diagram (detached process, ready file, health polling), component responsibilities table, version 1.3→1.3.1.
 
 ---
 

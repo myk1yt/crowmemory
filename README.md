@@ -282,6 +282,38 @@ If you manually switch to `"type": "stdio"` (command mode), each VS Code instanc
 - Normal! Crow needs 20-30+ ingestions before meaningful hints emerge. Keep coding.
 - Enable AUTO-INGEST by switching to "Code + Crow Memory" mode — the AI will learn proactively.
 
+### UnicodeEncodeError: 'cp949' codec can't encode character (Korean Windows)
+
+**Symptoms**: Kimi Code shows `\u2717 Connection failed: UnicodeEncodeError: 'cp949' codec can't encode character '\u2713'...`. Zoo Code may also fail to connect.
+
+**Root cause**: Korean Windows uses `cp949` (EUC-KR) as the default system encoding. When MCP clients (Kimi Code, etc.) process SSE responses containing Unicode characters (✓, Korean text, emoji), the `cp949` codec fails because it cannot represent these characters.
+
+**Affected languages** (any non-UTF-8 Windows locale):
+| Language | Code Page | Issue |
+|----------|-----------|-------|
+| Korean (한국어) | `cp949` | Unicode checkmarks, Korean characters |
+| Japanese (日本語) | `cp932` | Shift-JIS can't encode certain Unicode symbols |
+| Chinese Simplified (简体中文) | `cp936` | GBK encoding conflicts |
+| Chinese Traditional (繁體中文) | `cp950` | Big5 encoding conflicts |
+| Thai (ไทย) | `cp874` | Thai + Unicode mixing issues |
+| Any non-Unicode Windows locale | various | Same class of problem |
+
+**Fix A — Enable Windows UTF-8 mode (recommended, permanent)**
+
+1. `Win + R` → `intl.cpl` → Enter
+2. **Administrative** tab → **Change system locale...**
+3. Check ✅ **Beta: Use Unicode UTF-8 for worldwide language support**
+4. OK → **Restart Windows**
+
+Or via PowerShell (Admin):
+```powershell
+Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Nls\CodePage" -Name "ACP" -Value "65001"
+```
+
+**Fix B — Environment variables (already applied by installer)**
+
+[`start_crow_sse.bat`](start_crow_sse.bat) sets `PYTHONUTF8=1` and `PYTHONIOENCODING=utf-8`, and runs Python with `-X utf8` flag. [`crow_mcp_server.py`](crow_mcp_server.py) enforces UTF-8 stdout/stderr at startup. These prevent most encoding issues on the server side, but client-side encoding (Kimi Code) requires Fix A.
+
 ### PermissionError / lock file issues
 - Delete stale lock: `del memory\crow.bin.lock` (Windows) or `rm memory/crow.bin.lock` (macOS/Linux)
 - [`start_crow_sse.bat`](start_crow_sse.bat) automatically cleans stale locks before starting

@@ -274,6 +274,7 @@ set "LOCK_FILE=$CrowDir\memory\crow.bin.lock"
 set "STATE_PATH=$StatePath"
 set "READY_FILE=$CrowDir\memory\.crow_ready"
 set "PYTHONIOENCODING=utf-8"
+set "PYTHONUTF8=1"
 
 netstat -ano 2>nul | findstr ":%PORT% " | findstr "LISTENING" >nul 2>&1
 if !ERRORLEVEL! equ 0 (
@@ -298,7 +299,7 @@ if exist "%READY_FILE%" del "%READY_FILE%" 2>nul
 echo [%date% %time%] Starting Crow Memory SSE server (detached) on port %PORT%... >> "%LOG_FILE%"
 
 powershell -NoProfile -ExecutionPolicy Bypass -Command ^
-  "$p = Start-Process -FilePath '$PythonExe' -ArgumentList '\"$ServerPy\" --state \"%STATE_PATH%\" --transport dual --port %PORT% --http-port %HTTP_PORT% --ready-file \"%READY_FILE%\"' -WindowStyle Hidden -PassThru; ^
+  "$p = Start-Process -FilePath '$PythonExe' -ArgumentList '-X utf8 \"$ServerPy\" --state \"%STATE_PATH%\" --transport dual --port %PORT% --http-port %HTTP_PORT% --ready-file \"%READY_FILE%\"' -WindowStyle Hidden -PassThru; ^
    Write-Output $p.Id" >> "%LOG_FILE%" 2>&1
 
 echo [%date% %time%] Waiting for server to become ready... >> "%LOG_FILE%"
