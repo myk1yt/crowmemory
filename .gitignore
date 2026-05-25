@@ -13,6 +13,10 @@ memory/test_*/
 memory/demo_output.txt
 memory/project_*/
 
+# Transient runtime files (locks, ready signals)
+memory/crow.bin.lock
+memory/.crow_ready
+
 # Test files (outdated, not for end users)
 test_crow.py
 test_integration.py
@@ -37,6 +41,7 @@ venv/
 # Logs
 debug.log
 sse_server.log
+*.log
 
 # OS
 .DS_Store

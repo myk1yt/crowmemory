@@ -1,7 +1,7 @@
 # Crow (까마귀) Memory Architecture
 ## A Synaptic State Cache for Recursive Agent Development
 
-**Version:** 1.3
+**Version:** 1.3.1
 **Date:** 2026-05-25
 **Author:** Stefano,Kim & AI Collaborative Design
 **Target Runtime:** Any MCP-compatible IDE + LLM API + Local Python MCP Server
@@ -80,10 +80,17 @@ The `crow.bin` file is forever fixed at ~80MB (configurable). It does not grow a
 |                                         |
 |                           +-------------v-------------+
 |                           |  Local Python MCP Server  |
-|                           |  (SSE HTTP, port 9020)    |
+|                           |  (SSE HTTP, port 9020,    |
+|                           |   Streamable HTTP 9021)   |
+|                           |  - Detached process       |
+|                           |    (survives IDE restart) |
 |                           |  - Auto-started by        |
 |                           |    .vscode/tasks.json     |
-|                           |  - Memory-mapped I/O      |
+|                           |    + start_crow_sse.bat   |
+|                           |  - Health polling with    |
+|                           |    exponential backoff    |
+|                           |  - Ready file signal      |
+|                           |    (memory/.crow_ready)   |
 |                           |  - Multi-client safe      |
 |                           +-------------+-------------+
 |                                         |
@@ -98,9 +105,10 @@ The `crow.bin` file is forever fixed at ~80MB (configurable). It does not grow a
 
 | Component | Runtime | Responsibility |
 |-----------|---------|----------------|
-| **VS Code IDE** | Local Electron/Node | Orchestrates the agent loop, captures build exit codes, renders HITL UI. Auto-starts SSE server on workspace open via `.vscode/tasks.json`. |
+| **VS Code IDE** | Local Electron/Node | Orchestrates the agent loop, captures build exit codes, renders HITL UI. Auto-starts SSE server on workspace open via `.vscode/tasks.json` → `start_crow_sse.bat`. |
 | **LLM Agent** | Cloud/On-prem API | Inference engine, generates code, proposes prompt mutations, decides tool calls |
-| **MCP Server (SSE)** | Local Python | Serves `crow.bin` I/O over HTTP (port 9020). Embedding encoding, weight math, FAISS nearest-neighbor lookup. Serializes all multi-client access. |
+| **MCP Server (SSE)** | Local Python (detached) | Serves `crow.bin` I/O over HTTP (port 9020 SSE + 9021 Streamable HTTP). Embedding encoding, weight math, FAISS nearest-neighbor lookup. Serializes all multi-client access. **Runs as detached process** — survives IDE restarts. Writes `memory/.crow_ready` on listen. |
+| **`start_crow_sse.bat`** | Batch + PowerShell | Detached process launcher + health poller. Uses `Start-Process -WindowStyle Hidden` for process isolation. Polls `/sse` with exponential backoff (0.5s→8s, max 30s). Cleans stale lock files. |
 | **`crow.bin`** | Local SSD | Fixed-size `safetensors` file containing 8 weight matrices + projection layer |
 | **Build Hook** | Local Node | Captures `npm run build`, test results, linter output; emits JSON to MCP server |
 

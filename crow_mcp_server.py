@@ -13,7 +13,14 @@ Usage:
 import asyncio
 import argparse
 import json
+import sys
+import io
 from pathlib import Path
+
+# Fix Windows cp949 encoding issues with Unicode characters
+if sys.platform == "win32" and sys.stdout.encoding != "utf-8":
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
+    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8", errors="replace")
 
 from mcp.server import Server
 from mcp.server.stdio import stdio_server
@@ -183,7 +190,7 @@ TOOL_DEFINITIONS = [
 def create_server(state_path: str) -> Server:
     server = Server(
         name="crow_memory",
-        version="1.2.1",
+        version="1.3.1",
         instructions=(
             "Crow Memory — External synaptic memory for AI coding agents. "
             "Stores your coding style, bug intuition, and architectural "
@@ -391,26 +398,74 @@ def _error(message: str) -> list:
 
 
 # ---------------------------------------------------------------------------
+# Ready file helpers (for external scripts to poll server readiness)
+# ---------------------------------------------------------------------------
+
+_ready_file_path: str | None = None
+
+def _write_ready_file():
+    """Create a .crow_ready marker file so external scripts know the server is listening."""
+    global _ready_file_path
+    if _ready_file_path:
+        try:
+            Path(_ready_file_path).write_text(str(os.getpid()))
+        except OSError:
+            pass
+
+def _remove_ready_file():
+    """Remove the ready marker file on shutdown."""
+    global _ready_file_path
+    if _ready_file_path:
+        try:
+            Path(_ready_file_path).unlink(missing_ok=True)
+        except OSError:
+            pass
+
+
+# ---------------------------------------------------------------------------
 # Entry point
 # ---------------------------------------------------------------------------
 
 async def main():
+    global _ready_file_path
+
     parser = argparse.ArgumentParser(description="Crow Memory MCP Server")
     parser.add_argument("--state", default=DEFAULT_STATE_PATH,
                         help=f"Path to crow.bin (default: {DEFAULT_STATE_PATH})")
-    parser.add_argument("--transport", choices=["stdio", "sse"], default="stdio",
-                        help="Transport protocol (default: stdio)")
+    parser.add_argument("--transport", choices=["stdio", "sse", "streamable-http", "dual"], default="dual",
+                        help="Transport protocol (default: dual)")
     parser.add_argument("--port", type=int, default=9020,
                         help="Port for SSE transport (default: 9020)")
+    parser.add_argument("--http-port", type=int, default=9021,
+                        help="Port for Streamable HTTP transport (default: 9021)")
     parser.add_argument("--host", default="127.0.0.1",
                         help="Host for SSE transport (default: 127.0.0.1)")
+    parser.add_argument("--ready-file", default=None,
+                        help="Path to a ready marker file created when server starts listening (default: none)")
     args = parser.parse_args()
+
+    _ready_file_path = args.ready_file
+
+    # Remove stale ready file from any previous crashed instance
+    if _ready_file_path:
+        try:
+            Path(_ready_file_path).unlink(missing_ok=True)
+        except OSError:
+            pass
 
     state_path = str(Path(args.state).resolve())
     server = create_server(state_path)
 
+    # Register cleanup on shutdown
+    import atexit
+    atexit.register(_remove_ready_file)
+
     if args.transport == "sse":
         await _run_sse(server, args.host, args.port)
+    elif args.transport == "streamable-http":
+        await _run_streamable_http(server, args.host, args.http_port)
+    elif args.transport == "dual":
+        await _run_dual_port(server, args.host, args.port, args.http_port)
     else:
         async with stdio_server() as (read_stream, write_stream):
             await server.run(
@@ -456,7 +511,102 @@ async def _run_sse(server, host: str, port: int):
     )
     http_server = uvicorn.Server(config)
     print(f"Crow Memory MCP SSE server listening on http://{host}:{port}/sse")
+    _write_ready_file()
     await http_server.serve()
+
+
+async def _run_streamable_http(server, host: str, port: int):
+    """Run Crow MCP server over Streamable HTTP transport."""
+    import anyio
+    from mcp.server.streamable_http import StreamableHTTPServerTransport
+    import uvicorn
+
+    transport = StreamableHTTPServerTransport(
+        mcp_session_id=None, is_json_response_enabled=True
+    )
+
+    async with transport.connect() as (read_stream, write_stream):
+        async def app(scope, receive, send):
+            if scope["type"] == "lifespan":
+                return
+            await transport.handle_request(scope, receive, send)
+
+        config = uvicorn.Config(app, host=host, port=port, log_level="warning")
+        http_server = uvicorn.Server(config)
+        print(f"Crow Memory MCP Streamable HTTP server listening on http://{host}:{port}/")
+        _write_ready_file()
+
+        async with anyio.create_task_group() as tg:
+            tg.start_soon(
+                server.run,
+                read_stream,
+                write_stream,
+                server.create_initialization_options(),
+            )
+            tg.start_soon(http_server.serve)
+
+
+async def _run_dual_port(server, host: str, sse_port: int, http_port: int):
+    """Run Crow MCP server with SSE and Streamable HTTP on separate ports.
+
+    Uses a single CrowMemory instance so both transports share crow.bin.
+    """
+    from mcp.server.sse import SseServerTransport
+    from mcp.server.streamable_http import StreamableHTTPServerTransport
+    import uvicorn
+
+    sse = SseServerTransport("/messages/")
+    streamable_http = StreamableHTTPServerTransport(mcp_session_id=None, is_json_response_enabled=True)
+
+    async with streamable_http.connect() as (read_stream, write_stream):
+        async def sse_app(scope, receive, send):
+            if scope["type"] == "lifespan":
+                return
+            if scope["path"] == "/sse":
+                async with sse.connect_sse(scope, receive, send) as (rs, ws):
+                    await server.run(rs, ws, server.create_initialization_options())
+            elif scope["path"].startswith("/messages/"):
+                await sse.handle_post_message(scope, receive, send)
+            else:
+                body = b"Crow Memory MCP SSE Server"
+                await send({
+                    "type": "http.response.start",
+                    "status": 200,
+                    "headers": [[b"content-type", b"text/plain"]],
+                })
+                await send({
+                    "type": "http.response.body",
+                    "body": body,
+                })
+
+        sse_config = uvicorn.Config(sse_app, host=host, port=sse_port, log_level="warning")
+        sse_server = uvicorn.Server(sse_config)
+
+        async def http_app(scope, receive, send):
+            if scope["type"] == "lifespan":
+                return
+            await streamable_http.handle_request(scope, receive, send)
+
+        http_config = uvicorn.Config(http_app, host=host, port=http_port, log_level="warning")
+        http_server = uvicorn.Server(http_config)
+
+        async def run_sse():
+            print(f"Crow Memory MCP SSE server listening on http://{host}:{sse_port}/sse")
+            _write_ready_file()
+            await sse_server.serve()
+
+        async def run_http():
+            print(f"Crow Memory MCP Streamable HTTP server listening on http://{host}:{http_port}/")
+            await http_server.serve()
+
+        async def run_server():
+            await server.run(
+                read_stream,
+                write_stream,
+                server.create_initialization_options(),
+            )
+
+        await asyncio.gather(run_sse(), run_http(), run_server())
 
 
 if __name__ == "__main__":

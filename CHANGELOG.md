@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.3.1] — 2026-05-25
+
+### Fixed
+- **`ECONNREFUSED 127.0.0.1:9020` on VS Code restart**: Root cause — race condition between MCP client connecting and SSE server starting. MCP client reads `mcp_config.json` and connects immediately on workspace open, but the `folderOpen` task that launches `crow_mcp_server.py` takes 3–10 seconds (Python imports + `crow.bin` load + SentenceTransformer model warm-up). The server process was also a child of VS Code's task (`start /b`), meaning it died when VS Code closed, forcing a cold start every time.
+  - **Fix 1 — Detached process launch**: [`start_crow_sse.bat`](start_crow_sse.bat) now uses PowerShell `Start-Process -WindowStyle Hidden` instead of `start /b`. The Python server is fully detached from VS Code's process tree and survives IDE restarts.
+  - **Fix 2 — Health polling with exponential backoff**: Bat file polls `http://127.0.0.1:9020/sse` with backoff (0.5s → 1s → 2s → 4s → 8s cap, max 30s) to confirm server readiness before exiting.
+  - **Fix 3 — Ready file signal**: [`crow_mcp_server.py`](crow_mcp_server.py) now writes `memory/.crow_ready` when the server starts listening, deleted on shutdown. External scripts can poll this file as an alternative to HTTP health checks.
+  - **Result**: On first VS Code open after system boot, the bat file starts the server detached and waits for readiness. On subsequent VS Code restarts, the server is already running → bat file exits instantly → MCP client connects without error.
+
+### Changed
+- **`install.py` / `install.ps1` bat template**: Generated `start_crow_sse.bat` now includes detached launch + health polling logic. Transport changed from `--transport sse` to `--transport dual` (SSE + Streamable HTTP).
+
+---
+
 ## [1.3.0] — 2026-05-25
 
 ### Added

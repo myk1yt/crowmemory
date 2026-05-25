@@ -59,7 +59,19 @@ The installer automatically:
 - Registers a Startup `.bat` so the SSE server also starts with Windows
 - Pre-authorizes all 10 Crow tools (`alwaysAllow`)
 
-> ⚡ **That's it.** No manual server commands. The SSE server starts automatically when you open VS Code.
+> ⚡ **That's it.** No manual server commands. The SSE server auto-starts when you open VS Code and **survives IDE restarts** (runs as a detached background process).
+
+### How Auto-Start Works (v1.3.1)
+
+[`start_crow_sse.bat`](start_crow_sse.bat) uses a three-layer strategy to eliminate `ECONNREFUSED` errors:
+
+| Layer | Mechanism | Purpose |
+|-------|-----------|---------|
+| **Detached Process** | PowerShell `Start-Process -WindowStyle Hidden` | Server survives VS Code close; ready on next open |
+| **Health Polling** | HTTP `GET /sse` with exponential backoff (0.5s→8s, max 30s) | Waits for server readiness before task exits |
+| **Ready File** | `memory/.crow_ready` written by server on listen, deleted on shutdown | Alternative readiness signal for external scripts |
+
+This means: **first open** → bat starts server detached + polls until ready. **Subsequent opens** → server already running → bat exits instantly → MCP connects immediately.
 
 ### 3. Restart & Switch Mode
 
@@ -223,9 +235,10 @@ The installer configures everything for SSE mode by default. This is the only sa
 
 **How it works:**
 1. You open the `crowsmemory` workspace in **any** VS Code-based editor
-2. [`.vscode/tasks.json`](.vscode/tasks.json) auto-runs [`start_crow_sse.bat`](start_crow_sse.bat) — starts the SSE server if not already running
+2. [`.vscode/tasks.json`](.vscode/tasks.json) auto-runs [`start_crow_sse.bat`](start_crow_sse.bat) — if server is already running (detached from previous session), exits instantly; otherwise starts it detached + polls until ready
 3. All AI clients (Zoo Code, Kimi Code, etc.) connect to `http://127.0.0.1:9020/sse`
 4. The single SSE server serializes all reads/writes — **no race conditions, no data corruption**
+5. The server process is **detached** from VS Code — closing the IDE does not kill it
 
 ### ⚠️ Warning: stdio Mode
 
@@ -250,9 +263,14 @@ If you manually switch to `"type": "stdio"` (command mode), each VS Code instanc
 - Check the SSE server is running: visit `http://127.0.0.1:9020/` in a browser — should show "Crow Memory MCP SSE Server"
 - Verify `.roo/mcp.json` (Zoo Code) or `mcp_config.json` (VS Code/Kimi Code) has `crow_memory` configured for SSE.
 
+### ECONNREFUSED 127.0.0.1:9020 on VS Code restart
+- This is a **race condition** fixed in v1.3.1. The SSE server now runs as a **detached process** that survives VS Code restarts.
+- If you still see this: wait 10 seconds and re-run the `Crow SSE Server — Auto Start` task manually (`Ctrl+Shift+P` → `Tasks: Run Task`).
+- Verify the server is alive: visit `http://127.0.0.1:9020/` in a browser.
+
 ### SSE server not auto-starting
 - Verify [`.vscode/tasks.json`](.vscode/tasks.json) exists in the workspace root
-- Run manually once: `python crow_mcp_server.py --transport sse --port 9020`
+- Run manually once: `python crow_mcp_server.py --transport dual --port 9020`
 - Check `sse_server.log` for error messages
 - Ensure no other process is using port 9020: `netstat -ano | findstr :9020`
 
@@ -282,5 +300,5 @@ MIT License — see [`LICENSE`](LICENSE) for details.
 
 ---
 
-*Crow Memory v1.3.0 — May 2026*
+*Crow Memory v1.3.1 — May 2026*
 *Co-designed by Stefano,Kim & AI*
