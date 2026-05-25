@@ -71,17 +71,21 @@ if !ERRORLEVEL! equ 0 (
     goto :wait_done
 )
 
-REM Exponential backoff: 0.5s, 1s, 2s, 4s, 8s... capped at 8s
-if !ATTEMPT! leq 1 set "SLEEP=0.5"
-if !ATTEMPT! equ 2 set "SLEEP=1"
-if !ATTEMPT! equ 3 set "SLEEP=2"
-if !ATTEMPT! equ 4 set "SLEEP=4"
-if !ATTEMPT! geq 5 set "SLEEP=8"
+REM Exponential backoff: 500ms, 1s, 2s, 4s, 8s... capped at 8s
+REM SLEEP values are in milliseconds for PowerShell Start-Sleep
+if !ATTEMPT! leq 1 set "SLEEP=500"
+if !ATTEMPT! equ 2 set "SLEEP=1000"
+if !ATTEMPT! equ 3 set "SLEEP=2000"
+if !ATTEMPT! equ 4 set "SLEEP=4000"
+if !ATTEMPT! geq 5 set "SLEEP=8000"
 
-REM Use PowerShell for sub-second sleep
-powershell -NoProfile -Command "Start-Sleep -Milliseconds !SLEEP!000" 2>nul
-REM Fallback if powershell fails: use ping-based delay (1s granularity)
-if !ERRORLEVEL! neq 0 timeout /t !SLEEP! /nobreak >nul
+REM Use PowerShell for precise sleep (supports sub-second via milliseconds)
+powershell -NoProfile -Command "Start-Sleep -Milliseconds !SLEEP!" 2>nul
+REM Fallback if powershell fails: use timeout with seconds (rounded up)
+if !ERRORLEVEL! neq 0 (
+    set /a TIMEOUT_SEC=^( !SLEEP! + 999 ^) / 1000
+    timeout /t !TIMEOUT_SEC! /nobreak >nul
+)
 
 goto :wait_loop
 

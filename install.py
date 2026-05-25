@@ -321,14 +321,17 @@ if !ERRORLEVEL! equ 0 (
     goto :wait_done
 )
 
-if !ATTEMPT! leq 1 set "SLEEP=0.5"
-if !ATTEMPT! equ 2 set "SLEEP=1"
-if !ATTEMPT! equ 3 set "SLEEP=2"
-if !ATTEMPT! equ 4 set "SLEEP=4"
-if !ATTEMPT! geq 5 set "SLEEP=8"
+if !ATTEMPT! leq 1 set "SLEEP=500"
+if !ATTEMPT! equ 2 set "SLEEP=1000"
+if !ATTEMPT! equ 3 set "SLEEP=2000"
+if !ATTEMPT! equ 4 set "SLEEP=4000"
+if !ATTEMPT! geq 5 set "SLEEP=8000"
 
-powershell -NoProfile -Command "Start-Sleep -Milliseconds !SLEEP!000" 2>nul
-if !ERRORLEVEL! neq 0 timeout /t !SLEEP! /nobreak >nul
+powershell -NoProfile -Command "Start-Sleep -Milliseconds !SLEEP!" 2>nul
+if !ERRORLEVEL! neq 0 (
+    set /a TIMEOUT_SEC=(!SLEEP! + 999) / 1000
+    timeout /t !TIMEOUT_SEC! /nobreak >nul
+)
 
 goto :wait_loop
 
