@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.3.4] — 2026-05-26
+
+### Fixed
+- **`crow_recall(register="all")` caused "Unknown register: all" error**: [`crow_mcp_server.py`](crow_mcp_server.py) `_recall` handler did not handle `register="all"`. When passed, it was forwarded to [`crow_core.py`](crow_core.py) `recall()` which rejected it. Now `register="all"` is converted to `register=None`, forcing domain-based multi-register query (same behavior as `domain="all"` without register).
+
+---
+
 ## [1.3.3] — 2026-05-26
 
 ### Changed — "Important memories survive" design philosophy

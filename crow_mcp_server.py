@@ -288,6 +288,10 @@ def _recall(crow: CrowMemory, args: dict) -> list:
     register = args.get("register")
     top_k = max(1, min(5, args.get("top_k", 2)))
 
+    # "all" register → force domain-based multi-register query
+    if register == "all":
+        register = None
+
     # If domain specified without register, query all registers in domain
     if domain and not register:
         from crow_core import DOMAINS
