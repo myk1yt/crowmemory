@@ -1,8 +1,8 @@
 # Crow (까마귀) Memory Architecture
 ## A Synaptic State Cache for Recursive Agent Development
 
-**Version:** 1.3.1
-**Date:** 2026-05-25
+**Version:** 1.3.4
+**Date:** 2026-05-26
 **Author:** Stefano,Kim & AI Collaborative Design
 **Target Runtime:** Any MCP-compatible IDE + LLM API + Local Python MCP Server
 
@@ -111,6 +111,10 @@ The `crow.bin` file is forever fixed at ~80MB (configurable). It does not grow a
 | **`start_crow_sse.bat`** | Batch + PowerShell | Detached process launcher + health poller. Uses `Start-Process -WindowStyle Hidden` for process isolation. Polls `/sse` with exponential backoff (0.5s→8s, max 30s). Cleans stale lock files. |
 | **`crow.bin`** | Local SSD | Fixed-size `safetensors` file containing 8 weight matrices + projection layer |
 | **Build Hook** | Local Node | Captures `npm run build`, test results, linter output; emits JSON to MCP server |
+| **`crow_auto_inject.py`** | Local Python | Standalone script that generates `[User Bias]` block for manual prompt injection without MCP |
+| **`backup_manager.py`** | Local Python | CLI utility for backup creation, rotation, listing, and drift recovery |
+| **`hitl_panel.html`** | Local Browser | Web UI for human-in-the-loop approval of evolved prompt rules |
+| **`patch_kimi_code.py`** | Local Python | Fallback injector for Kimi Code CLI < v1.2 (superseded by `AGENTS.md`) |
 
 ---
 
@@ -153,7 +157,7 @@ The `crow.bin` file is forever fixed at ~80MB (configurable). It does not grow a
 
     # Metadata
     "update_count":   int64 scalar,
-    "schema_version": int64 scalar         # 2
+    "schema_version": int64 scalar         # 1 (current)
 }
 # Total: ~140 MB (compressed ~100 MB)
 ```
@@ -334,82 +338,143 @@ def _clip_spectrum(self, register: str, max_sv: float):
 
 This is the exact schema exposed by the local Python MCP server. The LLM sees these as native tools.
 
+### 10 MCP Tools
+
 ```json
 {
   "tools": [
     {
       "name": "crow_recall",
-      "description": "Recall user-specific coding style, bug intuition, architectural preference, or personal context from the Crow synaptic memory. Call this BEFORE every response to align with user's inductive bias.",
+      "description": "Recall user-specific coding style, bug intuition, architectural preference, or personal context from the Crow synaptic memory. Call this BEFORE every response to align with user's inductive bias. By default (no register, domain=all), queries all 8 registers.",
       "parameters": {
         "type": "object",
         "properties": {
-          "query": {
-            "type": "string",
-            "description": "Natural language description of the current task or problem. Example: 'React useEffect cleanup for PDF worker'"
-          },
-          "register": {
-            "type": "string",
-            "enum": ["style", "bug", "arch", "context", "life_pref", "life_avoid", "life_phil", "life_context"],
-            "description": "Which memory register to query. Code: style/bug/arch/context. Life: life_pref/life_avoid/life_phil/life_context."
-          },
-          "top_k": {
-            "type": "integer",
-            "default": 2,
-            "description": "Number of hint strings to return (1-3)."
-          }
+          "query": {"type": "string", "description": "Natural language description of the current task."},
+          "register": {"type": "string", "enum": ["style", "bug", "arch", "context", "life_pref", "life_avoid", "life_phil", "life_context", "all"], "description": "Which register. Use 'all' to query every register. Code: style/bug/arch/context. Life: life_pref/life_avoid/life_phil/life_context."},
+          "top_k": {"type": "integer", "default": 2, "description": "Number of hints (1-5)."},
+          "domain": {"type": "string", "enum": ["code", "life", "all"], "default": "all", "description": "Domain filter shortcut. 'code' = 4 code registers, 'life' = 4 life registers, 'all' = all 8 (default)."}
         },
-        "required": ["query", "register"]
+        "required": ["query"]
       }
     },
     {
       "name": "crow_ingest",
-      "description": "Ingest a coding experience into Crow's long-term synaptic memory. Call this AFTER build/test results are known or after user explicit feedback.",
+      "description": "Ingest a coding experience into Crow's long-term synaptic memory. Call AFTER build/test results or user explicit feedback.",
       "parameters": {
         "type": "object",
         "properties": {
-          "key": {
-            "type": "string",
-            "description": "Abstract description of the situation. Example: 'PDF worker memory leak fix'"
-          },
-          "value": {
-            "type": "string",
-            "description": "The actual code pattern, architectural decision, or style choice that was applied."
-          },
-          "polarity": {
-            "type": "number",
-            "description": "Reinforcement strength. +1.5 for build success & user acceptance, -1.0 for build failure or user rewrite, +2.0 for explicit 'remember this', -2.0 for explicit 'never again'. Range: [-2.0, 2.0]"
-          },
-          "register": {
-            "type": "string",
-            "enum": ["style", "bug", "arch", "context"],
-            "description": "Which register to write to."
-          }
+          "key": {"type": "string", "description": "Abstract description of the situation."},
+          "value": {"type": "string", "description": "Code pattern or decision applied."},
+          "polarity": {"type": "number", "description": "Reinforcement strength [-2.0, 2.0]."},
+          "register": {"type": "string", "enum": ["style", "bug", "arch", "context", "life_pref", "life_avoid", "life_phil", "life_context"], "description": "Which register to write to."}
         },
         "required": ["key", "value", "polarity", "register"]
       }
     },
     {
       "name": "crow_evolve_propose",
-      "description": "Request Crow to analyze recent memory patterns and propose a permanent system prompt mutation. This is a meta-level tool for agent self-improvement. Returns a suggestion only; human approval is required for adoption.",
+      "description": "Analyze recent memory patterns and propose a permanent system prompt mutation. Returns a suggestion only; human approval is required for adoption.",
       "parameters": {
         "type": "object",
         "properties": {
-          "min_confidence": {
-            "type": "number",
-            "default": 0.85,
-            "description": "Minimum retrieval confidence threshold to consider a pattern statistically significant."
-          },
-          "min_occurrences": {
-            "type": "integer",
-            "default": 3,
-            "description": "Minimum number of recent sessions a pattern must appear in."
-          }
+          "min_confidence": {"type": "number", "default": 0.85},
+          "min_occurrences": {"type": "integer", "default": 3}
         }
+      }
+    },
+    {
+      "name": "crow_diagnostics",
+      "description": "Return diagnostic information about the Crow memory state (register norms, sparsity, update count, value bank size, prompt stats).",
+      "parameters": {"type": "object", "properties": {}}
+    },
+    {
+      "name": "crow_check_drift",
+      "description": "Check if recent recalls show signs of memory drift (confidence too low across multiple records).",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "threshold": {"type": "number", "default": 0.5},
+          "min_low_confidence_count": {"type": "integer", "default": 5}
+        }
+      }
+    },
+    {
+      "name": "crow_ingest_from_build",
+      "description": "Auto-determine polarity from build exit code and user edit status, then ingest the experience. Use this after npm run build completes.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "key": {"type": "string", "description": "Abstract description."},
+          "value": {"type": "string", "description": "Code pattern applied."},
+          "exit_code": {"type": "integer", "description": "Build exit code (0 = success)."},
+          "user_edited": {"type": "boolean", "default": false},
+          "register": {"type": "string", "enum": ["style", "bug", "arch", "context"], "default": "arch"},
+          "explicit_polarity": {"type": "number", "description": "Override auto-polarity."}
+        },
+        "required": ["key", "value", "exit_code"]
+      }
+    },
+    {
+      "name": "crow_get_user_bias",
+      "description": "Generate the [User Bias] block for injection into the system prompt. Queries specified registers and formats hints for prompt prepending.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "query": {"type": "string", "description": "Current task description."},
+          "registers": {"type": "array", "items": {"type": "string"}, "description": "Registers to query (default: all)."}
+        },
+        "required": ["query"]
+      }
+    },
+    {
+      "name": "crow_manage_prompt",
+      "description": "Read, append to, or get statistics about the system_prompt.md file. Use 'read' to view current prompt, 'append' to adopt an evolved rule, 'stats' for metrics.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "action": {"type": "string", "enum": ["read", "append", "stats"]},
+          "rule": {"type": "string", "description": "Rule text (required for append action)."},
+          "auto_backup": {"type": "boolean", "default": true}
+        },
+        "required": ["action"]
+      }
+    },
+    {
+      "name": "crow_manage_backup",
+      "description": "Manage Crow memory backups. Create, rotate, list, or recover from drift.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "action": {"type": "string", "enum": ["create", "rotate", "list", "recover"]},
+          "tag": {"type": "string", "default": "daily", "enum": ["daily", "weekly", "manual"]},
+          "max_daily": {"type": "integer", "default": 7},
+          "max_weekly": {"type": "integer", "default": 4}
+        },
+        "required": ["action"]
+      }
+    },
+    {
+      "name": "crow_project_info",
+      "description": "List existing project-isolated Crow memory instances, or create a new isolated project memory.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "action": {"type": "string", "enum": ["list", "create"]},
+          "project_name": {"type": "string", "description": "Project name (required for create)."}
+        },
+        "required": ["action"]
       }
     }
   ]
 }
 ```
+
+### 2 MCP Prompts (Auto-Loaded by Host)
+
+| Prompt | Description |
+|--------|-------------|
+| `crow_memory_bias` | Full context: evolved rules + recent memory hints from all registers. Loaded automatically at session start. |
+| `crow_evolved_rules` | Permanent rules from `memory/system_prompt.md`. Returns only the approved RULE lines. |
 
 ---
 
@@ -496,11 +561,11 @@ To prevent a single bad session from poisoning memory:
 
 ```
 memory/
-|-- crow.bin               # Active memory
-|-- crow.bin.bak.1         # Daily backup (rotating 7 days)
-|-- crow.bin.bak.weekly    # Weekly checkpoint
-|-- system_prompt.md       # Active prompt
-|-- system_prompt.md.bak   # Pre-evolution backup
+|-- crow.bin                              # Active memory
+|-- crow.bin.bak.daily.20260525_143022    # Daily backup (rotating 7 days)
+|-- crow.bin.bak.weekly.20260525_000000   # Weekly checkpoint
+|-- system_prompt.md                      # Active prompt
+|-- system_prompt.md.bak                  # Pre-evolution backup
 ```
 
 Every `evolve` adoption triggers atomic backup. User can rollback to any previous week.
@@ -509,31 +574,31 @@ Every `evolve` adoption triggers atomic backup. User can rollback to any previou
 
 ## 8. Implementation Roadmap
 
-### Phase 0: Prototype (Day 1)
-- [ ] Implement `CrowState` class (4 registers, EMA, spectral clip)
-- [ ] Integrate `nomic-embed-text-v1.5` encoder
-- [ ] Build `stdio` MCP server exposing 3 tools
-- [ ] Manual test: `recall` -> `ingest` -> `recall` cycle with dummy data
+### Phase 0: Prototype — ✅ Implemented
+- [x] Implement `CrowState` class (8 registers, EMA, spectral clip)
+- [x] Integrate `nomic-embed-text-v1.5` encoder
+- [x] Build MCP server exposing 10 tools + 2 prompts
+- [x] Manual test: `recall` -> `ingest` -> `recall` cycle with dummy data
 
-### Phase 1: Zoo Code Hook (Day 2-3)
-- [ ] Capture `npm run build` exit code in Zoo Code extension
-- [ ] Auto-trigger `crow_ingest` on build success/failure
-- [ ] Inject `[User Bias]` block into the LLM system prompt before generation
+### Phase 1: Zoo Code Hook — ✅ Implemented
+- [x] Capture `npm run build` exit code via `crow_ingest_from_build`
+- [x] Auto-trigger `crow_ingest` on build success/failure
+- [x] Inject `[User Bias]` block into the LLM system prompt before generation
 
-### Phase 2: Feedback Loop (Week 1)
-- [ ] Track user edit distance (accepted vs rewritten)
-- [ ] Polarity modulation based on edit distance
-- [ ] `value_bank` circular buffer + FAISS index for text retrieval
+### Phase 2: Feedback Loop — ✅ Implemented
+- [x] Track user edit distance (accepted vs rewritten) via polarity auto-detection
+- [x] Polarity modulation based on build exit code + user edits
+- [x] `value_bank` importance-weighted priority queue + FAISS index for text retrieval
 
-### Phase 3: Evolution (Week 2)
-- [ ] Implement `crow_evolve_propose` with confidence/occurrence thresholds
-- [ ] Build HITL UI in Zoo Code (simple webview panel)
-- [ ] Connect to `system_prompt.md` append workflow
+### Phase 3: Evolution — ✅ Implemented
+- [x] Implement `crow_evolve_propose` with confidence/occurrence thresholds
+- [x] Build HITL UI (`hitl_panel.html`) for rule approval
+- [x] Connect to `system_prompt.md` append workflow with auto-backup
 
-### Phase 4: Hardening (Week 3-4)
-- [ ] Drift detection & auto-alert
-- [ ] Backup rotation & rollback UI
-- [ ] Multi-project isolation (optional: per-project `crow.bin`)
+### Phase 4: Hardening — ✅ Implemented
+- [x] Drift detection (`crow_check_drift`) & auto-recovery (`recover_from_drift`)
+- [x] Backup rotation (`crow_manage_backup`) & rollback
+- [x] Multi-project isolation (`crow_project_info` with per-project `crow.bin`)
 
 ---
 
@@ -611,6 +676,8 @@ The name is not merely poetic. It is a **behavioral contract**: we are not build
 
 ## 11. Appendix C: Minimal Viable Server (Python)
 
+### C.1 stdio Transport (single client)
+
 ```python
 #!/usr/bin/env python3
 """
@@ -650,7 +717,6 @@ class CrowMemory:
             self.data = self._init_blank()
         self.encoder = SentenceTransformer("nomic-ai/nomic-embed-text-v1.5")
         self.proj = nn.Linear(768, DIM).half().eval()
-        # Load projector weights from state if present
         if "proj_W" in self.data:
             self.proj.weight.data = torch.from_numpy(self.data["proj_W"])
             self.proj.bias.data = torch.from_numpy(self.data["proj_b"])
@@ -676,9 +742,7 @@ class CrowMemory:
         q = self.encode(query)
         S = self.data[f"{register}_S"]
         r = S.T.astype(np.float32) @ q.astype(np.float32)
-        # Confidence = norm of recalled vector (relative to typical)
         conf = float(np.linalg.norm(r) / (np.linalg.norm(S) + 1e-8))
-        # TODO: nearest-neighbor lookup against value_bank
         return {
             "hints": [f"Crow recalls a strong {register} bias for: {query}"],
             "confidence": round(min(conf, 1.0), 2),
@@ -687,7 +751,7 @@ class CrowMemory:
 
     def ingest(self, key: str, value: str, polarity: float, register: str):
         k = self.encode(key)
-        v = self.encode(value)[:REGISTERS[register][1]]  # Match register value dim
+        v = self.encode(value)[:REGISTERS[register][1]]
         S = self.data[f"{register}_S"]
         lam = REGISTERS[register][2]
         S *= lam
@@ -709,7 +773,6 @@ class CrowMemory:
         import os
         os.replace(self.path + ".tmp", self.path)
 
-# --- MCP Server Wiring ---
 app = Server("crow_memory")
 crow = CrowMemory("./memory/crow.bin")
 
@@ -722,7 +785,6 @@ async def handle_tool(name: str, arguments: dict):
                     arguments["polarity"], arguments["register"])
         return {"status": "ingested"}
     elif name == "crow_evolve_propose":
-        # Stub: statistical analysis of recent retrievals
         return {"proposal": "RULE: Prefer early return guards in all async functions.",
                 "confidence": 0.91, "requires_human_approval": True}
     raise ValueError(f"Unknown tool: {name}")
@@ -734,6 +796,18 @@ async def main():
 if __name__ == "__main__":
     asyncio.run(main())
 ```
+
+### C.2 Dual Transport (SSE + Streamable HTTP) — Recommended
+
+For multi-client safety, run the server in **dual mode** so both Zoo Code (SSE on port 9020) and Kimi Code (Streamable HTTP on port 9021) share a single `crow.bin`:
+
+```bash
+python crow_mcp_server.py --transport dual --port 9020 --http-port 9021
+```
+
+This launches two Uvicorn servers — one for SSE (`/sse`) and one for Streamable HTTP — using a single `CrowMemory` instance. All reads and writes are serialized through the same process, eliminating race conditions.
+
+> ⚠️ **Do not use stdio mode with multiple editors.** Each editor spawns its own `crow_mcp_server.py` process, and concurrent writes to `crow.bin` will cause silent data loss. Always use SSE or dual mode for multi-client setups.
 
 ---
 
