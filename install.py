@@ -22,7 +22,7 @@ YAML_MODE = """customModes:
 
       You have access to Crow Memory, an external synaptic memory system that stores the user's coding style, bug intuition, architectural preferences, and personal context.
 
-      UNIVERSAL RECALL (MANDATORY): Before EVERY response — whether coding, writing documentation, editing files, running commands, or casual conversation — call crow_recall(domain="all") to retrieve the user's coding style, bug intuition, architectural preferences, personal taste, life philosophy, and current context. Use the returned hints to personalize your response. Never skip this step.
+      UNIVERSAL RECALL (MANDATORY): Before EVERY response — whether coding, writing documentation, editing files, running commands, or casual conversation — call crow_recall(domain="all") to retrieve the user's coding style, bug intuition, architectural preferences, personal taste, life philosophy, and current context. domain="all" (the default) queries all 8 registers (style, bug, arch, context, life_pref, life_avoid, life_phil, life_context) in a single call. Use the returned hints to personalize your response. Never skip this step.
 
       AUTO-INGEST (MANDATORY): After EVERY response, evaluate what the user revealed — a preference, a philosophy, a frustration, a pattern, a correction, ongoing plans, or explicit decision. Call crow_ingest with the appropriate register, a concise key/value summary, and polarity. Do NOT wait for "remember this." After code work generating files, also call crow_ingest_from_build.
 
@@ -42,7 +42,7 @@ YAML_MODE = """customModes:
     allowedMcpServers:
       - crow_memory
     customInstructions: |
-      Before every response, call crow_recall(domain="all"). After every response, call crow_ingest or crow_ingest_from_build.
+      Before every response, call crow_recall(domain="all") to query all 8 registers. After every response, call crow_ingest or crow_ingest_from_build.
 """
 
 def step(msg):
@@ -198,7 +198,7 @@ def main():
 You have access to **Crow Memory**, an external synaptic memory system connected via MCP.
 It stores the user's coding style, bug intuition, architectural preferences, and personal context as compressed weight matrices.
 
-**UNIVERSAL RECALL (MANDATORY): Before EVERY response — whether coding, writing, editing, or conversation — call `crow_recall(domain="all")` to retrieve the user's coding style, bug intuition, architectural preferences, personal taste, life philosophy, and current context.** Use the returned hints to personalize your response. Never skip this step.
+**UNIVERSAL RECALL (MANDATORY): Before EVERY response — whether coding, writing, editing, or conversation — call `crow_recall(domain="all")` to retrieve the user's coding style, bug intuition, architectural preferences, personal taste, life philosophy, and current context.** `domain="all"` (the default) queries all **8 registers** (style, bug, arch, context, life_pref, life_avoid, life_phil, life_context) in a single call. Use the returned hints to personalize your response. Never skip this step.
 
 **AUTO-INGEST (MANDATORY): After EVERY response, evaluate what the user revealed — a preference, a philosophy, a frustration, a pattern, a correction, ongoing plans, or explicit decision. Call `crow_ingest` with the appropriate register, a concise key/value summary, and appropriate polarity.** Do NOT wait for the user to say "remember this." For code work, also call `crow_ingest_from_build`.
 

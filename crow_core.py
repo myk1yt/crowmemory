@@ -117,6 +117,8 @@ REGISTERS: dict[str, tuple[int, int, float]] = {
 DOMAINS: dict[str, list[str]] = {
     "code": ["style", "bug", "arch", "context"],
     "life": ["life_pref", "life_avoid", "life_phil", "life_context"],
+    "all": ["style", "bug", "arch", "context",
+            "life_pref", "life_avoid", "life_phil", "life_context"],
 }
 CODE_REGISTERS = DOMAINS["code"]
 LIFE_REGISTERS = DOMAINS["life"]

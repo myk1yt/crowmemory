@@ -48,15 +48,16 @@ TOOL_DEFINITIONS = [
         "description": (
             "Recall user-specific coding style, bug intuition, architectural "
             "preference, or personal context from the Crow synaptic memory. "
-            "Call this BEFORE every response to align with user's inductive bias."
+            "Call this BEFORE every response to align with user's inductive bias. "
+            "By default (no register, domain=all), queries all 8 registers."
         ),
         "inputSchema": {
             "type": "object",
             "properties": {
                 "query": {"type": "string", "description": "Natural language description of the current task."},
-                "register": {"type": "string", "enum": ["style", "bug", "arch", "context", "life_pref", "life_avoid", "life_phil", "life_context"], "description": "Which register. Code: style/bug/arch/context. Life: life_pref/life_avoid/life_phil/life_context."},
+                "register": {"type": "string", "enum": ["style", "bug", "arch", "context", "life_pref", "life_avoid", "life_phil", "life_context", "all"], "description": "Which register. Use 'all' to query every register (same as domain=all). Code: style/bug/arch/context. Life: life_pref/life_avoid/life_phil/life_context."},
                 "top_k": {"type": "integer", "default": 2, "description": "Number of hints (1-3)."},
-                "domain": {"type": "string", "enum": ["code", "life", "all"], "default": "all", "description": "Domain filter shortcut."},
+                "domain": {"type": "string", "enum": ["code", "life", "all"], "default": "all", "description": "Domain filter shortcut. 'code' = style/bug/arch/context, 'life' = life_pref/life_avoid/life_phil/life_context, 'all' = all 8 registers (default)."},
             },
             "required": ["query"],
         },
@@ -283,7 +284,7 @@ def create_server(state_path: str) -> Server:
 # ---------------------------------------------------------------------------
 
 def _recall(crow: CrowMemory, args: dict) -> list:
-    domain = args.get("domain")
+    domain = args.get("domain", "all")
     register = args.get("register")
     top_k = max(1, min(5, args.get("top_k", 2)))
 
@@ -292,7 +293,7 @@ def _recall(crow: CrowMemory, args: dict) -> list:
         from crow_core import DOMAINS
         all_hints = []
         total_conf = 0.0
-        registers = DOMAINS.get(domain, ["style"])
+        registers = DOMAINS.get(domain, DOMAINS["all"])
         for reg in registers:
             r = crow.recall(args.get("query", ""), reg, max(1, top_k // len(registers)))
             all_hints.extend(r.get("hints", []))

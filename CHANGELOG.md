@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.3.2] — 2026-05-26
+
+### Fixed
+- **`crow_recall(domain="all")` silently queries only `style` register**: [`crow_core.py`](crow_core.py) `DOMAINS` dictionary was missing the `"all"` key. When `_recall` handler received `domain="all"`, it fell back to `DOMAINS.get("all", ["style"])` → returned only `style` hints instead of all 8 registers.
+  - **Fix**: Added `"all"` key to `DOMAINS` mapping to all 8 registers (`style`, `bug`, `arch`, `context`, `life_pref`, `life_avoid`, `life_phil`, `life_context`).
+- **`_recall` handler no default domain**: When `domain` argument was omitted, `args.get("domain")` returned `None`, skipping the multi-register path and falling back to `register or "style"` — only 1 register queried.
+  - **Fix**: Changed to `args.get("domain", "all")` so domain defaults to `"all"`, automatically querying all registers even when no arguments are passed beyond `query`.
+
+### Changed
+- **`crow_recall` tool definition**: `register` enum now includes `"all"`, allowing callers to explicitly specify `register="all"` for multi-register query.
+- **Domain fallback hardened**: `DOMAINS.get(domain, ["style"])` → `DOMAINS.get(domain, DOMAINS["all"])` so unknown domains fall back to all registers instead of just `style`.
+
+### Documentation
+- **AGENTS.md**: UNIVERSAL RECALL rule now explicitly states that `domain="all"` queries all **8 registers**.
+- **system_prompt.example.md**: Same clarification added to the evolved Korean RULE.
+- **install.py**: Both `customInstructions` and `agents_md_content` templates updated with the 8-register clarification.
+- **patch_kimi_code.py**: `CROW_SECTION` template updated with the same clarification.
+
+---
+
 ## [1.3.1] — 2026-05-25
 
 ### Fixed
