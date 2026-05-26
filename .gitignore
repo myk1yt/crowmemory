@@ -43,6 +43,9 @@ debug.log
 sse_server.log
 *.log
 
+# Tests (local only)
+tests/
+
 # OS
 .DS_Store
 Thumbs.db
