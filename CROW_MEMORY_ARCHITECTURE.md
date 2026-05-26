@@ -41,7 +41,7 @@ Crow learns not from what the model *generates*, but from what the *user accepts
 While Crow cannot rewrite the LLM's genotype (base weights), it can rewrite its **phenotype** (system prompt and tool-call behavior). Crow's `evolve_prompt` protocol proposes prompt mutations. These mutations are **suggestions only**--a Human-in-the-Loop (HITL) gate must approve them. This mimics evolutionary selection: mutations arise freely, but only the fittest survive human curation.
 
 ### 1.5 Fixed-Size Immortality
-The `crow.bin` file is forever fixed at ~80MB (configurable). It does not grow as you accumulate projects. This is not a limitation; it is a *feature*. It forces the system to compress, abstract, and generalize--exactly what human long-term memory does. You do not remember every line of code you wrote in 2003; you remember *that you preferred monolithic classes back then*.
+The `crow.bin` file is forever fixed at ~140MB (configurable). It does not grow as you accumulate projects. This is not a limitation; it is a *feature*. It forces the system to compress, abstract, and generalize--exactly what human long-term memory does. You do not remember every line of code you wrote in 2003; you remember *that you preferred monolithic classes back then*.
 
 ---
 
@@ -351,7 +351,7 @@ This is the exact schema exposed by the local Python MCP server. The LLM sees th
         "properties": {
           "query": {"type": "string", "description": "Natural language description of the current task."},
           "register": {"type": "string", "enum": ["style", "bug", "arch", "context", "life_pref", "life_avoid", "life_phil", "life_context", "all"], "description": "Which register. Use 'all' to query every register. Code: style/bug/arch/context. Life: life_pref/life_avoid/life_phil/life_context."},
-          "top_k": {"type": "integer", "default": 2, "description": "Number of hints (1-5)."},
+          "top_k": {"type": "integer", "default": 2, "description": "Number of hints (1-3)."},
           "domain": {"type": "string", "enum": ["code", "life", "all"], "default": "all", "description": "Domain filter shortcut. 'code' = 4 code registers, 'life' = 4 life registers, 'all' = all 8 (default)."}
         },
         "required": ["query"]
@@ -384,7 +384,7 @@ This is the exact schema exposed by the local Python MCP server. The LLM sees th
     },
     {
       "name": "crow_diagnostics",
-      "description": "Return diagnostic information about the Crow memory state (register norms, sparsity, update count, value bank size, prompt stats).",
+      "description": "Return diagnostic information about the Crow memory state (register norms, sparsity, update count, value bank size, prompt stats). Matches crow_diagnostics tool output.",
       "parameters": {"type": "object", "properties": {}}
     },
     {
@@ -416,7 +416,7 @@ This is the exact schema exposed by the local Python MCP server. The LLM sees th
     },
     {
       "name": "crow_get_user_bias",
-      "description": "Generate the [User Bias] block for injection into the system prompt. Queries specified registers and formats hints for prompt prepending.",
+      "description": "Generate the [User Bias] block for injection into the system prompt. Queries all registers and formats hints for prompt prepending.",
       "parameters": {
         "type": "object",
         "properties": {
@@ -428,7 +428,7 @@ This is the exact schema exposed by the local Python MCP server. The LLM sees th
     },
     {
       "name": "crow_manage_prompt",
-      "description": "Read, append to, or get statistics about the system_prompt.md file. Use 'read' to view current prompt, 'append' to adopt an evolved rule, 'stats' for metrics.",
+      "description": "Read, append to, or get statistics about the system_prompt.md file. Use 'read' to view current prompt, 'append' to adopt an evolved rule, 'stats' for metrics. Matches crow_manage_prompt tool.",
       "parameters": {
         "type": "object",
         "properties": {
@@ -441,7 +441,7 @@ This is the exact schema exposed by the local Python MCP server. The LLM sees th
     },
     {
       "name": "crow_manage_backup",
-      "description": "Manage Crow memory backups. Create, rotate, list, or recover from drift.",
+      "description": "Manage Crow memory backups. Create, rotate, list, or recover from drift. Matches crow_manage_backup tool.",
       "parameters": {
         "type": "object",
         "properties": {

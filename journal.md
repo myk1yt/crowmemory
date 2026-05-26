@@ -67,17 +67,17 @@
 
 | 테스트 | 결과 | 핵심 지표 |
 |---|---|---|
-| Test 1: Initialize | ✅ | 4레지스터 모두 0-노름, update_count=0 |
-| Test 2: Ingest 5 experiences | ✅ | 모든 레지스터 비영점 도달, context 노름 0.0352 |
-| Test 3: Recall hints | ✅ | sim=0.67~1.00, 올바른 힌트 반환 |
-| Test 4: Evolve proposal | ✅ | HITL 승인 필요 플래그 정상 |
-| Test 5: Drift detection | ✅ | 정상 상태에서 오탐 없음 |
-| Test 6: Persistence round-trip | ✅ | 재로딩 후 update_count·value_bank 보존 |
+| Test 1: Initialize | (OK) | 4레지스터 모두 0-노름, update_count=0 |
+| Test 2: Ingest 5 experiences | (OK) | 모든 레지스터 비영점 도달, context 노름 0.0352 |
+| Test 3: Recall hints | (OK) | sim=0.67~1.00, 올바른 힌트 반환 |
+| Test 4: Evolve proposal | (OK) | HITL 승인 필요 플래그 정상 |
+| Test 5: Drift detection | (OK) | 정상 상태에서 오탐 없음 |
+| Test 6: Persistence round-trip | (OK) | 재로딩 후 update_count·value_bank 보존 |
 
 #### Recall 품질 예시
-- `"Fix memory leak in React PDF worker"` → `[bug] Always use explicit cleanup in useEffect... (sim=0.67)` ✓
-- `"Design a binary format reader"` → `[arch] Always validate magic bytes in first 8 bytes... (sim=0.71)` ✓
-- `"What is the user currently working on?"` → `[context] User is building a book viewer application... (sim=1.00)` ✓
+- `"Fix memory leak in React PDF worker"` → `[bug] Always use explicit cleanup in useEffect... (sim=0.67)` (check)
+- `"Design a binary format reader"` → `[arch] Always validate magic bytes in first 8 bytes... (sim=0.71)` (check)
+- `"What is the user currently working on?"` → `[context] User is building a book viewer application... (sim=1.00)` (check)
 
 ### 결정 사항
 
@@ -138,15 +138,15 @@
 
 | Phase | 테스트 | 결과 |
 |---|---|---|
-| Phase 0 | Core engine (6 tests) | ✅ 6/6 |
-| Phase 1 | Build hook (6 tests) | ✅ 6/6 |
-| Phase 2 | FAISS (2 tests) | ✅ 2/2 |
-| Phase 3 | Prompt evolution (6 tests) | ✅ 6/6 |
-| Phase 4 | Backup (4 tests) | ✅ 4/4 |
-| Phase 4 | Drift (2 tests) | ✅ 2/2 |
-| Phase 4 | Multi-project (4 tests) | ✅ 4/4 |
-| MCP | Configuration (7 tests) | ✅ 7/7 |
-| **총계** | **37 tests** | **✅ 37/37** |
+| Phase 0 | Core engine (6 tests) | (OK) 6/6 |
+| Phase 1 | Build hook (6 tests) | (OK) 6/6 |
+| Phase 2 | FAISS (2 tests) | (OK) 2/2 |
+| Phase 3 | Prompt evolution (6 tests) | (OK) 6/6 |
+| Phase 4 | Backup (4 tests) | (OK) 4/4 |
+| Phase 4 | Drift (2 tests) | (OK) 2/2 |
+| Phase 4 | Multi-project (4 tests) | (OK) 4/4 |
+| MCP | Configuration (7 tests) | (OK) 7/7 |
+| **총계** | **37 tests** | **(OK) 37/37** |
 
 ### 결정 사항
 

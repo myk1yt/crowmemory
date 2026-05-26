@@ -95,7 +95,7 @@ TOOL_DEFINITIONS = [
     },
     {
         "name": "crow_diagnostics",
-        "description": "Return diagnostic information about the Crow memory state.",
+        "description": "Return diagnostic information about the Crow memory state (register norms, sparsity, update count, value bank size, prompt stats).",
         "inputSchema": {"type": "object", "properties": {}},
     },
     {
@@ -146,8 +146,8 @@ TOOL_DEFINITIONS = [
     {
         "name": "crow_manage_prompt",
         "description": (
-            "Read or append to the system_prompt.md file. "
-            "Use 'read' to view current prompt, 'append' to adopt an evolved rule."
+            "Read, append to, or get statistics about the system_prompt.md file. "
+            "Use 'read' to view current prompt, 'append' to adopt an evolved rule, 'stats' for metrics."
         ),
         "inputSchema": {
             "type": "object",
@@ -162,7 +162,7 @@ TOOL_DEFINITIONS = [
     {
         "name": "crow_manage_backup",
         "description": (
-            "Manage Crow memory backups. Create, rotate, list, or recover."
+            "Manage Crow memory backups. Create, rotate, list, or recover from drift."
         ),
         "inputSchema": {
             "type": "object",
@@ -196,7 +196,7 @@ TOOL_DEFINITIONS = [
 def create_server(state_path: str) -> Server:
     server = Server(
         name="crow_memory",
-        version="1.3.1",
+        version="1.3.4",
         instructions=(
             "Crow Memory — External synaptic memory for AI coding agents. "
             "Stores your coding style, bug intuition, and architectural "
