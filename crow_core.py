@@ -288,14 +288,22 @@ class CrowMemory:
         if not candidates:
             return [f"Crow recalls a faint {register} bias. Few memories stored yet."]
 
+        import math
         hints = []
         for idx, sim in zip(ids, sims):
-            if idx < len(candidates) and sim > 0.3:
+            if idx < len(candidates):
                 entry = candidates[idx]
-                hints.append(
-                    f"[{register}] {entry['value'][:200]}"
-                    f" (sim={sim:.2f})"
-                )
+                importance = entry.get("importance", 1.0)
+                # Importance-weighted similarity: frequently-ingested / frequently-recalled
+                # patterns get a lower visibility threshold (higher effective similarity).
+                importance_boost = 1.0 + 0.12 * math.log(max(importance, 0.1) + 1.0)
+                effective_sim = sim * importance_boost
+                # Base threshold 0.28, high-importance entries get additional leeway
+                if effective_sim > 0.28 or (importance > 5.0 and sim > 0.15):
+                    hints.append(
+                        f"[{register}] {entry['value'][:200]}"
+                        f" (sim={sim:.2f})"
+                    )
 
         if not hints:
             hints = [f"Crow recalls a faint {register} bias. Few memories stored yet."]
@@ -326,7 +334,7 @@ class CrowMemory:
 
         self.data["update_count"] = np.int64(int(self.data["update_count"]) + 1)
         self._maybe_clip(register)
-        self._append_value_bank(key, value, v, register)
+        self._append_value_bank(key, value, v, register, polarity)
         self._persist()
 
         return {
@@ -400,21 +408,53 @@ class CrowMemory:
     # ------------------------------------------------------------------
 
     def _append_value_bank(self, key: str, value: str, vector: np.ndarray,
-                           register: str):
+                           register: str, polarity: float = 1.0):
+        key_trunc = key[:500]
+
+        # Duplicate key handling: accumulate importance on re-ingest
+        existing = None
+        for entry in self._value_bank:
+            if entry.get("register") == register and entry.get("key") == key_trunc:
+                existing = entry
+                break
+
+        if existing:
+            existing["value"] = value[:1000]
+            existing["vector_b64"] = self._encode_vector(vector)
+            existing["importance"] = existing.get("importance", 1.0) + abs(polarity)
+            existing["ingest_count"] = existing.get("ingest_count", 1) + 1
+            existing["timestamp"] = time.time()
+            # Append new FAISS vector; index will be rebuilt lazily
+            self._faiss_vectors.setdefault(register, []).append(vector.astype(np.float32))
+            self._faiss_indexes.pop(register, None)
+            return existing
+
         entry = {
-            "key": key[:500],
+            "key": key_trunc,
             "value": value[:1000],
             "vector_b64": self._encode_vector(vector),
             "register": register,
             "timestamp": time.time(),
+            "importance": abs(polarity),
+            "ingest_count": 1,
         }
         self._value_bank.append(entry)
+
+        # Importance-based eviction: remove least important entries first
         while len(self._value_bank) > VALUE_BANK_MAX:
-            self._value_bank.pop(0)
+            # Find the entry with the lowest importance score
+            min_idx = min(
+                range(len(self._value_bank)),
+                key=lambda i: self._value_bank[i].get("importance", 0),
+            )
+            self._value_bank.pop(min_idx)
+            self._faiss_indexes.pop(register, None)
+
         self._faiss_vectors.setdefault(register, []).append(vector.astype(np.float32))
-        if len(self._faiss_vectors[register]) > VALUE_BANK_MAX:
+        while len(self._faiss_vectors[register]) > VALUE_BANK_MAX:
             self._faiss_vectors[register].pop(0)
         self._faiss_indexes.pop(register, None)
+        return entry
 
     def _load_value_bank(self):
         vb_path = os.path.join(self.memory_dir, "value_bank.json")
@@ -460,22 +500,45 @@ class CrowMemory:
         entry["last_hints"] = hints[:3]
         entry["last_seen"] = time.time()
 
-        # Enforce per-register max entries (remove oldest first)
+        # Boost value_bank importance for frequently-recalled patterns
+        # Each recall adds a small importance increment proportional to confidence
+        for hint in hints:
+            # Extract register prefix from hint (e.g., "[style] some value (sim=0.85)")
+            if hint.startswith("[") and "] " in hint:
+                hint_register = hint[1:].split("]", 1)[0]
+                if hint_register == register:
+                    # Try to match hint text to value_bank entries
+                    hint_text = hint.split("] ", 1)[1].rsplit(" (sim=", 1)[0] if " (sim=" in hint else hint.split("] ", 1)[1]
+                    for vb_entry in self._value_bank:
+                        if vb_entry.get("register") == register and vb_entry["value"][:200] == hint_text[:200]:
+                            vb_entry["importance"] = vb_entry.get("importance", 1.0) + 0.1 * confidence
+                            break
+
+        # Enforce per-register max entries (remove least-frequently-recalled first)
         max_entries = self._recall_stats_max_per_register
         if len(stats) > max_entries:
-            oldest = sorted(stats.items(), key=lambda kv: kv[1]["last_seen"])[:len(stats) - max_entries]
-            for k, _ in oldest:
+            # Sort by occurrences (ascending) then last_seen (ascending) — keep frequently-recalled entries
+            sorted_entries = sorted(
+                stats.items(),
+                key=lambda kv: (kv[1].get("occurrences", 0), kv[1].get("last_seen", 0)),
+            )
+            for k, _ in sorted_entries[:len(stats) - max_entries]:
                 del stats[k]
 
-        # Lazy prune: only run TTL cleanup + persist every 3600 seconds
+        # Lazy prune: run cleanup every 3600 seconds
+        # 30-day hard TTL, 7-day soft TTL only for entries recalled < 3 times
         now = time.time()
         if now - self._last_recall_prune > 3600:
-            cutoff = now - 7 * 86400
+            hard_cutoff = now - 30 * 86400   # 30 days — remove regardless
+            soft_cutoff = now - 7 * 86400    # 7 days — remove if recalled < 3 times
             for reg in list(self._recall_stats.keys()):
-                pruned = {
-                    k: v for k, v in self._recall_stats[reg].items()
-                    if v["last_seen"] > cutoff
-                }
+                pruned = {}
+                for k, v in self._recall_stats[reg].items():
+                    last_seen = v.get("last_seen", 0)
+                    occurrences = v.get("occurrences", 0)
+                    if last_seen > hard_cutoff:
+                        if last_seen > soft_cutoff or occurrences >= 3:
+                            pruned[k] = v
                 if pruned:
                     self._recall_stats[reg] = pruned
                 else:

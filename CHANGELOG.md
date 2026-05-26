@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.3.3] — 2026-05-26
+
+### Changed — "Important memories survive" design philosophy
+- **Value Bank: FIFO → Importance-based priority queue**: [`crow_core.py`](crow_core.py) `_append_value_bank` no longer drops the oldest entry. Instead, it drops the entry with the lowest `importance` score, preserving frequently-ingested / high-polarity memories. Duplicate keys accumulate importance on re-ingest.
+- **Recall Stats: 7-day hard TTL → dual-threshold with recall frequency**: [`crow_core.py`](crow_core.py) `_track_recall` now uses **30-day hard TTL** (remove regardless) + **7-day soft TTL** (remove only if recalled < 3 times). Frequently recalled patterns survive longer. Per-register max entries now evict least-frequently-recalled first.
+- **Recall visibility: fixed threshold → importance-weighted adaptive**: [`crow_core.py`](crow_core.py) `_nearest_hints` no longer uses a fixed `sim > 0.3` threshold. High-importance entries get an effective similarity boost (`importance_boost = 1 + 0.12 * log(importance + 1)`) and a lower visibility floor (`sim > 0.15` when `importance > 5`).
+- **Ingest strengthens, not just adds**: Re-ingesting the same key now accumulates `importance` and increments `ingest_count` instead of creating a duplicate entry.
+
+---
+
 ## [1.3.2] — 2026-05-26
 
 ### Fixed
