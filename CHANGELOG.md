@@ -19,11 +19,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **`crow_recall` tool definition**: `register` enum now includes `"all"`, allowing callers to explicitly specify `register="all"` for multi-register query.
 - **Domain fallback hardened**: `DOMAINS.get(domain, ["style"])` → `DOMAINS.get(domain, DOMAINS["all"])` so unknown domains fall back to all registers instead of just `style`.
 
+### Changed
+- **`code-crow` mode definition**: Added `description` field to both [`custom_modes.example.yaml`](custom_modes.example.yaml) and [`install.py`](install.py) `YAML_MODE` template. The description explains the difference between Code and Code+Crow modes: Code+Crow auto-recalls style/preferences and learns from feedback; plain Code mode provides unbiased, one-shot answers without memory influence.
+
 ### Documentation
 - **AGENTS.md**: UNIVERSAL RECALL rule now explicitly states that `domain="all"` queries all **8 registers**.
 - **system_prompt.example.md**: Same clarification added to the evolved Korean RULE.
-- **install.py**: Both `customInstructions` and `agents_md_content` templates updated with the 8-register clarification.
+- **install.py**: Both `customInstructions`, `YAML_MODE`, and `agents_md_content` templates updated with the 8-register clarification and mode description.
 - **patch_kimi_code.py**: `CROW_SECTION` template updated with the same clarification.
+- **custom_modes.example.yaml**: Added `description` field to `code-crow` mode explaining when to use it vs. plain Code mode.
 
 ---
 

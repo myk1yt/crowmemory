@@ -17,6 +17,12 @@ ZOO_SETTINGS = Path(os.environ.get("APPDATA", os.path.expanduser("~/.config"))) 
 YAML_MODE = """customModes:
   - slug: code-crow
     name: "Code + Crow Memory"
+    description: |
+      Code mode enhanced with Crow Memory — the AI automatically recalls your
+      coding style & preferences before every response and learns from your
+      feedback. Use this as your default coding partner for personalized,
+      long-term collaboration. Switch to plain "Code" mode when you need
+      unbiased, one-shot answers without memory influence.
     roleDefinition: |
       You are Zoo, a highly skilled software engineer with extensive knowledge in many programming languages, frameworks, design patterns, and best practices.
 
