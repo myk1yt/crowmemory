@@ -277,6 +277,18 @@ If you manually switch to `"type": "stdio"` (command mode), each VS Code instanc
 
 ---
 
+### Kimi Code Integration
+
+Kimi Code does not support custom modes like Zoo Code's `orchestrator-crow`. Instead, use the single-file [`AGENTS.md`](AGENTS.md) for equivalent Crow Memory integration:
+
+1. Set environment variable: `KIMI_AGENTS_MD=/path/to/crowsmemory/AGENTS.md`
+2. Configure MCP: Add `crow_memory` SSE server to Kimi Code's `mcp_settings.json`
+3. Start the server: `python crow_mcp_server.py --transport sse --port 9020`
+
+The `AGENTS.md` file provides session-start recall, session-end ingest, and full tool reference — matching the `orchestrator-crow` experience in Zoo Code.
+
+---
+
 ## Troubleshooting
 
 ### Crow tools don't appear

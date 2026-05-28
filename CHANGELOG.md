@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2026-05-28] — Kimi Code Integration Restored
+
+### Added
+- **`AGENTS.md`** — Single-file Kimi Code Crow Memory integration (replaces deleted `patch_kimi_code.py`, `crow_auto_inject.py`, and old `AGENTS.md`)
+  - Session-start `crow_recall` + session-end `crow_ingest` rules
+  - Full 10-tool reference with register guide
+  - Designed for `${KIMI_AGENTS_MD}` auto-injection — equivalent to Zoo Code's `orchestrator-crow` mode
+
+### Changed
+- `README.md` — Kimi Code integration guide linking to `AGENTS.md`
+
+---
+
 ## [1.3.6] — 2026-05-28
 
 ### Removed
