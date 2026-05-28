@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Verify all v1.3.2–v1.3.4 fixes with real crow_core imports."""
+"""Verify all v1.3.2–v1.3.5 fixes with real crow_core imports."""
 import sys
 import os
 import json

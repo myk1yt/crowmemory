@@ -16,3 +16,22 @@ It stores the user's coding style, bug intuition, architectural preferences, and
 - User shows frustration / avoidance → -0.5 (`life_avoid` / `bug`)
 
 Crow is not a database — it stores inductive biases. Use it as your intuition, not your encyclopedia.
+
+---
+
+## Orchestrator + Crow Mode (orchestrator-crow)
+
+Crow Memory also supports an **orchestrator-crow** custom mode for task-delegation workflows.
+
+### How to enable in Zoo Code:
+
+1. Press `Ctrl+Shift+P` → type "Mode" → select "Switch Mode"
+2. Choose **"Orchestrator + Crow"** from the list
+3. Or set it as default in [`.zoo/config.json`](.zoo/config.json):
+   ```json
+   {
+     "defaultMode": "orchestrator-crow"
+   }
+   ```
+
+This mode integrates Crow Memory's recall/ingest cycle with orchestrator-style task delegation.

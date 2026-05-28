@@ -1,0 +1,10 @@
+{
+  "$schema": "../.zoo/config.schema.json",
+  "defaultMode": "orchestrator-crow",
+  "version": "1.3.5",
+  "project": "crowmemory",
+  "crow": {
+    "autoRecall": true,
+    "autoIngest": true
+  }
+}

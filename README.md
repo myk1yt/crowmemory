@@ -77,7 +77,9 @@ This means: **first open** → bat starts server detached + polls until ready. *
 
 1. **Restart Zoo Code / Kimi Code**
 2. Open the `crowsmemory` workspace folder
-3. Switch mode to **"Code + Crow Memory"**
+3. Switch mode to one of the following:
+   - **"Code + Crow Memory"** — for direct coding with auto-recall/auto-ingest
+   - **"Orchestrator + Crow"** — for task-delegation workflows with Crow Memory integration
 4. Done. The SSE server auto-starts. Crow activates on every response.
 
 ### 4. Verify
@@ -99,6 +101,31 @@ Four layers ensure Crow is always active across all editors:
 | **AUTO-INGEST** | Same as above — auto-detects preferences, corrections, context | ✅ | ✅ |
 
 The installer copies [`system_prompt.example.md`](system_prompt.example.md) → `memory/system_prompt.md` with 3 pre-evolved rules. Kimi Code users also get [`AGENTS.md`](AGENTS.md) at the project root — the CLI auto-injects these rules every session, no patching required, survives updates permanently.
+
+---
+
+## `.zoo/` Configuration Structure
+
+Crow Memory now supports the Zoo Code `.zoo/` configuration convention:
+
+| File | Description |
+|------|-------------|
+| [`.zoo/config.json`](.zoo/config.json) | Project-level Zoo configuration — default mode, version, Crow auto-recall/ingest flags |
+| [`.zoo/config.schema.json`](.zoo/config.schema.json) | JSON Schema for `.zoo/config.json` validation |
+| [`.roo/mcp.schema.json`](.roo/mcp.schema.json) | JSON Schema for `.roo/mcp.json` MCP configuration validation |
+
+### Default Mode
+
+Set `"defaultMode": "orchestrator-crow"` in [`.zoo/config.json`](.zoo/config.json) to automatically activate the Orchestrator + Crow mode when you open the project.
+
+### Templates
+
+The [`templates/`](templates/) directory contains reusable configuration templates:
+
+| Template | Description |
+|----------|-------------|
+| [`templates/zoo-config.json`](templates/zoo-config.json) | Template for `.zoo/config.json` with Crow Memory defaults |
+| [`templates/.roo/mcp.json`](templates/.roo/mcp.json) | Template for `.roo/mcp.json` with Crow Memory MCP server config |
 
 ---
 
@@ -334,5 +361,5 @@ MIT License — see [`LICENSE`](LICENSE) for details.
 
 ---
 
-*Crow Memory v1.3.4 — May 2026*
+*Crow Memory v1.3.5 — May 2026*
 *Co-designed by Stefano,Kim & AI*

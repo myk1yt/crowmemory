@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.3.5] — 2026-05-28
+
+### Added
+- `orchestrator-crow` 커스텀 모드 지원 — 작업 위임 중심 워크플로우에 Crow Memory 통합
+- `.zoo/` 디렉토리 구조: `config.json`, `config.schema.json`
+- `.roo/mcp.schema.json` — MCP 설정 JSON Schema 검증
+- `templates/` 디렉토리: `zoo-config.json`, `.roo/mcp.json` 프로젝트 템플릿
+
+### Changed
+- `custom_modes.example.yaml`에 `orchestrator-crow` 모드 예시 추가
+- `AGENTS.md`에 `orchestrator-crow` 모드 활성화 가이드 추가
+- `README.md`에 `.zoo/` 설정 구조 및 `orchestrator-crow` 모드 안내 추가
+
+---
+
 ## [1.3.4] — 2026-05-26
 
 ### Fixed

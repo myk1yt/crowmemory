@@ -1,7 +1,7 @@
 # Crow (까마귀) Memory Architecture
 ## A Synaptic State Cache for Recursive Agent Development
 
-**Version:** 1.3.4
+**Version:** 1.3.5
 **Date:** 2026-05-26
 **Author:** Stefano,Kim & AI Collaborative Design
 **Target Runtime:** Any MCP-compatible IDE + LLM API + Local Python MCP Server
