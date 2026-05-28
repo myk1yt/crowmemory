@@ -3,7 +3,7 @@
   "tasks": [
     {
       "label": "Crow SSE Server — Auto Start",
-      "detail": "Starts the Crow Memory SSE server on port 9020 when this workspace is opened. Both Zoo Code and Kimi Code connect via SSE to share crow.bin.",
+      "detail": "Starts the Crow Memory SSE server on port 9020 when this workspace is opened. Zoo Code connects via SSE to share crow.bin.",
       "type": "shell",
       "command": "cmd /c \"${workspaceFolder}\\start_crow_sse.bat\"",
       "isBackground": true,

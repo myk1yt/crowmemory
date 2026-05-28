@@ -1,7 +1,7 @@
 # Crow (까마귀) Memory Architecture
 ## A Synaptic State Cache for Recursive Agent Development
 
-**Version:** 1.3.5
+**Version:** 1.3.6
 **Date:** 2026-05-26
 **Author:** Stefano,Kim & AI Collaborative Design
 **Target Runtime:** Any MCP-compatible IDE + LLM API + Local Python MCP Server
@@ -51,7 +51,7 @@ The `crow.bin` file is forever fixed at ~140MB (configurable). It does not grow 
 
 ```
 +---------------------------------------------------------------------+
-|                   VS CODE-BASED IDE (Zoo Code / Kimi Code)           |
+|                   VS CODE-BASED IDE (Zoo Code)                       |
 |  +-----------------+  +------------------+  +---------------------+ |
 |  |  User Editor    |  |  Build/Test Hook |  |  HITL Gate (UI)     | |
 |  |  (TypeScript)   |  |  (Node.js)       |  |  (Approve/Reject)   | |
@@ -107,14 +107,12 @@ The `crow.bin` file is forever fixed at ~140MB (configurable). It does not grow 
 |-----------|---------|----------------|
 | **VS Code IDE** | Local Electron/Node | Orchestrates the agent loop, captures build exit codes, renders HITL UI. Auto-starts SSE server on workspace open via `.vscode/tasks.json` → `start_crow_sse.bat`. |
 | **LLM Agent** | Cloud/On-prem API | Inference engine, generates code, proposes prompt mutations, decides tool calls |
-| **MCP Server (SSE)** | Local Python (detached) | Serves `crow.bin` I/O over HTTP (port 9020 SSE + 9021 Streamable HTTP). Embedding encoding, weight math, FAISS nearest-neighbor lookup. Serializes all multi-client access. **Runs as detached process** — survives IDE restarts. Writes `memory/.crow_ready` on listen. |
+| **MCP Server (SSE)** | Local Python (detached) | Serves `crow.bin` I/O over HTTP (port 9020 SSE). Embedding encoding, weight math, FAISS nearest-neighbor lookup. Serializes all multi-client access. **Runs as detached process** — survives IDE restarts. Writes `memory/.crow_ready` on listen. |
 | **`start_crow_sse.bat`** | Batch + PowerShell | Detached process launcher + health poller. Uses `Start-Process -WindowStyle Hidden` for process isolation. Polls `/sse` with exponential backoff (0.5s→8s, max 30s). Cleans stale lock files. |
 | **`crow.bin`** | Local SSD | Fixed-size `safetensors` file containing 8 weight matrices + projection layer |
 | **Build Hook** | Local Node | Captures `npm run build`, test results, linter output; emits JSON to MCP server |
-| **`crow_auto_inject.py`** | Local Python | Standalone script that generates `[User Bias]` block for manual prompt injection without MCP |
 | **`backup_manager.py`** | Local Python | CLI utility for backup creation, rotation, listing, and drift recovery |
 | **`hitl_panel.html`** | Local Browser | Web UI for human-in-the-loop approval of evolved prompt rules |
-| **`patch_kimi_code.py`** | Local Python | Fallback injector for Kimi Code CLI < v1.2 (superseded by `AGENTS.md`) |
 
 ---
 
@@ -797,9 +795,9 @@ if __name__ == "__main__":
     asyncio.run(main())
 ```
 
-### C.2 Dual Transport (SSE + Streamable HTTP) — Recommended
+### C.2 Dual Transport (SSE + Streamable HTTP)
 
-For multi-client safety, run the server in **dual mode** so both Zoo Code (SSE on port 9020) and Kimi Code (Streamable HTTP on port 9021) share a single `crow.bin`:
+For multi-client safety, run the server in **dual mode** so multiple clients (Zoo Code, etc.) share a single `crow.bin`:
 
 ```bash
 python crow_mcp_server.py --transport dual --port 9020 --http-port 9021

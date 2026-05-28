@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.3.6] — 2026-05-28
+
+### Removed
+- **Kimi Code 지원 완전 제거** — Zoo Code 전용 프로젝트로 전환
+- `AGENTS.md` — Kimi Code CLI 자동 주입 파일 (Zoo Code는 custom_modes.example.yaml 사용)
+- `patch_kimi_code.py` — Kimi Code CLI 패치 스크립트
+- `mcp_config.json` — `.roo/mcp.json`과 100% 중복되는 범용 MCP 설정
+- `journal.md` — 개인 개발 일지 (공개 저장소 부적합)
+- `verify_fixes.py` — 내부 테스트 스크립트
+- `crow_auto_inject.py` — MCP 서버 도구로 대체된 중복 CLI 도구
+- `memory/project_pytest_demo/` — 빈 테스트 디렉토리
+
+### Changed
+- `install.ps1` / `install.py` — Kimi Code 관련 Step 4.5 전체 제거, mcp_config.json 생성 제거, Step 카운트 7→5
+- `README.md` — 모든 "Kimi Code" → "Zoo Code" 대체, Multi-Client 섹션 단순화
+- `CROW_MEMORY_ARCHITECTURE.md` — Kimi Code + Streamable HTTP 참조 제거
+- `.vscode/tasks.json` — detail 문자열 Zoo Code 전용으로 수정
+
+---
+
 ## [1.3.5] — 2026-05-28
 
 ### Added

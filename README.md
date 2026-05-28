@@ -31,7 +31,7 @@ Forgetting is not a bug. Crow's fixed-size weight matrices and λ (decay rate) i
 ### 1. Requirements
 
 - **Python 3.10+**
-- **Zoo Code** or **Kimi Code** (or any MCP-compatible AI coding agent)
+- **Zoo Code** (or any MCP-compatible AI coding agent)
 - Git (to clone the repository)
 
 ### 2. Install (One Command)
@@ -53,7 +53,7 @@ python install.py
 The installer automatically:
 - Installs Python dependencies
 - Initializes `crow.bin` (140MB fixed-size weight matrix)
-- Creates `.roo/mcp.json` **and** `mcp_config.json` with SSE MCP server config — works for both Zoo Code and Kimi Code
+- Creates `.roo/mcp.json` with SSE MCP server config — works for Zoo Code
 - Creates `.vscode/tasks.json` — **auto-starts the SSE server when you open the workspace** (no manual commands needed)
 - Creates a "Code + Crow Memory" custom mode with `allowedMcpServers` + AUTO-INGEST
 - Registers a Startup `.bat` so the SSE server also starts with Windows
@@ -75,7 +75,7 @@ This means: **first open** → bat starts server detached + polls until ready. *
 
 ### 3. Restart & Switch Mode
 
-1. **Restart Zoo Code / Kimi Code**
+1. **Restart Zoo Code**
 2. Open the `crowsmemory` workspace folder
 3. Switch mode to one of the following:
    - **"Code + Crow Memory"** — for direct coding with auto-recall/auto-ingest
@@ -91,16 +91,14 @@ If Crow is alive, it will report register norms, update count, and value bank si
 
 ### How Auto-Activation Works
 
-Four layers ensure Crow is always active across all editors:
+Two layers ensure Crow is always active:
 
-| Layer | Mechanism | Zoo Code | Kimi Code |
-|-------|-----------|----------|-----------|
-| **SSE Auto-Start** | [`.vscode/tasks.json`](.vscode/tasks.json) with `runOn: folderOpen` | ✅ | ✅ |
-| **AGENTS.md** | Kimi Code CLI auto-injects via `${KIMI_AGENTS_MD}` | — | ✅ |
-| **UNIVERSAL RECALL** | Custom mode system prompt (`custom_modes.yaml` for Zoo Code, [`AGENTS.md`](AGENTS.md) for Kimi Code) | ✅ | ✅ |
-| **AUTO-INGEST** | Same as above — auto-detects preferences, corrections, context | ✅ | ✅ |
+| Layer | Mechanism |
+|-------|-----------|
+| **SSE Auto-Start** | [`.vscode/tasks.json`](.vscode/tasks.json) with `runOn: folderOpen` |
+| **UNIVERSAL RECALL + AUTO-INGEST** | Custom mode system prompt (`custom_modes.yaml` for Zoo Code) |
 
-The installer copies [`system_prompt.example.md`](system_prompt.example.md) → `memory/system_prompt.md` with 3 pre-evolved rules. Kimi Code users also get [`AGENTS.md`](AGENTS.md) at the project root — the CLI auto-injects these rules every session, no patching required, survives updates permanently.
+The installer copies [`system_prompt.example.md`](system_prompt.example.md) → `memory/system_prompt.md` with 3 pre-evolved rules.
 
 ---
 
@@ -175,7 +173,7 @@ The core challenge: LLMs don't spontaneously call tools. Crow solves this with f
 |-------|-----------|------|
 | **AUTO-INGEST** | AI proactively evaluates every exchange and calls `crow_ingest` when it detects preferences, philosophy, corrections, or context. No "remember this" needed. | Every exchange |
 | **MCP Prompt** | `crow_memory_bias` is auto-loaded by the LLM host at session start. No tool call needed. | Every session |
-| **Auto-Inject** | [`crow_auto_inject.py`](crow_auto_inject.py) pre-generates a `[User Bias]` block for manual injection. | Pre-task hook |
+| **Auto-Inject** | Custom mode system prompt pre-generates a `[User Bias]` block for manual injection. | Pre-task hook |
 | **Evolved Rules** | Statistically significant patterns promoted to `system_prompt.md` via HITL approval. | Permanent |
 
 ---
@@ -221,7 +219,6 @@ The core challenge: LLMs don't spontaneously call tools. Crow solves this with f
 | `backup_manager.py` | ✅ Yes | Backup utility |
 | `hitl_panel.html` | ✅ Yes | HITL UI |
 | `requirements.txt` | ✅ Yes | Dependencies |
-| `mcp_config.json` | ✅ Yes | Config example |
 | **`memory/crow.bin`** | ❌ **No** | Your personal synaptic memories |
 | **`memory/value_bank.json`** | ❌ **No** | Your experience data |
 | **`memory/recall_stats.json`** | ❌ **No** | Your recall statistics |
@@ -233,7 +230,7 @@ The included `.gitignore` automatically excludes all personal memory files.
 
 ---
 
-## Multi-Client Setup (Zoo Code + Kimi Code + others)
+## Multi-Client Setup (Zoo Code + others)
 
 ### ✅ Default: Shared SSE Server (Auto-Start)
 
@@ -241,7 +238,7 @@ The installer configures everything for SSE mode by default. This is the only sa
 
 ```
 ┌──────────────┐     ┌──────────────┐
-│  Zoo Code    │     │  Kimi Code   │
+│  Zoo Code    │     │  Other Client│
 │  (SSE MCP)   │     │  (SSE MCP)   │
 └──────┬───────┘     └──────┬───────┘
        │                    │
@@ -263,7 +260,7 @@ The installer configures everything for SSE mode by default. This is the only sa
 **How it works:**
 1. You open the `crowsmemory` workspace in **any** VS Code-based editor
 2. [`.vscode/tasks.json`](.vscode/tasks.json) auto-runs [`start_crow_sse.bat`](start_crow_sse.bat) — if server is already running (detached from previous session), exits instantly; otherwise starts it detached + polls until ready
-3. All AI clients (Zoo Code, Kimi Code, etc.) connect to `http://127.0.0.1:9020/sse`
+3. All AI clients (Zoo Code, etc.) connect to `http://127.0.0.1:9020/sse`
 4. The single SSE server serializes all reads/writes — **no race conditions, no data corruption**
 5. The server process is **detached** from VS Code — closing the IDE does not kill it
 
@@ -276,10 +273,7 @@ If you manually switch to `"type": "stdio"` (command mode), each VS Code instanc
 | Client | Transport | Port | Config File | Auto-Generated |
 |--------|-----------|------|-------------|----------------|
 | Zoo Code | SSE | 9020 | `.roo/mcp.json` | ✅ Yes |
-| Kimi Code CLI | Streamable HTTP | 9021 | `~/.kimi/mcp.json` | ✅ Yes |
 | Cline / Roo Code | SSE | 9020 | `.roo/mcp.json` | ✅ Yes |
-
-> **Note**: Kimi Code uses Streamable HTTP (port 9021) instead of SSE (port 9020) because Kimi Code CLI has a known bug — it does not recognize the MCP SSE `endpoint` event during handshake, causing infinite "Testing..." hang. Streamable HTTP transport avoids this issue entirely. Both transports share the same `crow.bin` through the single `crow_mcp_server.py` process running in `dual` mode.
 
 ---
 
@@ -290,7 +284,7 @@ If you manually switch to `"type": "stdio"` (command mode), each VS Code instanc
 - First launch downloads `nomic-embed-text-v1.5` model (~30-60s). Subsequent launches are fast (~5-10s).
 - Verify Python is in PATH: `python --version`
 - Check the SSE server is running: visit `http://127.0.0.1:9020/` in a browser — should show "Crow Memory MCP SSE Server"
-- Verify `.roo/mcp.json` (Zoo Code) or `mcp_config.json` (VS Code/Kimi Code) has `crow_memory` configured for SSE.
+- Verify `.roo/mcp.json` (Zoo Code) has `crow_memory` configured for SSE.
 
 ### ECONNREFUSED 127.0.0.1:9020 on VS Code restart
 - This is a **race condition** fixed in v1.3.1. The SSE server now runs as a **detached process** that survives VS Code restarts.
@@ -313,9 +307,9 @@ If you manually switch to `"type": "stdio"` (command mode), each VS Code instanc
 
 ### UnicodeEncodeError: 'cp949' codec can't encode character (Korean Windows)
 
-**Symptoms**: Kimi Code shows `\u2717 Connection failed: UnicodeEncodeError: 'cp949' codec can't encode character '\u2713'...`. Zoo Code may also fail to connect.
+**Symptoms**: Zoo Code shows `UnicodeEncodeError: 'cp949' codec can't encode character...`.
 
-**Root cause**: Korean Windows uses `cp949` (EUC-KR) as the default system encoding. When MCP clients (Kimi Code, etc.) process SSE responses containing Unicode characters (✓, Korean text, emoji), the `cp949` codec fails because it cannot represent these characters.
+**Root cause**: Korean Windows uses `cp949` (EUC-KR) as the default system encoding. When MCP clients process SSE responses containing Unicode characters (✓, Korean text, emoji), the `cp949` codec fails because it cannot represent these characters.
 
 **Affected languages** (any non-UTF-8 Windows locale):
 | Language | Code Page | Issue |
@@ -341,7 +335,7 @@ Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Nls\CodePage" -Na
 
 **Fix B — Environment variables (already applied by installer)**
 
-[`start_crow_sse.bat`](start_crow_sse.bat) sets `PYTHONUTF8=1` and `PYTHONIOENCODING=utf-8`, and runs Python with `-X utf8` flag. [`crow_mcp_server.py`](crow_mcp_server.py) enforces UTF-8 stdout/stderr at startup. These prevent most encoding issues on the server side, but client-side encoding (Kimi Code) requires Fix A.
+[`start_crow_sse.bat`](start_crow_sse.bat) sets `PYTHONUTF8=1` and `PYTHONIOENCODING=utf-8`, and runs Python with `-X utf8` flag. [`crow_mcp_server.py`](crow_mcp_server.py) enforces UTF-8 stdout/stderr at startup. These prevent most encoding issues on the server side, but client-side encoding requires Fix A.
 
 ### PermissionError / lock file issues
 - Delete stale lock: `del memory\crow.bin.lock` (Windows) or `rm memory/crow.bin.lock` (macOS/Linux)
@@ -361,5 +355,5 @@ MIT License — see [`LICENSE`](LICENSE) for details.
 
 ---
 
-*Crow Memory v1.3.5 — May 2026*
+*Crow Memory v1.3.6 — May 2026*
 *Co-designed by Stefano,Kim & AI*

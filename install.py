@@ -54,7 +54,7 @@ YAML_MODE = """customModes:
 def step(msg):
     print(f"  [{step.count}/{step.total}] {msg}...", end=" ", flush=True)
 step.count = 0
-step.total = 7
+step.total = 5
 
 def ok():
     print("\033[92mDone.\033[0m")
@@ -86,8 +86,8 @@ def main():
         shutil.copy2(str(prompt_template), str(prompt_target))
     ok()
 
-    # Step 3: MCP config (.roo/mcp.json for Zoo Code, mcp_config.json for VS Code — SSE mode)
-    step.count += 1; step("Configuring MCP server (SSE mode) for Zoo Code & VS Code")
+    # Step 3: MCP config (.roo/mcp.json for Zoo Code)
+    step.count += 1; step("Configuring MCP server (SSE mode) for Zoo Code")
     roo_dir = CROW_DIR / ".roo"
     roo_dir.mkdir(parents=True, exist_ok=True)
     mcp_config = {
@@ -122,17 +122,6 @@ def main():
     else:
         with open(mcp_path_roo, "w", encoding="utf-8") as f:
             json.dump(mcp_config, f, indent=2)
-    # Write workspace-root mcp_config.json (VS Code / Kimi Code)
-    mcp_path_root = CROW_DIR / "mcp_config.json"
-    if mcp_path_root.exists():
-        with open(mcp_path_root, "r", encoding="utf-8") as f:
-            existing = json.load(f)
-        existing.setdefault("mcpServers", {})["crow_memory"] = mcp_config["mcpServers"]["crow_memory"]
-        with open(mcp_path_root, "w", encoding="utf-8") as f:
-            json.dump(existing, f, indent=2)
-    else:
-        with open(mcp_path_root, "w", encoding="utf-8") as f:
-            json.dump(mcp_config, f, indent=2)
     ok()
 
     # Step 3.5: VS Code tasks.json — auto-start SSE server on workspace open
@@ -144,7 +133,7 @@ def main():
         "tasks": [
             {
                 "label": "Crow SSE Server — Auto Start",
-                "detail": "Starts the Crow Memory SSE server on port 9020 when this workspace is opened. Both Zoo Code and Kimi Code connect via SSE to share crow.bin.",
+                "detail": "Starts the Crow Memory SSE server on port 9020 when this workspace is opened. Zoo Code connects via SSE to share crow.bin.",
                 "type": "shell",
                 "command": f'cmd /c "{CROW_DIR}\\start_crow_sse.bat"',
                 "isBackground": True,
@@ -194,76 +183,6 @@ def main():
     else:
         with open(mode_path, "w", encoding="utf-8") as f:
             f.write(YAML_MODE)
-    ok()
-
-    # Step 4.5: Kimi Code setup (AGENTS.md + ~/.kimi/mcp.json)
-    step.count += 1; step("Setting up Kimi Code (AGENTS.md + ~/.kimi/mcp.json)")
-    # 4.5a: Write AGENTS.md — Kimi Code CLI auto-injects this via ${KIMI_AGENTS_MD}
-    agents_md_content = """# Crow Memory (Auto-Activation)
-
-You have access to **Crow Memory**, an external synaptic memory system connected via MCP.
-It stores the user's coding style, bug intuition, architectural preferences, and personal context as compressed weight matrices.
-
-**UNIVERSAL RECALL (MANDATORY): Before EVERY response — whether coding, writing, editing, or conversation — call `crow_recall(domain="all")` to retrieve the user's coding style, bug intuition, architectural preferences, personal taste, life philosophy, and current context.** `domain="all"` (the default) queries all **8 registers** (style, bug, arch, context, life_pref, life_avoid, life_phil, life_context) in a single call. Use the returned hints to personalize your response. Never skip this step.
-
-**AUTO-INGEST (MANDATORY): After EVERY response, evaluate what the user revealed — a preference, a philosophy, a frustration, a pattern, a correction, ongoing plans, or explicit decision. Call `crow_ingest` with the appropriate register, a concise key/value summary, and appropriate polarity.** Do NOT wait for the user to say "remember this." For code work, also call `crow_ingest_from_build`.
-
-**POLARITY GUIDE** (auto-determined, no user command needed):
-- User likes / prefers something → +1.5 (`life_pref` / `style`)
-- User reveals philosophy / values → +2.0 (`life_phil`)
-- User corrects you / rewrites your work → -1.0 (`bug` / `style`)
-- User shares ongoing context / plans → +1.5 (`life_context` / `context`)
-- User explicitly says "remember" / "never forget" → +2.0 / -2.0
-- User shows frustration / avoidance → -0.5 (`life_avoid` / `bug`)
-
-Crow is not a database — it stores inductive biases. Use it as your intuition, not your encyclopedia.
-"""
-    agents_path = CROW_DIR / "AGENTS.md"
-    with open(agents_path, "w", encoding="utf-8") as f:
-        f.write(agents_md_content)
-    print("  [Kimi Code] AGENTS.md written.", end=" ")
-    # 4.5b: Write ~/.kimi/mcp.json — Kimi Code CLI standard MCP config location
-    kimi_mcp_dir = Path.home() / ".kimi"
-    kimi_mcp_dir.mkdir(parents=True, exist_ok=True)
-    kimi_mcp_path = kimi_mcp_dir / "mcp.json"
-    # Kimi Code uses Streamable HTTP (port 9021) instead of SSE (port 9020)
-    # because Kimi Code CLI has a known bug: it does not recognize the
-    # MCP SSE "endpoint" event during handshake, causing infinite "Testing..." hang.
-    # Streamable HTTP on port 9021 works correctly with Kimi Code.
-    kimi_mcp_config = {
-        "mcpServers": {
-            "crow_memory": {
-                "type": "http",
-                "url": "http://127.0.0.1:9021/",
-                "disabled": False,
-            }
-        }
-    }
-    if kimi_mcp_path.exists():
-        with open(kimi_mcp_path, "r", encoding="utf-8") as f:
-            try:
-                existing_kimi = json.load(f)
-            except json.JSONDecodeError:
-                existing_kimi = {}
-        existing_kimi.setdefault("mcpServers", {})["crow_memory"] = kimi_mcp_config["mcpServers"]["crow_memory"]
-        with open(kimi_mcp_path, "w", encoding="utf-8") as f:
-            json.dump(existing_kimi, f, indent=2)
-    else:
-        with open(kimi_mcp_path, "w", encoding="utf-8") as f:
-            json.dump(kimi_mcp_config, f, indent=2)
-    print("  [Kimi Code] ~/.kimi/mcp.json written.", end=" ")
-    # 4.5c: Run patch_kimi_code.py as optional fallback (for Kimi Code CLI < v1.2)
-    patch_script = str(CROW_DIR / "patch_kimi_code.py")
-    try:
-        subprocess.run(
-            [sys.executable, patch_script],
-            cwd=str(CROW_DIR),
-            capture_output=True,
-            timeout=30,
-        )
-        print("  [Kimi Code] system.md patched (fallback).", end=" ")
-    except Exception:
-        pass  # AGENTS.md is the primary mechanism; patch is optional
     ok()
 
     # Step 5: Start SSE server + auto-start registration
@@ -382,11 +301,10 @@ endlocal
     print("  SSE server running on http://127.0.0.1:9020/sse")
     print()
     print("  Next steps:")
-    print("  1. Restart Zoo Code / Kimi Code")
+    print("  1. Restart Zoo Code")
     print('  2. Switch mode to "Code + Crow Memory"')
     print("  3. Crow auto-activates — no manual setup needed")
     print("  4. SSE server auto-starts with Windows (registered in Startup)")
-    print("  5. Kimi Code: System prompt auto-patched via patch_kimi_code.py")
     print()
 
 if __name__ == "__main__":
