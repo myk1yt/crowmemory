@@ -379,5 +379,28 @@ MIT License — see [`LICENSE`](LICENSE) for details.
 
 ---
 
+## Commercial Services / 맞춤형 개발 문의
+
+Crow Memory is open-source and free to use under MIT. But every organization has unique needs — different security requirements, proprietary LLM integrations, custom encoding schemes, or industry-specific compliance mandates.
+
+**We offer custom development services for:**
+
+- 🔒 **Security-hardened deployments** — Air-gap environments, on-premise only, encrypted `crow.bin` storage, audit logging, RBAC integration
+- 🏢 **Enterprise customization** — Custom register dimensions, industry-specific decay profiles (finance, healthcare, legal), dedicated SLA-backed MCP server clusters
+- 🤖 **LLM-specific optimization** — Fine-tuned embedding models, custom projection layers, optimized weight matrices for specific LLM architectures (Claude, GPT, DeepSeek, Gemini, local models)
+- 🧩 **Software integration** — Plugin-style Crow integration for non-VS Code IDEs, CI/CD pipeline hooks, custom build event detectors
+- 🌐 **Additional language support** — Beyond the 36 VS Code locales, we can add translation support for any language or domain-specific terminology
+- 📊 **Enterprise analytics** — Memory usage dashboards, team-wide style consistency monitoring, drift alerting
+
+> **보안강화형, 기업용 혹은 특정 LLM이나 소프트웨어 맞춤형 Crow Memory 개발을 원하시는 분은 아래로 연락주세요.**
+>
+> **For security-enhanced, enterprise-grade, or custom LLM/software-tailored Crow Memory development:**
+
+📧 **myk1yt@gmail.com**
+
+*"If you share this philosophy and want to take Crow further — whether for your team, your product, or your enterprise — let's build it together."*
+
+---
+
 *Crow Memory v1.3.6 — May 2026*
 *Co-designed by Stefano,Kim & AI*
