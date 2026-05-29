@@ -34,9 +34,8 @@ venv/
 !.vscode/tasks.json
 .idea/
 
-# Zoo Code local config (only share mcp.json and mcp.schema.json for plug-and-play)
+# Zoo Code local config (all .roo/* ignored; MCP is configured globally)
 .roo/*
-!.roo/mcp.json
 !.roo/mcp.schema.json
 
 # Logs
