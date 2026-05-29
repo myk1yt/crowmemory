@@ -2,7 +2,7 @@
 ## A Synaptic State Cache for Recursive Agent Development
 
 **Version:** 1.3.6
-**Date:** 2026-05-26
+**Date:** 2026-05-29
 **Author:** Stefano,Kim & AI Collaborative Design
 **Target Runtime:** Any MCP-compatible IDE + LLM API + Local Python MCP Server
 
@@ -105,9 +105,9 @@ The `crow.bin` file is forever fixed at ~140MB (configurable). It does not grow 
 
 | Component | Runtime | Responsibility |
 |-----------|---------|----------------|
-| **VS Code IDE** | Local Electron/Node | Orchestrates the agent loop, captures build exit codes, renders HITL UI. Auto-starts SSE server on workspace open via `.vscode/tasks.json` → `start_crow_sse.bat`. |
+| **VS Code IDE** | Local Electron/Node | Orchestrates the agent loop, captures build exit codes, renders HITL UI. Auto-starts SSE server on workspace open via `.vscode/tasks.json` → `start_crow_sse.bat`. **Default mode: "Orchestrator + Crow"** — configured via `.zoo/config.json`. |
 | **LLM Agent** | Cloud/On-prem API | Inference engine, generates code, proposes prompt mutations, decides tool calls |
-| **MCP Server (SSE)** | Local Python (detached) | Serves `crow.bin` I/O over HTTP (port 9020 SSE). Embedding encoding, weight math, FAISS nearest-neighbor lookup. Serializes all multi-client access. **Runs as detached process** — survives IDE restarts. Writes `memory/.crow_ready` on listen. |
+| **MCP Server (SSE)** | Local Python (detached) | Serves `crow.bin` I/O over HTTP (port 9020 SSE). Embedding encoding, weight math, FAISS nearest-neighbor lookup. Serializes all multi-client access. **Runs as detached process** — survives IDE restarts. Writes `memory/.crow_ready` on listen. Supports **36-language i18n** based on VS Code locale detection. |
 | **`start_crow_sse.bat`** | Batch + PowerShell | Detached process launcher + health poller. Uses `Start-Process -WindowStyle Hidden` for process isolation. Polls `/sse` with exponential backoff (0.5s→8s, max 30s). Cleans stale lock files. |
 | **`crow.bin`** | Local SSD | Fixed-size `safetensors` file containing 8 weight matrices + projection layer |
 | **Build Hook** | Local Node | Captures `npm run build`, test results, linter output; emits JSON to MCP server |

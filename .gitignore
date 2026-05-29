@@ -49,4 +49,4 @@ tests/
 # OS
 .DS_Store
 Thumbs.db
-"$null"  
+$null

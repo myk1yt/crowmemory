@@ -53,9 +53,9 @@ python install.py
 The installer automatically:
 - Installs Python dependencies
 - Initializes `crow.bin` (140MB fixed-size weight matrix)
-- Creates `.roo/mcp.json` with SSE MCP server config — works for Zoo Code
 - Creates `.vscode/tasks.json` — **auto-starts the SSE server when you open the workspace** (no manual commands needed)
-- Creates a "Code + Crow Memory" custom mode with `allowedMcpServers` + AUTO-INGEST
+- Creates an **"Orchestrator + Crow"** custom mode with `allowedMcpServers` + AUTO-INGEST (Crow Memory integrated into the Orchestrator workflow)
+- Configures Crow Memory via **global MCP settings** (no project-level `.roo/mcp.json` needed)
 - Registers a Startup `.bat` so the SSE server also starts with Windows
 - Pre-authorizes all 10 Crow tools (`alwaysAllow`)
 
@@ -77,9 +77,7 @@ This means: **first open** → bat starts server detached + polls until ready. *
 
 1. **Restart Zoo Code**
 2. Open the `crowsmemory` workspace folder
-3. Switch mode to one of the following:
-   - **"Code + Crow Memory"** — for direct coding with auto-recall/auto-ingest
-   - **"Orchestrator + Crow"** — for task-delegation workflows with Crow Memory integration
+3. Switch mode to **"Orchestrator + Crow"** — for task-delegation workflows with Crow Memory integration
 4. Done. The SSE server auto-starts. Crow activates on every response.
 
 ### 4. Verify
@@ -199,7 +197,7 @@ The core challenge: LLMs don't spontaneously call tools. Crow solves this with f
 
 | Script | Description |
 |--------|-------------|
-| [`crow_auto_inject.py`](crow_auto_inject.py) | Generate `[User Bias]` block for manual prompt injection (no MCP needed) |
+| ~~`crow_auto_inject.py`~~ | ~~Removed in v1.3.6~~ — replaced by `crow_get_user_bias` MCP tool |
 
 ### MCP Prompts (Auto-Loaded by Host)
 
@@ -207,6 +205,17 @@ The core challenge: LLMs don't spontaneously call tools. Crow solves this with f
 |--------|-------------|
 | `crow_memory_bias` | Full context: evolved rules + recent memory hints. Loaded automatically at session start. |
 | `crow_evolved_rules` | Permanent rules from `system_prompt.md`. |
+
+---
+
+## Internationalization (i18n) — 36 Languages
+
+Crow Memory automatically detects your VS Code language setting and displays all messages, MCP tool descriptions, and installer output in your preferred language.
+
+**Supported locales:**
+🇺🇸 English · 🇰🇷 한국어 · 🇯🇵 日本語 · 🇨🇳 简体中文 · 🇹🇼 繁體中文 · 🇫🇷 Français · 🇩🇪 Deutsch · 🇮🇹 Italiano · 🇪🇸 Español · 🇧🇷 Português · 🇷🇺 Русский ... and 26 more.
+
+The installer, MCP server, and system prompt templates all use your VS Code locale automatically. If a translation is missing, English is used as fallback.
 
 ---
 
@@ -218,6 +227,9 @@ The core challenge: LLMs don't spontaneously call tools. Crow solves this with f
 | `crow_mcp_server.py` | ✅ Yes | MCP server |
 | `backup_manager.py` | ✅ Yes | Backup utility |
 | `hitl_panel.html` | ✅ Yes | HITL UI |
+| `crow_i18n.py` | ✅ Yes | i18n core module |
+| `i18n/*.json` | ✅ Yes | Translation files (36 languages) |
+| `system_prompt.example/` | ✅ Yes | Locale-specific prompt templates |
 | `requirements.txt` | ✅ Yes | Dependencies |
 | **`memory/crow.bin`** | ❌ **No** | Your personal synaptic memories |
 | **`memory/value_bank.json`** | ❌ **No** | Your experience data |
@@ -296,7 +308,7 @@ The `AGENTS.md` file provides session-start recall, session-end ingest, and full
 - First launch downloads `nomic-embed-text-v1.5` model (~30-60s). Subsequent launches are fast (~5-10s).
 - Verify Python is in PATH: `python --version`
 - Check the SSE server is running: visit `http://127.0.0.1:9020/` in a browser — should show "Crow Memory MCP SSE Server"
-- Verify `.roo/mcp.json` (Zoo Code) has `crow_memory` configured for SSE.
+- Verify global MCP settings have `crow_memory` configured for SSE.
 
 ### ECONNREFUSED 127.0.0.1:9020 on VS Code restart
 - This is a **race condition** fixed in v1.3.1. The SSE server now runs as a **detached process** that survives VS Code restarts.
@@ -315,7 +327,7 @@ The `AGENTS.md` file provides session-start recall, session-end ingest, and full
 
 ### Recall returns only "Few memories stored yet"
 - Normal! Crow needs 20-30+ ingestions before meaningful hints emerge. Keep coding.
-- Enable AUTO-INGEST by switching to "Code + Crow Memory" mode — the AI will learn proactively.
+- Enable AUTO-INGEST by switching to **"Orchestrator + Crow"** mode — the AI will learn proactively.
 
 ### UnicodeEncodeError: 'cp949' codec can't encode character (Korean Windows)
 
