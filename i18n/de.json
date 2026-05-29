@@ -1,0 +1,155 @@
+{
+  "_meta": {
+    "locale": "de",
+    "language_name": "Deutsch",
+    "version": "1.0.0",
+    "last_updated": "2026-05-29"
+  },
+  "server": {
+    "instructions": "Crow Memory — Externer synaptischer Speicher für KI-Codierungsagenten. Speichert Ihren Codierungsstil, Ihre Bug-Intuition und architektonischen Präferenzen als komprimierte Gewichtsmatrizen in crow.bin.",
+    "prompts": {
+      "crow_memory_bias": {
+        "description": "Automatisch injizierter Crow-Memory-Bias-Block. Enthält Ihren Codierungsstil, Ihre Präferenzen und weiterentwickelten Regeln. Der Host sollte dies beim Session-Start laden.",
+        "body_template": "=== Crow Memory — Automatisch injizierter Kontext ===\n\n[Permanent weiterentwickelte Regeln]\n{rules}\n\n[Aktuelle Gedächtnishinweise]\n{bias}\n\nDer obige Kontext repräsentiert Ihre erlernten Präferenzen und Ihren Stil. Verwenden Sie ihn zur Steuerung Ihrer Antworten. Für weitere Informationen rufen Sie crow_recall mit einer spezifischen Abfrage und einem Register (style/bug/arch/context/life_pref/life_avoid/life_phil/life_context) auf."
+      },
+      "crow_evolved_rules": {
+        "description": "Permanent weiterentwickelte Regeln aus Crows system_prompt.md. Dies sind statistisch signifikante Muster, die via HITL genehmigt wurden.",
+        "body_template": "{prompt}"
+      }
+    }
+  },
+  "tools": {
+    "crow_recall": {
+      "description": "Rufen Sie benutzerspezifischen Codierungsstil, Bug-Intuition, Architekturpräferenzen oder persönlichen Kontext aus Crows synaptischem Speicher ab. Rufen Sie dies VOR jeder Antwort auf, um sich an den induktiven Bias des Benutzers anzupassen. Standardmäßig (kein Register, domain=all) werden alle 8 Register abgefragt.",
+      "parameters": {
+        "query": "Natürlichsprachliche Beschreibung der aktuellen Aufgabe.",
+        "register": "Wählen Sie das Register. 'all' fragt alle Register ab (gleich wie domain=all). Code: style/bug/arch/context. Leben: life_pref/life_avoid/life_phil/life_context.",
+        "top_k": "Anzahl der Hinweise (1-3).",
+        "domain": "Domain-Filter-Kürzel. 'code' = style/bug/arch/context, 'life' = life_pref/life_avoid/life_phil/life_context, 'all' = alle 8 Register (Standard)."
+      }
+    },
+    "crow_ingest": {
+      "description": "Nehmen Sie eine Codierungserfahrung in Crows langfristigen synaptischen Speicher auf. Rufen Sie dies NACH Build-/Testergebnissen oder explizitem Benutzerfeedback auf.",
+      "parameters": {
+        "key": "Abstrakte Beschreibung der Situation.",
+        "value": "Angewandtes Codemuster oder Entscheidung.",
+        "polarity": "Verstärkungsstärke [-2.0, 2.0].",
+        "register": "Zielregister (style/bug/arch/context/life_pref/life_avoid/life_phil/life_context)."
+      }
+    },
+    "crow_evolve_propose": {
+      "description": "Analysieren Sie aktuelle Speichermuster und schlagen Sie eine permanente Systemprompt-Mutation vor. Gibt nur einen Vorschlag zurück; zur Übernahme ist menschliche Zustimmung erforderlich.",
+      "parameters": {
+        "min_confidence": "Mindestkonfidenzschwelle (Standard: 0,85).",
+        "min_occurrences": "Mindestanzahl Vorkommen (Standard: 3)."
+      }
+    },
+    "crow_diagnostics": {
+      "description": "Gibt Diagnoseinformationen zum Crow-Speicherzustand zurück (Registernormen, Sparsity, Update-Zähler, Wertbankspeicher, Prompt-Statistiken).",
+      "parameters": {}
+    },
+    "crow_check_drift": {
+      "description": "Überprüft, ob aktuelle Abrufe Anzeichen von Speicherdrift zeigen.",
+      "parameters": {
+        "threshold": "Konfidenzschwelle für die Erkennung niedriger Konfidenz (Standard: 0,5).",
+        "min_low_confidence_count": "Mindestanzahl von Niedrigkonfidenz-Datensätzen zum Auslösen von Drift (Standard: 5)."
+      }
+    },
+    "crow_ingest_from_build": {
+      "description": "Ermitteln Sie automatisch die Polarität aus dem Build-Exit-Code und dem Benutzerbearbeitungsstatus, und nehmen Sie dann die Erfahrung auf. Verwenden Sie dies nach npm run build.",
+      "parameters": {
+        "key": "Abstrakte Beschreibung.",
+        "value": "Angewandtes Codemuster.",
+        "exit_code": "Build-Exit-Code (0 = Erfolg).",
+        "user_edited": "Ob der Benutzer die Ausgabe der KI bearbeitet hat.",
+        "register": "Zielregister (style/bug/arch/context, Standard: arch).",
+        "explicit_polarity": "Überschreibt die automatische Polaritätserkennung."
+      }
+    },
+    "crow_get_user_bias": {
+      "description": "Generiert den [User Bias]-Block zur Injektion in den Systemprompt. Fragt alle Register ab und formatiert Hinweise zum Voranstellen an den Prompt.",
+      "parameters": {
+        "query": "Beschreibung der aktuellen Aufgabe.",
+        "registers": "Liste der abzufragenden Register (Standard: all)."
+      }
+    },
+    "crow_manage_prompt": {
+      "description": "Lesen, anhängen oder Statistiken über die Datei system_prompt.md abrufen. 'read' zum Anzeigen des aktuellen Prompts, 'append' zum Übernehmen einer weiterentwickelten Regel, 'stats' für Metriken.",
+      "parameters": {
+        "action": "Aktion: read, append oder stats.",
+        "rule": "Regeltext (erforderlich für append-Aktion).",
+        "auto_backup": "Automatisches Backup vor dem Anhängen erstellen (Standard: true)."
+      }
+    },
+    "crow_manage_backup": {
+      "description": "Verwalten Sie Crow-Speicher-Backups. Erstellen, rotieren, auflisten oder von Drift wiederherstellen.",
+      "parameters": {
+        "action": "Aktion: create, rotate, list oder recover.",
+        "tag": "Backup-Tag: daily, weekly oder manual (Standard: daily).",
+        "max_daily": "Maximale Anzahl täglicher Backups (Standard: 7).",
+        "max_weekly": "Maximale Anzahl wöchentlicher Backups (Standard: 4)."
+      }
+    },
+    "crow_project_info": {
+      "description": "Projektisolierte Crow-Speicherinstanzen auflisten oder erstellen.",
+      "parameters": {
+        "action": "Aktion: list oder create.",
+        "project_name": "Projektname (erforderlich für create-Aktion)."
+      }
+    }
+  },
+  "errors": {
+    "unknown_tool": "Unbekanntes Tool: {name}",
+    "unknown_prompt": "Unbekannter Prompt: {name}",
+    "unknown_action": "Unbekannte {context}-Aktion: {action}",
+    "project_name_required": "project_name ist für die create-Aktion erforderlich"
+  },
+  "recall_messages": {
+    "faint_bias": "Crow erinnert sich schwach an einen {register}-Bias. Es wurden noch wenige Erinnerungen gespeichert.",
+    "unknown_register": "Unbekanntes Register: {register}"
+  },
+  "ingest_messages": {
+    "status_ingested": "aufgenommen",
+    "unknown_register": "Unbekanntes Register: {register}"
+  },
+  "evolve_messages": {
+    "no_patterns": "Noch keine statistisch signifikanten Muster erkannt."
+  },
+  "drift_messages": {
+    "healthy": "Die Speicherkonfidenz ist gesund.",
+    "confused": "Crow-Speicher scheint verwirrt. Aktuelle Aufgaben sind möglicherweise zu neu oder der Speicher ist gesättigt. Erwägen Sie einen spektralen Reset oder eine Archivierung."
+  },
+  "cli": {
+    "stdio_start": "Crow Memory MCP-Server läuft auf stdio",
+    "sse_start": "Crow Memory MCP SSE-Server hört auf http://{host}:{port}/sse",
+    "http_start": "Crow Memory MCP Streamable HTTP-Server hört auf http://{host}:{port}/",
+    "dual_start_sse": "Crow Memory MCP SSE-Server hört auf http://{host}:{sse_port}/sse",
+    "dual_start_http": "Crow Memory MCP Streamable HTTP-Server hört auf http://{host}:{http_port}/"
+  },
+  "installer": {
+    "banner_title": "Crow Memory Installer für Zoo Code",
+    "step_1_install_deps": "Installiere Python-Abhängigkeiten",
+    "step_2_init_crow": "Initialisiere crow.bin",
+    "step_4_custom_mode": "Erstelle Zoo Code Auto-Aktivierungsmodus",
+    "step_5_start_server": "Starte Crow SSE-Server + Autostart",
+    "step_done": "Fertig.",
+    "complete_title": "Crow Memory Installation abgeschlossen!",
+    "sse_running": "SSE-Server läuft auf http://127.0.0.1:9020/sse",
+    "next_steps_label": "Nächste Schritte:",
+    "next_step_1": "1. Starten Sie Zoo Code neu",
+    "next_step_2": "2. Wechseln Sie in den Modus \"Orchestrator + Crow\"",
+    "next_step_3": "3. Crow aktiviert sich automatisch — keine manuelle Einrichtung erforderlich",
+    "next_step_4": "4. SSE-Server startet automatisch mit Windows (im Autostart registriert)",
+    "step_3_vscode_tasks": "Erstelle .vscode/tasks.json (automatischer SSE-Start beim Ordneröffnen)"
+  },
+  "system_prompt": {
+    "header": "# Crow Memory — Systemprompt-Regeln",
+    "subtitle": "> Diese Regeln wurden von Crow weiterentwickelt und vom Benutzer genehmigt.\n> Sie repräsentieren statistisch signifikante Codierungs-Biase.\n> Nicht manuell bearbeiten — verwenden Sie die Crow MCP Evolutionswerkzeuge.",
+    "managed_by": "<!-- Diese Datei wird von crow_mcp_server.py verwaltet -->",
+    "default_rules": [
+      "RULE: Before every response, call crow_recall(domain=\"all\") to query all 8 registers (style, bug, arch, context, life_pref, life_avoid, life_phil, life_context) for the user's coding style, bug intuition, architectural preferences, personal taste, philosophy, and current context. Reflect the returned hints in your response.",
+      "RULE: After every response, ingest what the user revealed — preferences, philosophy, corrections, context — via crow_ingest. Judge the appropriate register and polarity yourself without waiting for the user to say \"remember this.\" After code work, auto-evaluate build results via crow_ingest_from_build.",
+      "RULE: Do not skip the recall+ingest rules even for non-coding tasks such as document editing, git operations, or configuration changes. Always execute them."
+    ]
+  }
+}

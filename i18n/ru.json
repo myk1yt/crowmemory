@@ -1,0 +1,155 @@
+{
+  "_meta": {
+    "locale": "ru",
+    "language_name": "Русский",
+    "version": "1.0.0",
+    "last_updated": "2026-05-29"
+  },
+  "server": {
+    "instructions": "Crow Memory — Внешняя синаптическая память для ИИ-агентов кодирования. Сохраняет стиль кодирования, интуицию ошибок и архитектурные предпочтения в crow.bin.",
+    "prompts": {
+      "crow_memory_bias": {
+        "description": "Автоматически внедряемый блок смещения Crow Memory. Содержит стиль кодирования, предпочтения и эволюционировавшие правила.",
+        "body_template": "=== Crow Memory — Автоматически внедрённый контекст ===\n\n[Постоянные эволюционировавшие правила]\n{rules}\n\n[Недавние подсказки памяти]\n{bias}\n\nКонтекст представляет изученные предпочтения и стиль."
+      },
+      "crow_evolved_rules": {
+        "description": "Постоянные эволюционировавшие правила из system_prompt.md Crow. Статистически значимые паттерны, одобренные через HITL.",
+        "body_template": "{prompt}"
+      }
+    }
+  },
+  "tools": {
+    "crow_recall": {
+      "description": "Извлеките стиль кодирования, интуицию ошибок, архитектурные предпочтения или личный контекст из памяти Crow. Вызывайте ПЕРЕД каждым ответом. По умолчанию опрашивает все 8 регистров.",
+      "parameters": {
+        "query": "Описание текущей задачи на естественном языке.",
+        "register": "Выберите регистр. 'all' опрашивает все. Code: style/bug/arch/context. Life: life_pref/life_avoid/life_phil/life_context.",
+        "top_k": "Количество подсказок (1-3).",
+        "domain": "Ярлык фильтра. 'code' = style/bug/arch/context, 'life' = life_pref/life_avoid/life_phil/life_context, 'all' = все 8 регистров."
+      }
+    },
+    "crow_ingest": {
+      "description": "Поглотите опыт кодирования в долговременную память Crow. Вызывайте ПОСЛЕ сборки/тестов или явного отзыва.",
+      "parameters": {
+        "key": "Абстрактное описание ситуации.",
+        "value": "Применённый паттерн кода или решение.",
+        "polarity": "Сила подкрепления [-2.0, 2.0].",
+        "register": "Целевой регистр (style/bug/arch/context/life_pref/life_avoid/life_phil/life_context)."
+      }
+    },
+    "crow_evolve_propose": {
+      "description": "Анализирует недавние паттерны и предлагает постоянную мутацию системного промпта.",
+      "parameters": {
+        "min_confidence": "Мин. порог уверенности (по умолч: 0,85).",
+        "min_occurrences": "Мин. количество вхождений (по умолч: 3)."
+      }
+    },
+    "crow_diagnostics": {
+      "description": "Возвращает диагностику состояния памяти Crow (нормы, разреженность, обновления, размер, статистика).",
+      "parameters": {}
+    },
+    "crow_check_drift": {
+      "description": "Проверяет признаки дрейфа памяти в недавних извлечениях.",
+      "parameters": {
+        "threshold": "Порог для обнаружения низкой уверенности (по умолч: 0,5).",
+        "min_low_confidence_count": "Мин. записей с низкой уверенностью для дрейфа (по умолч: 5)."
+      }
+    },
+    "crow_ingest_from_build": {
+      "description": "Автоопределяет полярность из кода выхода сборки и статуса редактирования, затем поглощает опыт.",
+      "parameters": {
+        "key": "Абстрактное описание.",
+        "value": "Применённый паттерн кода.",
+        "exit_code": "Код выхода (0 = успех).",
+        "user_edited": "Редактировал ли пользователь вывод ИИ.",
+        "register": "Целевой регистр (style/bug/arch/context, по умолч: arch).",
+        "explicit_polarity": "Переопределяет автоопределение полярности."
+      }
+    },
+    "crow_get_user_bias": {
+      "description": "Генерирует блок [User Bias] для внедрения в системный промпт.",
+      "parameters": {
+        "query": "Описание текущей задачи.",
+        "registers": "Регистры для опроса (по умолч: all)."
+      }
+    },
+    "crow_manage_prompt": {
+      "description": "Читать, добавлять или получать статистику system_prompt.md.",
+      "parameters": {
+        "action": "Действие: read, append или stats.",
+        "rule": "Текст правила (обязательно для append).",
+        "auto_backup": "Авторезервное копирование перед добавлением (по умолч: true)."
+      }
+    },
+    "crow_manage_backup": {
+      "description": "Управляет резервными копиями памяти Crow. Создавать, ротировать, список, восстановление.",
+      "parameters": {
+        "action": "Действие: create, rotate, list или recover.",
+        "tag": "Тег: daily, weekly или manual (по умолч: daily).",
+        "max_daily": "Макс. ежедневных копий (по умолч: 7).",
+        "max_weekly": "Макс. еженедельных копий (по умолч: 4)."
+      }
+    },
+    "crow_project_info": {
+      "description": "Список или создание изолированных экземпляров памяти Crow.",
+      "parameters": {
+        "action": "Действие: list или create.",
+        "project_name": "Имя проекта (обязательно для create)."
+      }
+    }
+  },
+  "errors": {
+    "unknown_tool": "Неизвестный инструмент: {name}",
+    "unknown_prompt": "Неизвестный промпт: {name}",
+    "unknown_action": "Неизвестное действие {context}: {action}",
+    "project_name_required": "project_name обязателен для create"
+  },
+  "recall_messages": {
+    "faint_bias": "Crow смутно припоминает смещение {register}. Мало воспоминаний сохранено.",
+    "unknown_register": "Неизвестный регистр: {register}"
+  },
+  "ingest_messages": {
+    "status_ingested": "поглощено",
+    "unknown_register": "Неизвестный регистр: {register}"
+  },
+  "evolve_messages": {
+    "no_patterns": "Статистически значимых паттернов пока не обнаружено."
+  },
+  "drift_messages": {
+    "healthy": "Уверенность памяти в норме.",
+    "confused": "Память Crow сбита с толку. Задачи слишком новы или память насыщена. Рассмотрите спектральный сброс."
+  },
+  "cli": {
+    "stdio_start": "Сервер MCP Crow Memory работает на stdio",
+    "sse_start": "Сервер MCP SSE слушает http://{host}:{port}/sse",
+    "http_start": "Сервер MCP Streamable HTTP слушает http://{host}:{port}/",
+    "dual_start_sse": "Сервер MCP SSE слушает http://{host}:{sse_port}/sse",
+    "dual_start_http": "Сервер MCP Streamable HTTP слушает http://{host}:{http_port}/"
+  },
+  "installer": {
+    "banner_title": "Установщик Crow Memory для Zoo Code",
+    "step_1_install_deps": "Установка зависимостей Python",
+    "step_2_init_crow": "Инициализация crow.bin",
+    "step_4_custom_mode": "Создание режима автозапуска Zoo Code",
+    "step_5_start_server": "Запуск SSE сервера Crow + автозапуск",
+    "step_done": "Готово.",
+    "complete_title": "Установка Crow Memory завершена!",
+    "sse_running": "SSE сервер на http://127.0.0.1:9020/sse",
+    "next_steps_label": "Следующие шаги:",
+    "next_step_1": "1. Перезапустите Zoo Code",
+    "next_step_2": "2. Переключитесь в режим \"Orchestrator + Crow\"",
+    "next_step_3": "3. Crow активируется автоматически",
+    "next_step_4": "4. SSE сервер запускается с Windows (в автозагрузке)",
+    "step_3_vscode_tasks": "Создание .vscode/tasks.json (автозапуск SSE)"
+  },
+  "system_prompt": {
+    "header": "# Crow Memory — Правила системного промпта",
+    "subtitle": "> Правила эволюционированы Crow и одобрены пользователем.\n> Статистически значимые смещения кодирования.\n> Не редактируйте вручную.",
+    "managed_by": "<!-- Файл управляется crow_mcp_server.py -->",
+    "default_rules": [
+      "RULE: Before every response, call crow_recall(domain=\"all\") to query all 8 registers (style, bug, arch, context, life_pref, life_avoid, life_phil, life_context) for the user's coding style, bug intuition, architectural preferences, personal taste, philosophy, and current context. Reflect the returned hints in your response.",
+      "RULE: After every response, ingest what the user revealed — preferences, philosophy, corrections, context — via crow_ingest. Judge the appropriate register and polarity yourself without waiting for the user to say \"remember this.\" After code work, auto-evaluate build results via crow_ingest_from_build.",
+      "RULE: Do not skip the recall+ingest rules even for non-coding tasks such as document editing, git operations, or configuration changes. Always execute them."
+    ]
+  }
+}

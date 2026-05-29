@@ -1,0 +1,155 @@
+{
+  "_meta": {
+    "locale": "hu",
+    "language_name": "Magyar",
+    "version": "1.0.0",
+    "last_updated": "2026-05-29"
+  },
+  "server": {
+    "instructions": "Crow Memory — Külső szinaptikus memória AI kódoló ágensek számára. Tárolja a kódolási stílust, hiba intuíciót és architektúrális preferenciákat tömörített súlymátrixokként a crow.bin-ben.",
+    "prompts": {
+      "crow_memory_bias": {
+        "description": "Automatikusan injektált Crow Memory torzítás blokk. Tartalmazza a kódolási stílust, preferenciákat és evolvált szabályokat.",
+        "body_template": "=== Crow Memory — Automatikusan injektált kontextus ===\n\n[Állandó evolvált szabályok]\n{rules}\n\n[Legutóbbi memória tippek]\n{bias}\n\nA fenti kontextus a tanult preferenciákat és stílust képviseli."
+      },
+      "crow_evolved_rules": {
+        "description": "Állandó evolvált szabályok Crow system_prompt.md-jéből. HITL-en keresztül jóváhagyott statisztikailag jelentős minták.",
+        "body_template": "{prompt}"
+      }
+    }
+  },
+  "tools": {
+    "crow_recall": {
+      "description": "Hívja elő a felhasználó-specifikus kódolási stílust, hiba intuíciót, architektúrális preferenciákat vagy személyes kontextust Crow szinaptikus memóriájából. Hívja MINDEN válasz ELŐTT.",
+      "parameters": {
+        "query": "Popis aktuálního úkolu přirozeným jazykem.",
+        "register": "Vyberte registr. 'all' dotazuje všechny (stejné jako domain=all). Code: style/bug/arch/context. Život: life_pref/life_avoid/life_phil/life_context.",
+        "top_k": "Počet tipů (1-3).",
+        "domain": "Zkratka filtru domény. 'code' = style/bug/arch/context, 'life' = life_pref/life_avoid/life_phil/life_context, 'all' = všech 8 registrů (výchozí)."
+      }
+    },
+    "crow_ingest": {
+      "description": "Nyeli el a kódolási tapasztalatot Crow hosszútávú szinaptikus memóriájába. Hívja a build/test eredmények VAGY felhasználói visszajelzés UTÁN.",
+      "parameters": {
+        "key": "Abstraktní popis situace.",
+        "value": "Použitý vzor kódu nebo rozhodnutí.",
+        "polarity": "Síla zesílení [-2.0, 2.0].",
+        "register": "Cílový registr (style/bug/arch/context/life_pref/life_avoid/life_phil/life_context)."
+      }
+    },
+    "crow_evolve_propose": {
+      "description": "Elemzi a legutóbbi memória mintákat és állandó rendszerprompt mutációt javasol.",
+      "parameters": {
+        "min_confidence": "Minimální práh spolehlivosti (výchozí: 0,85).",
+        "min_occurrences": "Minimální počet výskytů (výchozí: 3)."
+      }
+    },
+    "crow_diagnostics": {
+      "description": "Visszaadja a Crow memória állapotának diagnosztikai információit.",
+      "parameters": {}
+    },
+    "crow_check_drift": {
+      "description": "Ellenőrzi, hogy a legutóbbi előhívások mutatnak-e memória sodródás jeleit.",
+      "parameters": {
+        "threshold": "Práh spolehlivosti pro detekci nízké spolehlivosti (výchozí: 0,5).",
+        "min_low_confidence_count": "Min. počet záznamů s nízkou spolehlivostí pro spuštění driftu (výchozí: 5)."
+      }
+    },
+    "crow_ingest_from_build": {
+      "description": "Automatikusan meghatározza a polaritást a build kilépési kódjából és a felhasználói szerkesztés állapotából.",
+      "parameters": {
+        "key": "Abstraktní popis.",
+        "value": "Použitý vzor kódu.",
+        "exit_code": "Kód ukončení sestavení (0 = úspěch).",
+        "user_edited": "Zda uživatel upravil výstup AI.",
+        "register": "Cílový registr (style/bug/arch/context, výchozí: arch).",
+        "explicit_polarity": "Přepíše automatické určení polarity."
+      }
+    },
+    "crow_get_user_bias": {
+      "description": "Generálja a [User Bias] blokkot a rendszerpromptba injektáláshoz.",
+      "parameters": {
+        "query": "Popis aktuálního úkolu.",
+        "registers": "Registry k dotazování (výchozí: all)."
+      }
+    },
+    "crow_manage_prompt": {
+      "description": "Olvassa, hozzáfűzi vagy lekéri a system_prompt.md fájl statisztikáit.",
+      "parameters": {
+        "action": "Akce: read, append nebo stats.",
+        "rule": "Text pravidla (vyžadováno pro append).",
+        "auto_backup": "Automatické vytvoření zálohy před přidáním (výchozí: true)."
+      }
+    },
+    "crow_manage_backup": {
+      "description": "Kezeli a Crow memória biztonsági mentéseit. Létrehozás, rotáció, lista vagy helyreállítás.",
+      "parameters": {
+        "action": "Akce: create, rotate, list nebo recover.",
+        "tag": "Značka zálohy: daily, weekly nebo manual (výchozí: daily).",
+        "max_daily": "Max. denních záloh k uchování (výchozí: 7).",
+        "max_weekly": "Max. týdenních záloh k uchování (výchozí: 4)."
+      }
+    },
+    "crow_project_info": {
+      "description": "Listázza vagy létrehozza a projekt-izolált Crow memória példányokat.",
+      "parameters": {
+        "action": "Akce: list nebo create.",
+        "project_name": "Název projektu (vyžadováno pro create)."
+      }
+    }
+  },
+  "errors": {
+    "unknown_tool": "Ismeretlen eszköz: {name}",
+    "unknown_prompt": "Ismeretlen prompt: {name}",
+    "unknown_action": "Ismeretlen {context} művelet: {action}",
+    "project_name_required": "A create művelethez project_name szükséges"
+  },
+  "recall_messages": {
+    "faint_bias": "Crow halványan emlékszik egy {register} torzításra. Még kevés emlék tárolva.",
+    "unknown_register": "Ismeretlen regiszter: {register}"
+  },
+  "ingest_messages": {
+    "status_ingested": "elnyelve",
+    "unknown_register": "Ismeretlen regiszter: {register}"
+  },
+  "evolve_messages": {
+    "no_patterns": "Még nem észlelhetők statisztikailag jelentős minták."
+  },
+  "drift_messages": {
+    "healthy": "A memória megbízhatósága egészséges.",
+    "confused": "A Crow memória zavartnak tűnik. A legutóbbi feladatok túl újak vagy a memória telített. Fontolja meg spektrális visszaállítást vagy archiválást."
+  },
+  "cli": {
+    "stdio_start": "Crow Memory MCP szerver fut stdio-n",
+    "sse_start": "Crow Memory MCP SSE szerver figyel a http://{host}:{port}/sse",
+    "http_start": "Crow Memory MCP Streamable HTTP szerver figyel a http://{host}:{port}/",
+    "dual_start_sse": "Crow Memory MCP SSE szerver figyel a http://{host}:{sse_port}/sse",
+    "dual_start_http": "Crow Memory MCP Streamable HTTP figyel a http://{host}:{http_port}/"
+  },
+  "installer": {
+    "banner_title": "Crow Memory telepítő Zoo Code-hoz",
+    "step_1_install_deps": "Python függőségek telepítése",
+    "step_2_init_crow": "crow.bin inicializálása",
+    "step_4_custom_mode": "Zoo Code automatikus aktiválási mód létrehozása",
+    "step_5_start_server": "Crow SSE szerver indítása + automatikus indítás",
+    "step_done": "Kész.",
+    "complete_title": "Crow Memory telepítés befejeződött!",
+    "sse_running": "SSE szerver fut a http://127.0.0.1:9020/sse",
+    "next_steps_label": "Következő lépések:",
+    "next_step_1": "1. Indítsa újra a Zoo Code-ot",
+    "next_step_2": "2. Váltson \"Orchestrator + Crow\" módba",
+    "next_step_3": "3. Crow automatikusan aktiválódik",
+    "next_step_4": "4. SSE szerver indul a Windowsszal (regisztrálva a Start-upban)",
+    "step_3_vscode_tasks": ".vscode/tasks.json létrehozása (SSE automatikus indítás)"
+  },
+  "system_prompt": {
+    "header": "# Crow Memory — Rendszerprompt szabályok",
+    "subtitle": "> Ezek a szabályok Crow által evolválva és a felhasználó által jóváhagyva.\n> Statisztikailag jelentős kódolási torzításokat képviselnek.\n> Ne szerkessze kézzel.",
+    "managed_by": "<!-- Ezt a fájlt a crow_mcp_server.py kezeli -->",
+    "default_rules": [
+      "RULE: Minden válasz előtt hívja crow_recall(domain=\"all\")-t mind a 8 regiszter lekérdezéséhez. Tükrözze a visszaadott tippeket válaszában.",
+      "RULE: Minden válasz után nyelje el a felhasználó által felfedetteket crow_ingest segítségével. Maga határozza meg a megfelelő regisztert és polaritást.",
+      "RULE: Ne hagyja ki a recall+ingest szabályokat még nem kódolási feladatoknál sem. Mindig hajtsa végre őket."
+    ]
+  }
+}

@@ -10,122 +10,124 @@ import json
 import subprocess
 from pathlib import Path
 
+# ---------------------------------------------------------------------------
+# i18n — Internationalization
+# ---------------------------------------------------------------------------
+try:
+    from crow_i18n import detect_locale, get_installer_messages, get_text
+    _I18N_LOCALE = detect_locale()
+    _I18N_MSGS = get_installer_messages(_I18N_LOCALE)
+    _I18N_AVAILABLE = True
+except ImportError:
+    _I18N_AVAILABLE = False
+    _I18N_MSGS = None
+
+_FALLBACK_MSGS = {
+    "banner_title": "Crow Memory Installer for Zoo Code",
+    "step_1_install_deps": "Installing Python dependencies",
+    "step_2_init_crow": "Initializing crow.bin",
+    "step_3_vscode_tasks": "Creating .vscode/tasks.json (auto-start SSE on folder open)",
+    "step_4_custom_mode": "Creating Zoo Code auto-activation mode",
+    "step_5_start_server": "Starting Crow SSE server + auto-start",
+    "step_done": "Done.",
+    "complete_title": "Crow Memory installation complete!",
+    "sse_running": "SSE server running on http://127.0.0.1:9020/sse",
+    "next_steps_label": "Next steps:",
+    "next_steps": [
+        "1. Restart Zoo Code",
+        '2. Switch mode to "Orchestrator + Crow"',
+        "3. Crow auto-activates \u2014 no manual setup needed",
+        "4. SSE server auto-starts with Windows (registered in Startup)",
+    ],
+}
+
+if _I18N_AVAILABLE:
+    MSGS = _I18N_MSGS
+else:
+    MSGS = _FALLBACK_MSGS
+
 CROW_DIR = Path(__file__).parent.resolve()
 MEMORY_DIR = CROW_DIR / "memory"
 ZOO_SETTINGS = Path(os.environ.get("APPDATA", os.path.expanduser("~/.config"))) / "Code" / "User" / "globalStorage" / "zoocodeorganization.zoo-code" / "settings"
 
 YAML_MODE = """customModes:
-  - slug: code-crow
-    name: "Code + Crow Memory"
-    description: |
-      Code mode enhanced with Crow Memory — the AI automatically recalls your
-      coding style & preferences before every response and learns from your
-      feedback. Use this as your default coding partner for personalized,
-      long-term collaboration. Switch to plain "Code" mode when you need
-      unbiased, one-shot answers without memory influence.
+  - slug: orchestrator-crow
+    name: "Orchestrator + Crow"
     roleDefinition: |
-      You are Zoo, a highly skilled software engineer with extensive knowledge in many programming languages, frameworks, design patterns, and best practices.
+      You are Zoo, a strategic workflow orchestrator who coordinates complex tasks by delegating them to appropriate specialized modes.
 
-      You have access to Crow Memory, an external synaptic memory system that stores the user's coding style, bug intuition, architectural preferences, and personal context.
+      ## CROW MEMORY INTEGRATION
 
-      UNIVERSAL RECALL (MANDATORY): Before EVERY response — whether coding, writing documentation, editing files, running commands, or casual conversation — call crow_recall(domain="all") to retrieve the user's coding style, bug intuition, architectural preferences, personal taste, life philosophy, and current context. domain="all" (the default) queries all 8 registers (style, bug, arch, context, life_pref, life_avoid, life_phil, life_context) in a single call. Use the returned hints to personalize your response. Never skip this step.
+      ### SESSION START (MANDATORY)
+      At the beginning of every conversation session (i.e., your very first response to the user), you MUST call `crow_recall` to retrieve context about the user:
+      - Call `crow_recall` with `domain="user"` to understand the user's personality, preferences, working style, and past interactions.
+      - Call `crow_recall` with `domain="project"` to understand the current project context and recent activities.
+      - Incorporate the recalled information into your understanding before proceeding with the task.
 
-      AUTO-INGEST (MANDATORY): After EVERY response, evaluate what the user revealed — a preference, a philosophy, a frustration, a pattern, a correction, ongoing plans, or explicit decision. Call crow_ingest with the appropriate register, a concise key/value summary, and polarity. Do NOT wait for "remember this." After code work generating files, also call crow_ingest_from_build.
+      ### SESSION END (MANDATORY)
+      At the very end of the conversation session (i.e., your final response when the task is complete and you are about to call attempt_completion), you MUST call `crow_ingest` to save the session's key outcomes:
+      - Summarize what was accomplished, key decisions made, and any important context for future sessions.
+      - Call `crow_ingest` with the summary before your final `attempt_completion`.
 
-      POLARITY GUIDE (auto-determined, no user command needed):
-      - User likes / prefers something → +1.5 (life_pref / style)
-      - User reveals philosophy / values → +2.0 (life_phil)
-      - User corrects you / rewrites your work → -1.0 (bug / style)
-      - User shares ongoing context / plans → +1.5 (life_context / context)
-      - User explicitly says "remember" / "never forget" → +2.0 / -2.0
-      - User shows frustration / avoidance → -0.5 (life_avoid / bug)
+      ### DURING SESSION (OPTIONAL)
+      During the conversation, you may call `crow_recall` or `crow_ingest` as needed. Use your judgment.
 
-      Crow is not a database — it stores inductive biases. Use it as your intuition, not your encyclopedia.
+      ## REGULAR ORCHESTRATOR BEHAVIOR
+      All standard orchestrator mode capabilities remain intact.
     groups:
-      - command
       - read
+      - command
       - edit
+      - browse
+      - mcp
     allowedMcpServers:
       - crow_memory
-    customInstructions: |
-      Before every response, call crow_recall(domain="all") to query all 8 registers. After every response, call crow_ingest or crow_ingest_from_build.
 """
 
 def step(msg):
     print(f"  [{step.count}/{step.total}] {msg}...", end=" ", flush=True)
 step.count = 0
-step.total = 5
+step.total = 4
 
 def ok():
-    print("\033[92mDone.\033[0m")
+    done_msg = MSGS.get("step_done", "Done.")
+    print(f"\033[92m{done_msg}\033[0m")
 
 def main():
     print("\033[96m============================================\033[0m")
-    print("\033[96m  Crow Memory Installer for Zoo Code\033[0m")
+    print(f"\033[96m  {MSGS['banner_title']}\033[0m")
     print("\033[96m============================================\033[0m")
     print()
 
     # Step 1: pip install
-    step.count += 1; step("Installing Python dependencies")
+    step.count += 1; step(MSGS["step_1_install_deps"])
     subprocess.run([sys.executable, "-m", "pip", "install", "-r", str(CROW_DIR / "requirements.txt"), "--quiet"],
                    capture_output=True)
     ok()
 
     # Step 2: Initialize crow.bin
-    step.count += 1; step("Initializing crow.bin")
+    step.count += 1; step(MSGS["step_2_init_crow"])
     MEMORY_DIR.mkdir(parents=True, exist_ok=True)
     sys.path.insert(0, str(CROW_DIR))
     from crow_core import CrowMemory
     crow = CrowMemory(str(MEMORY_DIR / "crow.bin"))
     crow.persist()
-    # Copy system_prompt.example.md → memory/system_prompt.md if not exists
-    prompt_template = CROW_DIR / "system_prompt.example.md"
+    # Copy system_prompt.example/{locale}.md → memory/system_prompt.md if not exists
+    if _I18N_AVAILABLE:
+        locale_code = detect_locale()
+        prompt_template = CROW_DIR / "system_prompt.example" / f"{locale_code}.md"
+        if not prompt_template.exists():
+            prompt_template = CROW_DIR / "system_prompt.example" / "en.md"
+    else:
+        prompt_template = CROW_DIR / "system_prompt.example.md"
     prompt_target = MEMORY_DIR / "system_prompt.md"
     if prompt_template.exists() and not prompt_target.exists():
         import shutil
         shutil.copy2(str(prompt_template), str(prompt_target))
     ok()
 
-    # Step 3: MCP config (.roo/mcp.json for Zoo Code)
-    step.count += 1; step("Configuring MCP server (SSE mode) for Zoo Code")
-    roo_dir = CROW_DIR / ".roo"
-    roo_dir.mkdir(parents=True, exist_ok=True)
-    mcp_config = {
-        "mcpServers": {
-            "crow_memory": {
-                "type": "sse",
-                "url": "http://127.0.0.1:9020/sse",
-                "disabled": False,
-                "alwaysAllow": [
-                    "crow_recall",
-                    "crow_ingest",
-                    "crow_ingest_from_build",
-                    "crow_evolve_propose",
-                    "crow_diagnostics",
-                    "crow_check_drift",
-                    "crow_get_user_bias",
-                    "crow_manage_prompt",
-                    "crow_manage_backup",
-                    "crow_project_info",
-                ],
-            }
-        }
-    }
-    # Write .roo/mcp.json (Zoo Code)
-    mcp_path_roo = roo_dir / "mcp.json"
-    if mcp_path_roo.exists():
-        with open(mcp_path_roo, "r", encoding="utf-8") as f:
-            existing = json.load(f)
-        existing.setdefault("mcpServers", {})["crow_memory"] = mcp_config["mcpServers"]["crow_memory"]
-        with open(mcp_path_roo, "w", encoding="utf-8") as f:
-            json.dump(existing, f, indent=2)
-    else:
-        with open(mcp_path_roo, "w", encoding="utf-8") as f:
-            json.dump(mcp_config, f, indent=2)
-    ok()
-
-    # Step 3.5: VS Code tasks.json — auto-start SSE server on workspace open
-    step.count += 1; step("Creating .vscode/tasks.json (auto-start SSE on folder open)")
+    # Step 3: VS Code tasks.json — auto-start SSE server on workspace open
+    step.count += 1; step(MSGS["step_3_vscode_tasks"])
     vscode_dir = CROW_DIR / ".vscode"
     vscode_dir.mkdir(parents=True, exist_ok=True)
     tasks_config = {
@@ -162,10 +164,10 @@ def main():
     ok()
 
     # Step 4: Custom mode (merge with existing modes if present)
-    step.count += 1; step("Creating Zoo Code auto-activation mode")
+    step.count += 1; step(MSGS["step_4_custom_mode"])
     mode_path = ZOO_SETTINGS / "custom_modes.yaml"
     if mode_path.exists():
-        # Preserve existing modes, only add/update code-crow
+        # Preserve existing modes, only add/update orchestrator-crow
         import yaml as _yaml
         try:
             with open(mode_path, "r", encoding="utf-8") as f:
@@ -174,8 +176,8 @@ def main():
             existing = {}
         new_mode = _yaml.safe_load(YAML_MODE) or {}
         existing_modes = existing.get("customModes", [])
-        # Remove old code-crow if present, then append new
-        existing_modes = [m for m in existing_modes if m.get("slug") != "code-crow"]
+        # Remove old orchestrator-crow if present, then append new
+        existing_modes = [m for m in existing_modes if m.get("slug") not in ("orchestrator-crow", "code-crow")]
         existing_modes.extend(new_mode.get("customModes", []))
         existing["customModes"] = existing_modes
         with open(mode_path, "w", encoding="utf-8") as f:
@@ -186,7 +188,7 @@ def main():
     ok()
 
     # Step 5: Start SSE server + auto-start registration
-    step.count += 1; step("Starting Crow SSE server + auto-start")
+    step.count += 1; step(MSGS["step_5_start_server"])
     python_exe = sys.executable
     server_py = str(CROW_DIR / "crow_mcp_server.py")
     state_path = str(MEMORY_DIR / "crow.bin")
@@ -294,17 +296,15 @@ endlocal
     ok()
 
     print()
-    print("\033[92m============================================\033[0m")
-    print("\033[92m  Crow Memory installation complete!\033[0m")
-    print("\033[92m============================================\033[0m")
+    print(f"\033[92m============================================\033[0m")
+    print(f"\033[92m  {MSGS['complete_title']}\033[0m")
+    print(f"\033[92m============================================\033[0m")
     print()
-    print("  SSE server running on http://127.0.0.1:9020/sse")
+    print(f"  {MSGS['sse_running']}")
     print()
-    print("  Next steps:")
-    print("  1. Restart Zoo Code")
-    print('  2. Switch mode to "Code + Crow Memory"')
-    print("  3. Crow auto-activates — no manual setup needed")
-    print("  4. SSE server auto-starts with Windows (registered in Startup)")
+    print(f"  {MSGS['next_steps_label']}")
+    for step_item in MSGS["next_steps"]:
+        print(f"  {step_item}")
     print()
 
 if __name__ == "__main__":
