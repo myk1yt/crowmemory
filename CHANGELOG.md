@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [2026-05-28] — Kimi Code Integration Restored
+## [1.3.7] — 2026-05-28
 
 ### Added
 - **`AGENTS.md`** — Single-file Kimi Code Crow Memory integration (replaces deleted `patch_kimi_code.py`, `crow_auto_inject.py`, and old `AGENTS.md`)
