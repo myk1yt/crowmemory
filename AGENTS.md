@@ -4,28 +4,30 @@ Crow Memory is an external synaptic memory system for LLM-based AI coding assist
 
 ---
 
-## MCP Server Setup
+## MCP Server Setup (Streamable HTTP)
 
-Add this to your Kimi Code `mcp_settings.json`:
+> ⚠️ **Kimi Code does NOT support SSE transport.** It has a known bug where it fails to recognize the MCP SSE `event: endpoint` handshake message. Use **Streamable HTTP** instead.
+
+Add this to your Kimi Code `~/.kimi/mcp.json`:
 
 ```json
 {
   "mcpServers": {
     "crow_memory": {
-      "type": "sse",
-      "url": "http://127.0.0.1:9020/sse"
+      "transport": "http",
+      "url": "http://127.0.0.1:9021/"
     }
   }
 }
 ```
 
-Start the Crow Memory SSE server before using Kimi Code:
+The Crow Memory server must be started in **dual mode** (SSE + Streamable HTTP):
 
 ```bash
-python crow_mcp_server.py --transport sse --port 9020
+python crow_mcp_server.py --transport dual --port 9020 --http-port 9021
 ```
 
-Or use the bundled script: `start_crow_sse.bat` (Windows)
+Or use the bundled script: `start_crow_sse.bat` (Windows) — it starts in dual mode by default.
 
 ---
 

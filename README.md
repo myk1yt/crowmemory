@@ -245,37 +245,40 @@ The included `.gitignore` automatically excludes all personal memory files.
 
 ## Multi-Client Setup (Zoo Code + others)
 
-### ✅ Default: Shared SSE Server (Auto-Start)
+### ✅ Default: Dual-Mode Server (Auto-Start)
 
-The installer configures everything for SSE mode by default. This is the only safe way to share `crow.bin` across multiple AI clients:
+The installer configures a **dual-mode** server (SSE + Streamable HTTP) by default. This is the only safe way to share `crow.bin` across multiple AI clients:
 
 ```
-┌──────────────┐     ┌──────────────┐
-│  Zoo Code    │     │  Other Client│
-│  (SSE MCP)   │     │  (SSE MCP)   │
-└──────┬───────┘     └──────┬───────┘
-       │                    │
-       └────────┬───────────┘
-                │ http://127.0.0.1:9020/sse
-       ┌────────┴───────────┐
-       │  Crow MCP Server   │
-       │  (SSE, port 9020)  │
-       │  Auto-started by   │
-       │  .vscode/tasks.json│
-       └────────┬───────────┘
-                │
-       ┌────────┴───────────┐
-       │     crow.bin       │
-       │  (single source)   │
-       └────────────────────┘
+┌──────────────┐     ┌──────────────┐     ┌──────────────┐
+│  Zoo Code    │     │  Kimi Code   │     │  Other Client│
+│  (SSE MCP)   │     │  (HTTP MCP)  │     │  (SSE MCP)   │
+└──────┬───────┘     └──────┬───────┘     └──────┬───────┘
+       │                    │                    │
+       └────────┬───────────┴───────────┬────────┘
+                │                       │
+     http://127.0.0.1:9020/sse   http://127.0.0.1:9021/
+       ┌────────┴───────────────────────┴────────┐
+       │          Crow MCP Server                │
+       │  (Dual Mode: SSE port 9020 +            │
+       │   Streamable HTTP port 9021)            │
+       │  Auto-started by .vscode/tasks.json     │
+       └────────┬───────────────────────┬────────┘
+                │                       │
+       ┌────────┴───────────────────────┴────────┐
+       │              crow.bin                   │
+       │           (single source)               │
+       └─────────────────────────────────────────┘
 ```
 
 **How it works:**
 1. You open the `crowsmemory` workspace in **any** VS Code-based editor
 2. [`.vscode/tasks.json`](.vscode/tasks.json) auto-runs [`start_crow_sse.bat`](start_crow_sse.bat) — if server is already running (detached from previous session), exits instantly; otherwise starts it detached + polls until ready
-3. All AI clients (Zoo Code, etc.) connect to `http://127.0.0.1:9020/sse`
-4. The single SSE server serializes all reads/writes — **no race conditions, no data corruption**
-5. The server process is **detached** from VS Code — closing the IDE does not kill it
+3. The server starts in **dual mode**: SSE on port 9020, Streamable HTTP on port 9021
+4. Zoo Code and SSE-compatible clients connect to `http://127.0.0.1:9020/sse`
+5. Kimi Code connects to `http://127.0.0.1:9021/` via Streamable HTTP
+6. The single server process serializes all reads/writes — **no race conditions, no data corruption**
+7. The server process is **detached** from VS Code — closing the IDE does not kill it
 
 ### ⚠️ Warning: stdio Mode
 
@@ -285,8 +288,9 @@ If you manually switch to `"type": "stdio"` (command mode), each VS Code instanc
 
 | Client | Transport | Port | Config File | Auto-Generated |
 |--------|-----------|------|-------------|----------------|
-| Zoo Code | SSE | 9020 | `.roo/mcp.json` | ✅ Yes |
-| Cline / Roo Code | SSE | 9020 | `.roo/mcp.json` | ✅ Yes |
+| Zoo Code | SSE | 9020 | `mcp_settings.json` (global) | ✅ Yes |
+| Cline / Roo Code | SSE | 9020 | `mcp_settings.json` (global) | ✅ Yes |
+| Kimi Code | Streamable HTTP | 9021 | `~/.kimi/mcp.json` | ✅ Yes |
 
 ---
 
@@ -295,8 +299,23 @@ If you manually switch to `"type": "stdio"` (command mode), each VS Code instanc
 Kimi Code does not support custom modes like Zoo Code's `orchestrator-crow`. Instead, use the single-file [`AGENTS.md`](AGENTS.md) for equivalent Crow Memory integration:
 
 1. Set environment variable: `KIMI_AGENTS_MD=/path/to/crowsmemory/AGENTS.md`
-2. Configure MCP: Add `crow_memory` SSE server to Kimi Code's `mcp_settings.json`
-3. Start the server: `python crow_mcp_server.py --transport sse --port 9020`
+2. Configure MCP in `~/.kimi/mcp.json`:
+
+   ```json
+   {
+     "mcpServers": {
+       "crow_memory": {
+         "transport": "http",
+         "url": "http://127.0.0.1:9021/"
+       }
+     }
+   }
+   ```
+
+3. The server must run in **dual mode**: `python crow_mcp_server.py --transport dual --port 9020 --http-port 9021`
+   (or just use `start_crow_sse.bat` which starts in dual mode by default)
+
+> ⚠️ **Kimi Code does NOT support SSE transport.** It has a known bug where it fails to recognize the MCP SSE `event: endpoint` handshake message, causing an infinite "Testing..." hang or a **405 Method Not Allowed** error. Always use Streamable HTTP (`"transport": "http"`, port 9021) for Kimi Code.
 
 The `AGENTS.md` file provides session-start recall, session-end ingest, and full tool reference — matching the `orchestrator-crow` experience in Zoo Code.
 

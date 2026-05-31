@@ -4,12 +4,16 @@
 # This mode includes Crow Memory system prompt instructions
 # so the LLM automatically calls crow_recall before EVERY response
 # and crow_ingest after EVERY response — fully autonomous memory.
+#
+# IMPORTANT: Zoo Code expects ARRAY format (customModes: [...]),
+# NOT map format (slug as top-level key).
+# Verified against zoo-code-3.56.0 extension.js source code (CustomModesManager class).
 
+# ============================================================
+# Orchestrator + Crow Memory (orchestrator-crow)
+# 작업 위임 중심 워크플로우에 Crow Memory 통합
+# ============================================================
 customModes:
-  # ============================================================
-  # Orchestrator + Crow Memory (orchestrator-crow)
-  # 작업 위임 중심 워크플로우에 Crow Memory 통합
-  # ============================================================
   - slug: orchestrator-crow
     name: Orchestrator + Crow
     roleDefinition: |
@@ -42,7 +46,6 @@ customModes:
       - read
       - command
       - edit
-      - browse
       - mcp
     allowedMcpServers:
       - crow_memory
