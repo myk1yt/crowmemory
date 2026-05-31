@@ -17,8 +17,9 @@ Forgetting is not a bug. Crow's fixed-size weight matrices and λ (decay rate) i
 *"If you share this philosophy and want to join me on this journey, you are always welcome."*
 
 ---
+[![Gumroad Sponsor](https://img.shields.io/badge/Gumroad-Sponsor-FF90A0?style=for-the-badge&logo=gumroad&logoColor=white)](https://teamsunplaza.gumroad.com/l/crowmemory)
 
-# Crow Memory (까마귀 메모리)
+# Crow Memory
 
 > *"Crow remembers not the code, but the hand that wrote it."*
 
