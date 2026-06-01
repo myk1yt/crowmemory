@@ -7,6 +7,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.3.7] — 2026-06-01
+
+### Added
+- **`.roomodes`** — Zoo Code 프로젝트 수준 `orchestrator-crow` 모드 설정 추가 (git 추적됨)
+- **`.github/FUNDING.yml`** — Gumroad 커스텀 펀딩 링크
+- **`Logo/`** — 프로젝트 로고 이미지 (2개 PNG 파일)
+- **Gumroad Sponsor 배지** — README 상단에 [![Gumroad Sponsor](https://img.shields.io/badge/Gumroad-Sponsor-FF90A0?style=for-the-badge&logo=gumroad&logoColor=white)](https://teamsunplaza.gumroad.com/l/crowmemory) 배지 추가
+- **`$null`** 가비지 파일 git 추적에서 제거
+
+### Changed
+- **`AGENTS.md`** — Kimi Code MCP 설정 SSE → Streamable HTTP 마이그레이션:
+  - 설정 파일 경로: `mcp_settings.json` → `~/.kimi/mcp.json`
+  - 전송 방식: `"type": "sse"` → `"transport": "http"`, URL 포트 9020→9021
+  - 서버 실행: `--transport sse --port 9020` → `--transport dual --port 9020 --http-port 9021`
+  - Kimi Code SSE 미지원 버그 경고 추가
+- **`README.md`** — 다음 내용 업데이트:
+  - 프로젝트 제목: `Crow Memory (까마귀 메모리)` → `Crow Memory`
+  - 다이어그램: SSE 전용 → 듀얼 모드(SSE + Streamable HTTP) 아키텍처 다이어그램
+  - 멀티 클라이언트 테이블: Zoo Code/Cline `.roo/mcp.json` → `mcp_settings.json` (global), Kimi Code 행 추가
+  - Kimi Code 섹션: 상세한 Streamable HTTP 설정 가이드 추가 (JSON 예제, 듀얼 모드 실행 명령어, SSE 버그 경고)
+  - "Commercial Services / 맞춤형 개발 문의" 섹션 추가 (이미 v1.3.6에 있음)
+- **`custom_modes.example.yaml`** — 다음 내용 업데이트:
+  - Zoo Code ARRAY 형식 중요 주석 추가
+  - `browse` 그룹 권한 제거
+  - 주석 위치 조정 (섹션 헤더를 `customModes:` 상단으로 이동)
+- **README.md 버전 문자열**: `v1.3.6` → `v1.3.7`
+- **버전 참조 일관성**: 모든 파일의 v1.3.6 참조를 v1.3.7로 업데이트
+
+### Fixed
+- **v1.3.4 태그 위치 오류**: v1.3.4 태그가 HEAD(`bd67634`)를 가리키는 문제 — v1.3.4는 v1.3.5/v1.3.6보다 이전 버전이어야 함 (별도 git 명령어로 처리)
+
+---
+
 ## [2026-05-28] — Kimi Code Integration Restored
 
 ### Added

@@ -50,3 +50,12 @@ tests/
 .DS_Store
 Thumbs.db
 $null
+
+# PowerShell artifacts
+-Destination/
+-Force/
+-p/
+-Path/
+Move-Item/
+Remove-Item/
+Write-Output/

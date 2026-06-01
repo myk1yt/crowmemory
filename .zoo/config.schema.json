@@ -15,6 +15,30 @@
       "enum": ["code", "code-crow", "architect", "debug", "ask", "orchestrator", "orchestrator-crow"],
       "description": "Default AI mode slug applied when the project loads"
     },
+    "version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "description": "Crow Memory schema version (semver)"
+    },
+    "project": {
+      "type": "string",
+      "description": "Project identifier name"
+    },
+    "crow": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "autoRecall": {
+          "type": "boolean",
+          "description": "Automatically call crow_recall on session start"
+        },
+        "autoIngest": {
+          "type": "boolean",
+          "description": "Automatically call crow_ingest on session end"
+        }
+      },
+      "description": "Crow Memory auto-behavior flags"
+    },
     "modes": {
       "type": "array",
       "items": {
