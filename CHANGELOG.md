@@ -14,8 +14,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Human-Repetition Memory Philosophy**: Introduced the guiding principle "memorize important information immediately, just as a human repeats key facts aloud to remember them." This directive — `crow_ingest` on every significant insight without waiting — has been embedded into `customInstructions` of all custom modes, `AGENTS.md`, and `system_prompt` templates. The AI now treats proactive memory ingestion as a reflex, not an optional step.
 
 ### Fixed
-- **Clean-Install Skip Bug (Zoo Code)**: `install.py` and `install.ps1` previously skipped the global custom modes setup entirely when the Zoo Code settings folder did not exist. The installers now **forcibly create** the settings directory before writing `custom_modes.yaml`, ensuring Orchestrator+Crow mode is correctly registered even on a fresh Zoo Code installation.
-- **`browser` group missing from Orchestrator mode**: The `orchestrator-crow` custom mode definition was missing the `browser` tool group, preventing the Orchestrator from accessing browser-based tools. The `groups` field has been restored to include `browser`, giving the Orchestrator full tool access as originally intended.
+- **Step counter display fix (`install.ps1`)**: The `Write-Step-Header` function hardcoded `/4` as the total step count despite there being 5 steps. Changed to `/5` so the progress indicator reads `[1/5]` through `[5/5]` correctly.
+- **`install.ps1` clean-install skip bug (Zoo Code)**: The `foreach` loop for injecting custom modes used `Test-Path (Split-Path $SettingsDir -Parent)` for both Zoo Code and Roo Code, causing Zoo Code setup to be skipped on a clean install (parent path doesn't exist yet). Zoo Code now unconditionally creates its settings directory; Roo Code retains the parent-check guard.
+- **`ko.md` missing memory philosophy rule**: The human-repetition memory philosophy (`If you encounter important information... actively use crow_ingest`) was present in `en.md` and `system_prompt.example.md` but entirely absent from `system_prompt.example/ko.md`. Korean-locale users were missing this directive. The rule has been added to `ko.md`.
+
 
 ### Changed
 - **Orchestrator+Crow global config path — format split by editor**: The installer now correctly distinguishes between Zoo Code and Roo Code when writing the global custom modes configuration:

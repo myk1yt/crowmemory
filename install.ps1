@@ -55,9 +55,9 @@ function Write-StepDone {
 
 function Write-Step-Header($stepNum, $defaultMsg, $msgKey) {
     if ($I18nAvailable -and $MSGS.$msgKey) {
-        Write-Host "[$stepNum/4] $($MSGS.$msgKey)..." -ForegroundColor Yellow
+        Write-Host "[$stepNum/5] $($MSGS.$msgKey)..." -ForegroundColor Yellow
     } else {
-        Write-Host "[$stepNum/4] $defaultMsg..." -ForegroundColor Yellow
+        Write-Host "[$stepNum/5] $defaultMsg..." -ForegroundColor Yellow
     }
 }
 
@@ -202,10 +202,15 @@ customModes:
 
 # Merge with existing custom modes if present for both Zoo and Roo
 foreach ($SettingsDir in @($ZooSettings, $RooMcpDir)) {
-    if (Test-Path (Split-Path $SettingsDir -Parent)) {
+    if ($SettingsDir -eq $ZooSettings) {
+        # Zoo Code: 조건 없이 무조건 생성
         if (-not (Test-Path $SettingsDir)) { New-Item -ItemType Directory -Path $SettingsDir -Force | Out-Null }
-        
-        $PythonScript = @"
+    } elseif (Test-Path (Split-Path $SettingsDir -Parent)) {
+        # Roo Code: 부모 폴더 있을 때만 생성
+        if (-not (Test-Path $SettingsDir)) { New-Item -ItemType Directory -Path $SettingsDir -Force | Out-Null }
+    } else { continue }
+
+    $PythonScript = @"
 import sys, yaml, json, os
 
 settings_dir = sys.argv[1]
@@ -253,14 +258,13 @@ else:
     with open(mode_path, 'w', encoding='utf-8') as f:
         json.dump(data, f, indent=2, ensure_ascii=False)
 "@
-        try {
-            $TempScript = New-TemporaryFile
-            $PythonScript | Set-Content $TempScript -Encoding UTF8
-            Start-Process -FilePath "python" -ArgumentList "`"$TempScript`"", "`"$SettingsDir`"", "`"$ZooSettings`"", "`"$CustomModeContent`"" -Wait -NoNewWindow
-            Remove-Item $TempScript -Force
-        } catch {
-            Write-Host "  [Warning] Failed to merge custom mode safely." -ForegroundColor Yellow
-        }
+    try {
+        $TempScript = New-TemporaryFile
+        $PythonScript | Set-Content $TempScript -Encoding UTF8
+        Start-Process -FilePath "python" -ArgumentList "`"$TempScript`"", "`"$SettingsDir`"", "`"$ZooSettings`"", "`"$CustomModeContent`"" -Wait -NoNewWindow
+        Remove-Item $TempScript -Force
+    } catch {
+        Write-Host "  [Warning] Failed to merge custom mode safely." -ForegroundColor Yellow
     }
 }
 Write-StepDone
