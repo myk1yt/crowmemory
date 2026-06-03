@@ -168,26 +168,52 @@ def main():
     for settings_dir in [ZOO_SETTINGS, ROO_MCP_DIR]:
         if settings_dir == ZOO_SETTINGS:
             settings_dir.mkdir(parents=True, exist_ok=True)
+            mode_path = settings_dir / "custom_modes.yaml"
+            
+            existing_modes = []
+            if mode_path.exists():
+                try:
+                    with open(mode_path, "r", encoding="utf-8") as f:
+                        data = _yaml.safe_load(f)
+                        if data and isinstance(data, dict):
+                            existing_modes = data.get("customModes", [])
+                except Exception:
+                    pass
+                    
+            existing_modes = [m for m in existing_modes if isinstance(m, dict) and m.get("slug") not in ("orchestrator-crow", "code-crow")]
+            existing_modes.extend(new_mode_dict.get("customModes", []))
+            
+            with open(mode_path, "w", encoding="utf-8") as f:
+                _yaml.dump({"customModes": existing_modes}, f, allow_unicode=True, sort_keys=False)
+                
+            # Cleanup old json files
+            for old_name in ["cline_custom_modes.json", "custom_modes.json"]:
+                old_file = settings_dir / old_name
+                if old_file.exists():
+                    try:
+                        old_file.unlink()
+                    except:
+                        pass
         else:
             if not settings_dir.parent.parent.exists(): continue
             settings_dir.mkdir(parents=True, exist_ok=True)
-        mode_path = settings_dir / "cline_custom_modes.json"
-        
-        existing = {}
-        if mode_path.exists():
-            try:
-                with open(mode_path, "r", encoding="utf-8") as f:
-                    existing = json.load(f)
-            except Exception:
-                pass
-                
-        existing_modes = existing.get("customModes", [])
-        existing_modes = [m for m in existing_modes if m.get("slug") not in ("orchestrator-crow", "code-crow")]
-        existing_modes.extend(new_mode_dict.get("customModes", []))
-        existing["customModes"] = existing_modes
-        
-        with open(mode_path, "w", encoding="utf-8") as f:
-            json.dump(existing, f, indent=2, ensure_ascii=False)
+            mode_path = settings_dir / "cline_custom_modes.json"
+            
+            existing = {}
+            if mode_path.exists():
+                try:
+                    with open(mode_path, "r", encoding="utf-8") as f:
+                        existing = json.load(f)
+                except Exception:
+                    pass
+                    
+            existing_modes = existing.get("customModes", [])
+            existing_modes = [m for m in existing_modes if isinstance(m, dict) and m.get("slug") not in ("orchestrator-crow", "code-crow")]
+            existing_modes.extend(new_mode_dict.get("customModes", []))
+            existing["customModes"] = existing_modes
+            
+            with open(mode_path, "w", encoding="utf-8") as f:
+                json.dump(existing, f, indent=2, ensure_ascii=False)
     ok()
 
     # Step 5: Start SSE server + auto-start registration

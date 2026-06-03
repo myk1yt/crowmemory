@@ -204,28 +204,59 @@ customModes:
 foreach ($SettingsDir in @($ZooSettings, $RooMcpDir)) {
     if (Test-Path (Split-Path $SettingsDir -Parent)) {
         if (-not (Test-Path $SettingsDir)) { New-Item -ItemType Directory -Path $SettingsDir -Force | Out-Null }
-        $CustomModePath = "$SettingsDir\cline_custom_modes.json"
         
         $PythonScript = @"
-import sys, yaml, json
-data = {}
-try:
-    with open(sys.argv[1], 'r', encoding='utf-8') as f:
-        data = json.load(f)
-except Exception:
-    pass
-modes = data.get('customModes', [])
-modes = [m for m in modes if m.get('slug') not in ('orchestrator-crow', 'code-crow')]
-new_mode = yaml.safe_load(sys.argv[2]) or {}
-modes.extend(new_mode.get('customModes', []))
-data['customModes'] = modes
-with open(sys.argv[1], 'w', encoding='utf-8') as f:
-    json.dump(data, f, indent=2, ensure_ascii=False)
+import sys, yaml, json, os
+
+settings_dir = sys.argv[1]
+is_zoo = settings_dir == sys.argv[2]
+new_mode_content = sys.argv[3]
+new_mode = yaml.safe_load(new_mode_content) or {}
+
+if is_zoo:
+    mode_path = os.path.join(settings_dir, 'custom_modes.yaml')
+    modes = []
+    if os.path.exists(mode_path):
+        try:
+            with open(mode_path, 'r', encoding='utf-8') as f:
+                data = yaml.safe_load(f)
+                if data and isinstance(data, dict):
+                    modes = data.get('customModes', [])
+        except Exception:
+            pass
+    modes = [m for m in modes if isinstance(m, dict) and m.get('slug') not in ('orchestrator-crow', 'code-crow')]
+    modes.extend(new_mode.get('customModes', []))
+    with open(mode_path, 'w', encoding='utf-8') as f:
+        yaml.dump({'customModes': modes}, f, allow_unicode=True, sort_keys=False)
+    
+    # cleanup old jsons
+    for old_file in ['cline_custom_modes.json', 'custom_modes.json']:
+        p = os.path.join(settings_dir, old_file)
+        if os.path.exists(p):
+            try:
+                os.remove(p)
+            except:
+                pass
+else:
+    mode_path = os.path.join(settings_dir, 'cline_custom_modes.json')
+    data = {}
+    if os.path.exists(mode_path):
+        try:
+            with open(mode_path, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+        except Exception:
+            pass
+    modes = data.get('customModes', [])
+    modes = [m for m in modes if isinstance(m, dict) and m.get('slug') not in ('orchestrator-crow', 'code-crow')]
+    modes.extend(new_mode.get('customModes', []))
+    data['customModes'] = modes
+    with open(mode_path, 'w', encoding='utf-8') as f:
+        json.dump(data, f, indent=2, ensure_ascii=False)
 "@
         try {
             $TempScript = New-TemporaryFile
             $PythonScript | Set-Content $TempScript -Encoding UTF8
-            Start-Process -FilePath "python" -ArgumentList "`"$TempScript`"", "`"$CustomModePath`"", "`"$CustomModeContent`"" -Wait -NoNewWindow
+            Start-Process -FilePath "python" -ArgumentList "`"$TempScript`"", "`"$SettingsDir`"", "`"$ZooSettings`"", "`"$CustomModeContent`"" -Wait -NoNewWindow
             Remove-Item $TempScript -Force
         } catch {
             Write-Host "  [Warning] Failed to merge custom mode safely." -ForegroundColor Yellow
