@@ -1,0 +1,155 @@
+{
+  "_meta": {
+    "locale": "es",
+    "language_name": "Español",
+    "version": "1.0.0",
+    "last_updated": "2026-05-29"
+  },
+  "server": {
+    "instructions": "Crow Memory — Memoria sináptica externa para agentes de codificación IA. Almacena tu estilo de codificación, intuición de errores y preferencias arquitectónicas como matrices de peso comprimidas en crow.bin.",
+    "prompts": {
+      "crow_memory_bias": {
+        "description": "Bloque de sesgo de Crow Memory inyectado automáticamente. Contiene tu estilo de codificación, preferencias y reglas evolucionadas. El anfitrión debe cargarlo al inicio de la sesión.",
+        "body_template": "=== Crow Memory — Contexto auto-inyectado ===\n\n[Reglas evolucionadas permanentes]\n{rules}\n\n[Indicaciones de memoria recientes]\n{bias}\n\nEl contexto anterior representa tus preferencias y estilo aprendidos. Úsalo para guiar tus respuestas."
+      },
+      "crow_evolved_rules": {
+        "description": "Reglas permanentes evolucionadas de system_prompt.md de Crow. Patrones estadísticamente significativos aprobados mediante HITL.",
+        "body_template": "{prompt}"
+      }
+    }
+  },
+  "tools": {
+    "crow_recall": {
+      "description": "Recupera el estilo de codificación, intuición de errores, preferencias arquitectónicas o contexto personal de la memoria sináptica de Crow. Llámalo ANTES de cada respuesta. Por defecto consulta los 8 registros.",
+      "parameters": {
+        "query": "Descripción en lenguaje natural de la tarea actual.",
+        "register": "Selecciona el registro. 'all' consulta todos (como domain=all). Code: style/bug/arch/context. Vida: life_pref/life_avoid/life_phil/life_context.",
+        "top_k": "Número de indicaciones (1-3).",
+        "domain": "Atajo de filtro. 'code' = style/bug/arch/context, 'life' = life_pref/life_avoid/life_phil/life_context, 'all' = los 8 registros."
+      }
+    },
+    "crow_ingest": {
+      "description": "Ingiere una experiencia de codificación en la memoria a largo plazo de Crow. Llámalo DESPUÉS de resultados de compilación o feedback explícito.",
+      "parameters": {
+        "key": "Descripción abstracta de la situación.",
+        "value": "Patrón de código o decisión aplicada.",
+        "polarity": "Fuerza de refuerzo [-2.0, 2.0].",
+        "register": "Registro de destino (style/bug/arch/context/life_pref/life_avoid/life_phil/life_context)."
+      }
+    },
+    "crow_evolve_propose": {
+      "description": "Analiza patrones de memoria y propone una mutación permanente del prompt del sistema.",
+      "parameters": {
+        "min_confidence": "Umbral mínimo de confianza (predet: 0,85).",
+        "min_occurrences": "Número mínimo de ocurrencias (predet: 3)."
+      }
+    },
+    "crow_diagnostics": {
+      "description": "Devuelve diagnóstico del estado de la memoria Crow (normas, dispersión, actualizaciones, tamaño, estadísticas).",
+      "parameters": {}
+    },
+    "crow_check_drift": {
+      "description": "Comprueba si los recuerdos recientes muestran deriva de memoria.",
+      "parameters": {
+        "threshold": "Umbral de confianza para detección de baja confianza (predet: 0,5).",
+        "min_low_confidence_count": "Mínimo de registros de baja confianza para activar deriva (predet: 5)."
+      }
+    },
+    "crow_ingest_from_build": {
+      "description": "Determina automáticamente la polaridad desde código de salida y estado de edición, luego ingiere la experiencia.",
+      "parameters": {
+        "key": "Descripción abstracta.",
+        "value": "Patrón de código aplicado.",
+        "exit_code": "Código de salida (0 = éxito).",
+        "user_edited": "Si el usuario editó la salida de la IA.",
+        "register": "Registro destino (style/bug/arch/context, predet: arch).",
+        "explicit_polarity": "Anula detección automática de polaridad."
+      }
+    },
+    "crow_get_user_bias": {
+      "description": "Genera el bloque [User Bias] para inyectar en el prompt del sistema.",
+      "parameters": {
+        "query": "Descripción de la tarea actual.",
+        "registers": "Registros a consultar (predet: all)."
+      }
+    },
+    "crow_manage_prompt": {
+      "description": "Lee, agrega u obtén estadísticas de system_prompt.md.",
+      "parameters": {
+        "action": "Acción: read, append o stats.",
+        "rule": "Texto de la regla (obligatorio para append).",
+        "auto_backup": "Crear backup automático antes de agregar (predet: true)."
+      }
+    },
+    "crow_manage_backup": {
+      "description": "Gestiona backups de la memoria Crow. Crea, rota, lista o recupera de deriva.",
+      "parameters": {
+        "action": "Acción: create, rotate, list o recover.",
+        "tag": "Etiqueta: daily, weekly o manual (predet: daily).",
+        "max_daily": "Máximo de backups diarios (predet: 7).",
+        "max_weekly": "Máximo de backups semanales (predet: 4)."
+      }
+    },
+    "crow_project_info": {
+      "description": "Lista o crea instancias de memoria Crow aisladas por proyecto.",
+      "parameters": {
+        "action": "Acción: list o create.",
+        "project_name": "Nombre del proyecto (obligatorio para create)."
+      }
+    }
+  },
+  "errors": {
+    "unknown_tool": "Herramienta desconocida: {name}",
+    "unknown_prompt": "Prompt desconocido: {name}",
+    "unknown_action": "Acción {context} desconocida: {action}",
+    "project_name_required": "project_name es obligatorio para create"
+  },
+  "recall_messages": {
+    "faint_bias": "Crow recuerda débilmente un sesgo {register}. Pocos recuerdos almacenados.",
+    "unknown_register": "Registro desconocido: {register}"
+  },
+  "ingest_messages": {
+    "status_ingested": "ingerido",
+    "unknown_register": "Registro desconocido: {register}"
+  },
+  "evolve_messages": {
+    "no_patterns": "Aún no se detectaron patrones estadísticamente significativos."
+  },
+  "drift_messages": {
+    "healthy": "La confianza de la memoria es saludable.",
+    "confused": "La memoria de Crow parece confundida. Tareas recientes demasiado novedosas o memoria saturada. Considera reinicio espectral o archivado."
+  },
+  "cli": {
+    "stdio_start": "Servidor MCP de Crow Memory ejecutándose en stdio",
+    "sse_start": "Servidor MCP SSE escuchando en http://{host}:{port}/sse",
+    "http_start": "Servidor MCP Streamable HTTP escuchando en http://{host}:{port}/",
+    "dual_start_sse": "Servidor MCP SSE escuchando en http://{host}:{sse_port}/sse",
+    "dual_start_http": "Servidor MCP Streamable HTTP escuchando en http://{host}:{http_port}/"
+  },
+  "installer": {
+    "banner_title": "Instalador de Crow Memory para Zoo Code",
+    "step_1_install_deps": "Instalando dependencias de Python",
+    "step_2_init_crow": "Inicializando crow.bin",
+    "step_4_custom_mode": "Creando modo de activación automática de Zoo Code",
+    "step_5_start_server": "Iniciando servidor SSE Crow + inicio automático",
+    "step_done": "Hecho.",
+    "complete_title": "¡Instalación de Crow Memory completada!",
+    "sse_running": "Servidor SSE en http://127.0.0.1:9020/sse",
+    "next_steps_label": "Próximos pasos:",
+    "next_step_1": "1. Reinicia Zoo Code",
+    "next_step_2": "2. Cambia al modo \"Orchestrator + Crow\"",
+    "next_step_3": "3. Crow se activa automáticamente",
+    "next_step_4": "4. El servidor SSE inicia con Windows (registrado en Inicio)",
+    "step_3_vscode_tasks": "Creando .vscode/tasks.json (inicio automático SSE al abrir carpeta)"
+  },
+  "system_prompt": {
+    "header": "# Crow Memory — Reglas del prompt del sistema",
+    "subtitle": "> Reglas evolucionadas por Crow y aprobadas por el usuario.\n> Representan sesgos de codificación estadísticamente significativos.\n> No editar manualmente — usa las herramientas de evolución Crow MCP.",
+    "managed_by": "<!-- Archivo gestionado por crow_mcp_server.py -->",
+    "default_rules": [
+      "RULE: Before every response, call crow_recall(domain=\"all\") to query all 8 registers (style, bug, arch, context, life_pref, life_avoid, life_phil, life_context) for the user's coding style, bug intuition, architectural preferences, personal taste, philosophy, and current context. Reflect the returned hints in your response.",
+      "RULE: After every response, ingest what the user revealed — preferences, philosophy, corrections, context — via crow_ingest. Judge the appropriate register and polarity yourself without waiting for the user to say \"remember this.\" After code work, auto-evaluate build results via crow_ingest_from_build.",
+      "RULE: Do not skip the recall+ingest rules even for non-coding tasks such as document editing, git operations, or configuration changes. Always execute them."
+    ]
+  }
+}

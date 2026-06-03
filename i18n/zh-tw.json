@@ -1,0 +1,155 @@
+{
+  "_meta": {
+    "locale": "zh-tw",
+    "language_name": "繁體中文",
+    "version": "1.0.0",
+    "last_updated": "2026-05-29"
+  },
+  "server": {
+    "instructions": "Crow Memory — AI編碼代理的外部突觸記憶。將編碼風格、錯誤直覺和架構偏好以壓縮權重矩陣的形式儲存在crow.bin中。",
+    "prompts": {
+      "crow_memory_bias": {
+        "description": "自動注入的Crow Memory偏置區塊。包含您的編碼風格、偏好和進化規則。主機應在會話開始時載入此內容。",
+        "body_template": "=== Crow Memory — 自動注入上下文 ===\n\n[永久進化規則]\n{rules}\n\n[近期記憶提示]\n{bias}\n\n以上上下文代表您已學習的偏好和風格。請用它來指導您的回應。要了解更多，請使用特定查詢和register（style/bug/arch/context/life_pref/life_avoid/life_phil/life_context）呼叫crow_recall。"
+      },
+      "crow_evolved_rules": {
+        "description": "來自Crow的system_prompt.md中進化的永久規則。這些是透過HITL批准的統計顯著模式。",
+        "body_template": "{prompt}"
+      }
+    }
+  },
+  "tools": {
+    "crow_recall": {
+      "description": "從Crow突觸記憶中回想使用者特定的編碼風格、錯誤直覺、架構偏好或個人上下文。請在每次回應前呼叫以與使用者的歸納偏置對齊。預設（未指定register，domain=all）查詢所有8個暫存器。",
+      "parameters": {
+        "query": "目前任務的自然語言描述。",
+        "register": "選擇暫存器。'all'查詢所有暫存器（等同於domain=all）。Code: style/bug/arch/context。Life: life_pref/life_avoid/life_phil/life_context。",
+        "top_k": "提示數量（1-3）。",
+        "domain": "領域篩選快捷方式。'code' = style/bug/arch/context，'life' = life_pref/life_avoid/life_phil/life_context，'all' = 全部8個暫存器（預設）。"
+      }
+    },
+    "crow_ingest": {
+      "description": "將編碼經驗攝取到Crow的長期突觸記憶中。在構建/測試結果或使用者明確反饋後呼叫。",
+      "parameters": {
+        "key": "情況的抽象描述。",
+        "value": "應用的程式碼模式或決策。",
+        "polarity": "強化強度 [-2.0, 2.0]。",
+        "register": "要儲存的暫存器（style/bug/arch/context/life_pref/life_avoid/life_phil/life_context）。"
+      }
+    },
+    "crow_evolve_propose": {
+      "description": "分析近期記憶模式並提出永久性的系統提示詞突變。僅返回建議；採用需要人工批准。",
+      "parameters": {
+        "min_confidence": "最小信心度閾值（預設：0.85）。",
+        "min_occurrences": "最小出現次數（預設：3）。"
+      }
+    },
+    "crow_diagnostics": {
+      "description": "返回Crow記憶狀態的診斷資訊（暫存器範數、稀疏性、更新次數、值庫大小、提示詞統計）。",
+      "parameters": {}
+    },
+    "crow_check_drift": {
+      "description": "檢查近期回想結果是否顯示記憶漂移的跡象。",
+      "parameters": {
+        "threshold": "低信心度檢測的信心度閾值（預設：0.5）。",
+        "min_low_confidence_count": "觸發漂移的最小低信心度記錄數（預設：5）。"
+      }
+    },
+    "crow_ingest_from_build": {
+      "description": "從構建退出代碼和使用者編輯狀態自動確定極性（polarity），然後攝取經驗。在npm run build完成後使用。",
+      "parameters": {
+        "key": "抽象描述。",
+        "value": "應用的程式碼模式。",
+        "exit_code": "構建退出代碼（0 = 成功）。",
+        "user_edited": "使用者是否編輯了AI的輸出。",
+        "register": "要儲存的暫存器（style/bug/arch/context，預設：arch）。",
+        "explicit_polarity": "覆蓋自動極性檢測。"
+      }
+    },
+    "crow_get_user_bias": {
+      "description": "生成要注入到系統提示詞中的[User Bias]區塊。查詢所有暫存器並以適合添加到提示詞前的格式整理提示。",
+      "parameters": {
+        "query": "目前任務描述。",
+        "registers": "要查詢的暫存器列表（預設：all）。"
+      }
+    },
+    "crow_manage_prompt": {
+      "description": "讀取、附加或取得system_prompt.md檔案的統計資訊。'read'檢視目前提示詞，'append'採用進化規則，'stats'檢視指標。",
+      "parameters": {
+        "action": "操作：read、append或stats。",
+        "rule": "規則文字（append操作必需）。",
+        "auto_backup": "附加前自動建立備份（預設：true）。"
+      }
+    },
+    "crow_manage_backup": {
+      "description": "管理Crow記憶備份。建立、輪替、列出或從漂移中回復。",
+      "parameters": {
+        "action": "操作：create、rotate、list或recover。",
+        "tag": "備份標籤：daily、weekly或manual（預設：daily）。",
+        "max_daily": "保留的最大每日備份數（預設：7）。",
+        "max_weekly": "保留的最大每週備份數（預設：4）。"
+      }
+    },
+    "crow_project_info": {
+      "description": "列出或建立專案隔離的Crow記憶實例。",
+      "parameters": {
+        "action": "操作：list或create。",
+        "project_name": "專案名稱（create操作必需）。"
+      }
+    }
+  },
+  "errors": {
+    "unknown_tool": "未知工具：{name}",
+    "unknown_prompt": "未知提示詞：{name}",
+    "unknown_action": "未知的{context}操作：{action}",
+    "project_name_required": "create操作需要project_name"
+  },
+  "recall_messages": {
+    "faint_bias": "Crow隱約回憶起{register}偏置。儲存的記憶還很少。",
+    "unknown_register": "未知暫存器：{register}"
+  },
+  "ingest_messages": {
+    "status_ingested": "已攝取",
+    "unknown_register": "未知暫存器：{register}"
+  },
+  "evolve_messages": {
+    "no_patterns": "尚未檢測到統計顯著的模式。"
+  },
+  "drift_messages": {
+    "healthy": "記憶信心度健康。",
+    "confused": "Crow記憶似乎混亂了。近期任務可能過於新穎或記憶已飽和。請考慮頻譜重置或歸檔。"
+  },
+  "cli": {
+    "stdio_start": "Crow Memory MCP伺服器正在stdio上執行",
+    "sse_start": "Crow Memory MCP SSE伺服器正在 http://{host}:{port}/sse 上監聽",
+    "http_start": "Crow Memory MCP Streamable HTTP伺服器正在 http://{host}:{port}/ 上監聽",
+    "dual_start_sse": "Crow Memory MCP SSE伺服器正在 http://{host}:{sse_port}/sse 上監聽",
+    "dual_start_http": "Crow Memory MCP Streamable HTTP伺服器正在 http://{host}:{http_port}/ 上監聽"
+  },
+  "installer": {
+    "banner_title": "Zoo Code的Crow Memory安裝程式",
+    "step_1_install_deps": "正在安裝Python依賴項",
+    "step_2_init_crow": "正在初始化crow.bin",
+    "step_4_custom_mode": "正在建立Zoo Code自動啟動模式",
+    "step_5_start_server": "正在啟動Crow SSE伺服器 + 自動啟動設定",
+    "step_done": "完成。",
+    "complete_title": "Crow Memory安裝完成！",
+    "sse_running": "SSE伺服器正在 http://127.0.0.1:9020/sse 上執行",
+    "next_steps_label": "下一步：",
+    "next_step_1": "1. 重新啟動Zoo Code",
+    "next_step_2": "2. 將模式切換為「Orchestrator + Crow」",
+    "next_step_3": "3. Crow自動啟動 — 無需手動設定",
+    "next_step_4": "4. SSE伺服器隨Windows自動啟動（已註冊到啟動項）",
+    "step_3_vscode_tasks": "正在建立.vscode/tasks.json（開啟資料夾時自動啟動SSE）"
+  },
+  "system_prompt": {
+    "header": "# Crow Memory — 系統提示詞規則",
+    "subtitle": "> 這些規則由Crow進化並經使用者批准。\n> 它們代表統計顯著的編碼偏置。\n> 請勿手動編輯 — 請使用Crow MCP進化工具。",
+    "managed_by": "<!-- 此檔案由crow_mcp_server.py管理 -->",
+    "default_rules": [
+      "RULE: Before every response, call crow_recall(domain=\"all\") to query all 8 registers (style, bug, arch, context, life_pref, life_avoid, life_phil, life_context) for the user's coding style, bug intuition, architectural preferences, personal taste, philosophy, and current context. Reflect the returned hints in your response.",
+      "RULE: After every response, ingest what the user revealed — preferences, philosophy, corrections, context — via crow_ingest. Judge the appropriate register and polarity yourself without waiting for the user to say \"remember this.\" After code work, auto-evaluate build results via crow_ingest_from_build.",
+      "RULE: Do not skip the recall+ingest rules even for non-coding tasks such as document editing, git operations, or configuration changes. Always execute them."
+    ]
+  }
+}
