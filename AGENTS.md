@@ -94,7 +94,7 @@ During the conversation, you may call `crow_recall` or `crow_ingest` as needed:
 To enable this integration, set the environment variable:
 
 ```bash
-export KIMI_AGENTS_MD="/path/to/crowsmemory/AGENTS.md"
+export KIMI_AGENTS_MD="$(pwd)/AGENTS.md"
 ```
 
 Or copy this file to your Kimi Code configuration directory.
