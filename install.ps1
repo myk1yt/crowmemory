@@ -162,7 +162,6 @@ Write-StepDone
 
 # Step 4: Configure Zoo Code custom mode
 Write-Step-Header "4" "Configuring Zoo Code auto-activation mode" "step_4_custom_mode"
-$CustomModePath = "$ZooSettings\custom_modes.yaml"
 $CustomModeContent = @"
 customModes:
   - slug: orchestrator-crow
@@ -197,28 +196,37 @@ customModes:
     allowedMcpServers:
       - crow_memory
 "@
-# Merge with existing custom modes if present
-if (Test-Path (Split-Path $ZooSettings -Parent)) {
-    if (-not (Test-Path $ZooSettings)) { New-Item -ItemType Directory -Path $ZooSettings -Force | Out-Null }
-    if (Test-Path $CustomModePath) {
-        try {
-            $existingModes = Get-Content $CustomModePath -Raw | python -c "
-import sys, yaml
-data = yaml.safe_load(sys.stdin) or {}
+
+# Merge with existing custom modes if present for both Zoo and Roo
+foreach ($SettingsDir in @($ZooSettings, $RooMcpDir)) {
+    if (Test-Path (Split-Path $SettingsDir -Parent)) {
+        if (-not (Test-Path $SettingsDir)) { New-Item -ItemType Directory -Path $SettingsDir -Force | Out-Null }
+        $CustomModePath = "$SettingsDir\cline_custom_modes.json"
+        
+        $PythonScript = @"
+import sys, yaml, json
+data = {}
+try:
+    with open(sys.argv[1], 'r', encoding='utf-8') as f:
+        data = json.load(f)
+except Exception:
+    pass
 modes = data.get('customModes', [])
 modes = [m for m in modes if m.get('slug') not in ('orchestrator-crow', 'code-crow')]
-new_mode = yaml.safe_load('''$CustomModeContent''') or {}
+new_mode = yaml.safe_load(sys.argv[2]) or {}
 modes.extend(new_mode.get('customModes', []))
 data['customModes'] = modes
-yaml.dump(data, sys.stdout, allow_unicode=True, default_flow_style=False)
-"
-            $existingModes | Set-Content $CustomModePath -Encoding UTF8
+with open(sys.argv[1], 'w', encoding='utf-8') as f:
+    json.dump(data, f, indent=2, ensure_ascii=False)
+"@
+        try {
+            $TempScript = New-TemporaryFile
+            $PythonScript | Set-Content $TempScript -Encoding UTF8
+            Start-Process -FilePath "python" -ArgumentList "`"$TempScript`"", "`"$CustomModePath`"", "`"$CustomModeContent`"" -Wait -NoNewWindow
+            Remove-Item $TempScript -Force
         } catch {
-            Write-Host "  [Warning] Failed to merge custom mode safely. Appending to existing file instead." -ForegroundColor Yellow
-            $CustomModeContent | Add-Content $CustomModePath -Encoding UTF8
+            Write-Host "  [Warning] Failed to merge custom mode safely." -ForegroundColor Yellow
         }
-    } else {
-        $CustomModeContent | Set-Content $CustomModePath -Encoding UTF8
     }
 }
 Write-StepDone

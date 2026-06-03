@@ -159,26 +159,29 @@ def main():
 
     # Step 4: Custom mode (merge with existing modes if present)
     step.count += 1; step(MSGS.get("step_4_custom_mode", "Configuring Zoo Code auto-activation mode"))
-    mode_path = ZOO_SETTINGS / "custom_modes.yaml"
-    if ZOO_SETTINGS.parent.exists():
-        ZOO_SETTINGS.mkdir(parents=True, exist_ok=True)
+    import yaml as _yaml
+    new_mode_dict = _yaml.safe_load(YAML_MODE) or {}
+    
+    for settings_dir in [ZOO_SETTINGS, ROO_MCP_DIR]:
+        if not settings_dir.parent.exists(): continue
+        settings_dir.mkdir(parents=True, exist_ok=True)
+        mode_path = settings_dir / "cline_custom_modes.json"
+        
+        existing = {}
         if mode_path.exists():
-            import yaml as _yaml
             try:
                 with open(mode_path, "r", encoding="utf-8") as f:
-                    existing = _yaml.safe_load(f) or {}
+                    existing = json.load(f)
             except Exception:
-                existing = {}
-            new_mode = _yaml.safe_load(YAML_MODE) or {}
-            existing_modes = existing.get("customModes", [])
-            existing_modes = [m for m in existing_modes if m.get("slug") not in ("orchestrator-crow", "code-crow")]
-            existing_modes.extend(new_mode.get("customModes", []))
-            existing["customModes"] = existing_modes
-            with open(mode_path, "w", encoding="utf-8") as f:
-                _yaml.dump(existing, f, allow_unicode=True, default_flow_style=False)
-        else:
-            with open(mode_path, "w", encoding="utf-8") as f:
-                f.write(YAML_MODE)
+                pass
+                
+        existing_modes = existing.get("customModes", [])
+        existing_modes = [m for m in existing_modes if m.get("slug") not in ("orchestrator-crow", "code-crow")]
+        existing_modes.extend(new_mode_dict.get("customModes", []))
+        existing["customModes"] = existing_modes
+        
+        with open(mode_path, "w", encoding="utf-8") as f:
+            json.dump(existing, f, indent=2, ensure_ascii=False)
     ok()
 
     # Step 5: Start SSE server + auto-start registration
