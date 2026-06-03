@@ -46,7 +46,7 @@ set "READY=0"
 set /a ATTEMPT+=1
 if !ATTEMPT! gtr !MAX_ATTEMPTS! goto :wait_done
 
-powershell -NoProfile -ExecutionPolicy Bypass -Command "try { $r = Invoke-WebRequest -Uri 'http://127.0.0.1:%PORT%/sse' -TimeoutSec 2 -UseBasicParsing; exit 0 } catch { exit 1 }" >nul 2>&1
+powershell -NoProfile -ExecutionPolicy Bypass -Command "try { $r = Invoke-WebRequest -Uri 'http://127.0.0.1:%PORT%/' -TimeoutSec 2 -UseBasicParsing; exit 0 } catch { exit 1 }" >nul 2>&1
 
 if !ERRORLEVEL! equ 0 (
     set "READY=1"
@@ -70,7 +70,7 @@ goto :wait_loop
 
 :wait_done
 if "!READY!" equ "1" (
-    echo [%date% %time%] Crow SSE server ready (attempt !ATTEMPT!). >> "%LOG_FILE%"
+    echo [%date% %time%] Crow SSE server ready. Attempt !ATTEMPT!. >> "%LOG_FILE%"
 ) else (
     echo [%date% %time%] WARNING: Server did not become ready. Check sse_server.log. >> "%LOG_FILE%"
 )

@@ -155,7 +155,7 @@ if (Test-Path (Split-Path $RooMcpDir -Parent)) {
         try { $RooCfg = Get-Content $RooMcpFile -Raw | ConvertFrom-Json -AsHashtable } catch { }
     }
     if (-not $RooCfg.ContainsKey("mcpServers")) { $RooCfg.mcpServers = @{} }
-    $RooCfg.mcpServers["crow_memory"] = @{ command = "python"; args = @("$CrowDir\crow_mcp_server.py", "--transport", "stdio", "--state", "$MemoryDir\crow.bin") }
+    $RooCfg.mcpServers["crow_memory"] = @{ url = "http://127.0.0.1:9020/sse" }
     $RooCfg | ConvertTo-Json -Depth 10 | Set-Content $RooMcpFile -Encoding UTF8
 }
 Write-StepDone
@@ -214,7 +214,8 @@ yaml.dump(data, sys.stdout, allow_unicode=True, default_flow_style=False)
 "
             $existingModes | Set-Content $CustomModePath -Encoding UTF8
         } catch {
-            $CustomModeContent | Set-Content $CustomModePath -Encoding UTF8
+            Write-Host "  [Warning] Failed to merge custom mode safely. Appending to existing file instead." -ForegroundColor Yellow
+            $CustomModeContent | Add-Content $CustomModePath -Encoding UTF8
         }
     } else {
         $CustomModeContent | Set-Content $CustomModePath -Encoding UTF8

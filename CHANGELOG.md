@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.4.1] — 2026-06-03
+
+### Fixed
+- **Roo Code Lock Contention**: Changed Roo Code MCP configuration from stdio (`{"command": "python"}`) to SSE (`{"url": "http://127.0.0.1:9020/sse"}`) in `install.py` and `install.ps1` to prevent multiple processes from locking `crow.bin`.
+- **Health Check Timeout**: Fixed the health check polling URL in `start_crow_sse.bat` to ping the root `/` endpoint instead of `/sse` which previously caused stream timeouts.
+- **Data Loss Risk**: Improved safety in `install.ps1` when merging Zoo Code custom modes; if parsing fails, the installer now securely appends to the file instead of overwriting it.
+- **Cross-Platform Bug**: Wrapped `.bat` execution in `install.py` with an OS check to prevent crashes on Mac/Linux environments.
+
 ## [1.4.0] — 2026-06-03
 
 ### Added

@@ -153,7 +153,7 @@ def main():
                 with open(roo_mcp_file, "r") as f: roo_cfg = json.load(f)
             except: pass
         if "mcpServers" not in roo_cfg: roo_cfg["mcpServers"] = {}
-        roo_cfg["mcpServers"]["crow_memory"] = {"command": "python", "args": [str(CROW_DIR / "crow_mcp_server.py"), "--transport", "stdio", "--state", str(MEMORY_DIR / "crow.bin")]}
+        roo_cfg["mcpServers"]["crow_memory"] = {"url": "http://127.0.0.1:9020/sse"}
         with open(roo_mcp_file, "w") as f: json.dump(roo_cfg, f, indent=2)
     ok()
 
@@ -185,13 +185,13 @@ def main():
     step.count += 1; step(MSGS.get("step_5_start_server", "Starting Crow SSE server + auto-start"))
     bat_path = CROW_DIR / "start_crow_sse.bat"
 
-    subprocess.Popen(
-        [str(bat_path)],
-        cwd=str(CROW_DIR),
-        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
-    )
-
     if os.name == "nt":
+        subprocess.Popen(
+            [str(bat_path)],
+            cwd=str(CROW_DIR),
+            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+            creationflags=subprocess.CREATE_NO_WINDOW if hasattr(subprocess, "CREATE_NO_WINDOW") else 0
+        )
         startup_dir = Path(os.environ.get("APPDATA", "")) / "Microsoft" / "Windows" / "Start Menu" / "Programs" / "Startup"
         if startup_dir.exists():
             import shutil
