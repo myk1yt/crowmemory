@@ -228,9 +228,6 @@ The installer, MCP server, and system prompt templates all use your VS Code loca
 | `crow_mcp_server.py` | ✅ Yes | MCP server |
 | `backup_manager.py` | ✅ Yes | Backup utility |
 | `hitl_panel.html` | ✅ Yes | HITL UI |
-| `crow_i18n.py` | ✅ Yes | i18n core module |
-| `i18n/*.json` | ✅ Yes | Translation files (36 languages) |
-| `system_prompt.example/` | ✅ Yes | Locale-specific prompt templates |
 | `requirements.txt` | ✅ Yes | Dependencies |
 | **`memory/crow.bin`** | ❌ **No** | Your personal synaptic memories |
 | **`memory/value_bank.json`** | ❌ **No** | Your experience data |
@@ -412,8 +409,6 @@ Crow Memory is open-source and free to use under MIT. But every organization has
 - 🌐 **Additional language support** — Beyond the 36 VS Code locales, we can add translation support for any language or domain-specific terminology
 - 📊 **Enterprise analytics** — Memory usage dashboards, team-wide style consistency monitoring, drift alerting
 
-> **보안강화형, 기업용 혹은 특정 LLM이나 소프트웨어 맞춤형 Crow Memory 개발을 원하시는 분은 아래로 연락주세요.**
->
 > **For security-enhanced, enterprise-grade, or custom LLM/software-tailored Crow Memory development:**
 
 📧 **myk1yt@gmail.com**

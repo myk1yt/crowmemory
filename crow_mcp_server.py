@@ -32,18 +32,7 @@ from mcp.server.stdio import stdio_server
 
 from crow_core import CrowMemory
 
-# i18n support (optional — fallback to hardcoded English if crow_i18n.py unavailable)
-try:
-    from crow_i18n import (
-        detect_locale,
-        get_tool_definitions,
-        get_server_instructions,
-        get_text,
-        get_prompt_messages,
-    )
-    _I18N_AVAILABLE = True
-except ImportError:
-    _I18N_AVAILABLE = False
+
 
 # ---------------------------------------------------------------------------
 # Init
@@ -210,7 +199,7 @@ def create_server(state_path: str) -> Server:
     server = Server(
         name="crow_memory",
         version="1.3.4",
-        instructions=get_server_instructions() if _I18N_AVAILABLE else (
+        instructions=(
             "Crow Memory — External synaptic memory for AI coding agents. "
             "Stores your coding style, bug intuition, and architectural "
             "preferences as compressed weight matrices in crow.bin."
@@ -223,8 +212,6 @@ def create_server(state_path: str) -> Server:
     @server.list_tools()
     async def handle_list_tools() -> list:
         from mcp.types import Tool
-        if _I18N_AVAILABLE:
-            return [Tool(**td) for td in get_tool_definitions()]
         return [Tool(**td) for td in TOOL_DEFINITIONS]
 
     # ---- MCP Prompts (auto-loaded by host at session start) ----
@@ -232,20 +219,6 @@ def create_server(state_path: str) -> Server:
     @server.list_prompts()
     async def handle_list_prompts() -> list:
         from mcp.types import Prompt
-        if _I18N_AVAILABLE:
-            msgs = get_prompt_messages()
-            return [
-                Prompt(
-                    name="crow_memory_bias",
-                    description=msgs["crow_memory_bias"]["description"],
-                    arguments=[],
-                ),
-                Prompt(
-                    name="crow_evolved_rules",
-                    description=msgs["crow_evolved_rules"]["description"],
-                    arguments=[],
-                ),
-            ]
         return [
             Prompt(
                 name="crow_memory_bias",
@@ -266,23 +239,16 @@ def create_server(state_path: str) -> Server:
             evolved = crow.get_system_prompt()
             rules = [l for l in evolved.split("\n") if l.startswith("RULE:")]
             rules_text = "\n".join(f"- {r}" for r in rules[-10:]) if rules else "- No evolved rules yet."
-            if _I18N_AVAILABLE:
-                msgs = get_prompt_messages()
-                body = msgs["crow_memory_bias"]["body"].format(
-                    rules=rules_text,
-                    bias=bias
-                )
-            else:
-                body = (
-                    "=== Crow Memory — Auto-Injected Context ===\n\n"
-                    "[Permanent Evolved Rules]\n"
-                    f"{rules_text}\n\n"
-                    "[Recent Memory Hints]\n"
-                    f"{bias}\n\n"
-                    "The above context represents your learned preferences and style. "
-                    "Use it to guide your responses. To learn more, call crow_recall with "
-                    "a specific query and register (style/bug/arch/context/life_pref/life_avoid/life_phil/life_context)."
-                )
+            body = (
+                "=== Crow Memory — Auto-Injected Context ===\n\n"
+                "[Permanent Evolved Rules]\n"
+                f"{rules_text}\n\n"
+                "[Recent Memory Hints]\n"
+                f"{bias}\n\n"
+                "The above context represents your learned preferences and style. "
+                "Use it to guide your responses. To learn more, call crow_recall with "
+                "a specific query and register (style/bug/arch/context/life_pref/life_avoid/life_phil/life_context)."
+            )
             return [
                 {"type": "text", "text": body},
             ]
@@ -514,10 +480,7 @@ async def main():
     elif args.transport == "dual":
         await _run_dual_port(server, args.host, args.port, args.http_port)
     else:
-        if _I18N_AVAILABLE:
-            print(get_text("cli.stdio_start"))
-        else:
-            print("Crow Memory MCP server running on stdio")
+        print("Crow Memory MCP server running on stdio")
         async with stdio_server() as (read_stream, write_stream):
             await server.run(
                 read_stream, write_stream,
@@ -562,10 +525,7 @@ async def _run_sse(server, host: str, port: int):
     )
     http_server = uvicorn.Server(config)
     # ASCII-only startup message to avoid cp949 issues in client parsers
-    if _I18N_AVAILABLE:
-        print(get_text("cli.sse_start", host=host, port=port))
-    else:
-        print(f"Crow Memory MCP SSE server listening on http://{host}:{port}/sse")
+    print(f"Crow Memory MCP SSE server listening on http://{host}:{port}/sse")
     _write_ready_file()
     await http_server.serve()
 
@@ -588,10 +548,7 @@ async def _run_streamable_http(server, host: str, port: int):
 
         config = uvicorn.Config(app, host=host, port=port, log_level="warning")
         http_server = uvicorn.Server(config)
-        if _I18N_AVAILABLE:
-            print(get_text("cli.http_start", host=host, port=port))
-        else:
-            print(f"Crow Memory MCP Streamable HTTP server listening on http://{host}:{port}/")
+        print(f"Crow Memory MCP Streamable HTTP server listening on http://{host}:{port}/")
         _write_ready_file()
 
         async with anyio.create_task_group() as tg:
@@ -649,18 +606,12 @@ async def _run_dual_port(server, host: str, sse_port: int, http_port: int):
         http_server = uvicorn.Server(http_config)
 
         async def run_sse():
-            if _I18N_AVAILABLE:
-                print(get_text("cli.dual_start_sse", host=host, sse_port=sse_port))
-            else:
-                print(f"Crow Memory MCP SSE server listening on http://{host}:{sse_port}/sse")
+            print(f"Crow Memory MCP SSE server listening on http://{host}:{sse_port}/sse")
             _write_ready_file()
             await sse_server.serve()
 
         async def run_http():
-            if _I18N_AVAILABLE:
-                print(get_text("cli.dual_start_http", host=host, http_port=http_port))
-            else:
-                print(f"Crow Memory MCP Streamable HTTP server listening on http://{host}:{http_port}/")
+            print(f"Crow Memory MCP Streamable HTTP server listening on http://{host}:{http_port}/")
             await http_server.serve()
 
         async def run_server():

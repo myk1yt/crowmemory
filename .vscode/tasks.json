@@ -2,10 +2,10 @@
   "version": "2.0.0",
   "tasks": [
     {
-      "label": "Crow SSE Server \u2014 Auto Start",
+      "label": "Crow SSE Server — Auto Start",
       "detail": "Starts the Crow Memory SSE server on port 9020 when this workspace is opened. Zoo Code connects via SSE to share crow.bin.",
       "type": "shell",
-      "command": "cmd /c \"C:\\Users\\k1yt\\OneDrive\\\ubb38\uc11c\\\uac01\uc885\uc790\ub8cc\\\uacf5\ubd80\uc790\ub8cc\ub4e4\\\ud30c\uc774\uc36c_Python\\crowsmemory\\start_crow_sse.bat\"",
+      "command": "cmd /c \"${workspaceFolder}\\start_crow_sse.bat\"",
       "isBackground": true,
       "problemMatcher": [],
       "runOptions": {
@@ -19,7 +19,7 @@
       }
     },
     {
-      "label": "Crow SSE Server \u2014 Stop",
+      "label": "Crow SSE Server — Stop",
       "detail": "Stops the Crow Memory SSE server.",
       "type": "shell",
       "command": "for /f \"tokens=5\" %a in ('netstat -ano ^| findstr :9020.*LISTENING') do @taskkill /PID %a /F 2>nul",

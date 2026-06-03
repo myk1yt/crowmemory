@@ -11,7 +11,7 @@
 
 # ============================================================
 # Orchestrator + Crow Memory (orchestrator-crow)
-# 작업 위임 중심 워크플로우에 Crow Memory 통합
+# Integrating Crow Memory into the delegation-centric workflow
 # ============================================================
 customModes:
   - slug: orchestrator-crow
