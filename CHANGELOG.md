@@ -9,8 +9,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.4.2] — 2026-06-03
 
+### Added
+- **Multilingual Silent Mode (i18n)**: The Crow Memory notification messages (e.g., "🧠 Crow Memory – Remembering...") are now automatically translated into the user's UI language. The AI detects the editor's locale at runtime and outputs the notification in the correct language, keeping the interface culturally consistent without any manual configuration.
+- **Human-Repetition Memory Philosophy**: Introduced the guiding principle "memorize important information immediately, just as a human repeats key facts aloud to remember them." This directive — `crow_ingest` on every significant insight without waiting — has been embedded into `customInstructions` of all custom modes, `AGENTS.md`, and `system_prompt` templates. The AI now treats proactive memory ingestion as a reflex, not an optional step.
+
+### Fixed
+- **Clean-Install Skip Bug (Zoo Code)**: `install.py` and `install.ps1` previously skipped the global custom modes setup entirely when the Zoo Code settings folder did not exist. The installers now **forcibly create** the settings directory before writing `custom_modes.yaml`, ensuring Orchestrator+Crow mode is correctly registered even on a fresh Zoo Code installation.
+- **`browser` group missing from Orchestrator mode**: The `orchestrator-crow` custom mode definition was missing the `browser` tool group, preventing the Orchestrator from accessing browser-based tools. The `groups` field has been restored to include `browser`, giving the Orchestrator full tool access as originally intended.
+
 ### Changed
-- **Dynamic translation for Silent Mode (UI language adaptation)**: The hardcoded Korean text in the Silent Mode rule was modified so the AI now dynamically translates the "Remembering..." or "Ingesting memory..." notification into the user's spoken language.
+- **Orchestrator+Crow global config path — format split by editor**: The installer now correctly distinguishes between Zoo Code and Roo Code when writing the global custom modes configuration:
+  - **Zoo Code** → `custom_modes.yaml` (YAML array format)
+  - **Roo Code** → `cline_custom_modes.json` (JSON format)
+  Previously both editors shared the same code path, causing silent failures on one or the other.
+- **Custom mode fields fully populated**: All custom mode definitions (`orchestrator-crow`, `code-crow`) have been updated with complete, real text for every field — `roleDefinition`, `description`, `shortDescription`, `whenToUse`, `customInstructions`, and `groups`. No field is left as a placeholder or empty string.
 
 ## [1.4.1] — 2026-06-03
 
