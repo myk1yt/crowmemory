@@ -422,5 +422,5 @@ Crow Memory is open-source and free to use under MIT. But every organization has
 
 ---
 
-*Crow Memory v1.4.1 — June 2026*
+*Crow Memory v1.4.2 — June 2026*
 *Co-designed by Stefano,Kim & AI*

@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.4.2] — 2026-06-03
+
+### Changed
+- **Dynamic translation for Silent Mode (UI language adaptation)**: The hardcoded Korean text in the Silent Mode rule was modified so the AI now dynamically translates the "Remembering..." or "Ingesting memory..." notification into the user's spoken language.
+
 ## [1.4.1] — 2026-06-03
 
 ### Fixed
