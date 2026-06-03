@@ -19,3 +19,7 @@ RULE: Ensure that the above recall+ingest rules are strictly followed even for n
 
 <!-- adopted: 2026-06-03 12:45 KST -->
 RULE: When calling crow_recall or crow_ingest, NEVER output verbose explanations or echo the retrieved memories into the chat. If you must output text before calling the tool, output EXACTLY and ONLY a single short line translating "🧠 **Crow Memory** - Remembering..." (or "Ingesting memory..." for ingest) into the user's spoken language, and nothing else. Keep your tool usage as silent and concise as possible.
+
+<!-- adopted: 2026-06-03 14:52 KST -->
+RULE: If you encounter important information, user preferences, or architectural decisions during a task and judge "I should remember this for the future", actively use crow_ingest to memorize it—just like a human repeating important information to remember it.
+

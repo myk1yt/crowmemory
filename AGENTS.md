@@ -55,6 +55,7 @@ At the very end of the conversation session (i.e., your final response when the 
 During the conversation, you may call `crow_recall` or `crow_ingest` as needed:
 - Use `crow_recall` when you need to refresh context about the user or project.
 - Use `crow_ingest` after important milestones, architectural decisions, or bug discoveries.
+- If you encounter important information, user preferences, or architectural decisions during a task and judge "I should remember this for the future", actively use crow_ingest to memorize it—just like a human repeating important information to remember it.
 - Use `crow_diagnostics` to check memory health.
 - Use `crow_check_drift` to verify memory consistency.
 - These calls are not required for every response — use your judgment.
