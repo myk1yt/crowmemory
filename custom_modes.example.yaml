@@ -38,6 +38,5 @@ customModes:
       - read
       - command
       - edit
+      - browser
       - mcp
-    allowedMcpServers:
-      - crow_memory

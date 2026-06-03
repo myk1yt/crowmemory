@@ -188,10 +188,8 @@ customModes:
       - read
       - command
       - edit
-      - browse
+      - browser
       - mcp
-    allowedMcpServers:
-      - crow_memory
 "@
 
 # Merge with existing custom modes if present for both Zoo and Roo

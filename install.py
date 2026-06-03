@@ -75,10 +75,8 @@ YAML_MODE = """customModes:
       - read
       - command
       - edit
-      - browse
+      - browser
       - mcp
-    allowedMcpServers:
-      - crow_memory
 """
 
 def step(msg):
