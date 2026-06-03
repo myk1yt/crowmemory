@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.4.0] — 2026-06-03
+
+### Added
+- **Silent Mode for Tools**: Added a new rule to system prompts (`system_prompt.example.md`, `system_prompt.example/ko.md`, `system_prompt.example/en.md`) to suppress verbose explanations when AI uses `crow_recall` and `crow_ingest` tools. The AI will now only output a concise `🧠 **Crow Memory** - 기억을 떠올려보는 중...` (or `기억을 기록하는 중...`) message, keeping the UI clean and less noisy.
+- **i18n Support Restored**: Restored i18n support modules that were removed in the previous commit, but enforced English for prompt templates and configurations to ensure consistency and prevent AI drift.
+
 ## [1.3.7] — 2026-06-01
 
 ### Added

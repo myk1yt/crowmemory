@@ -15,3 +15,7 @@ RULE: After every response, ALWAYS record the user's revealed preferences, philo
 
 <!-- adopted: 2026-05-25 07:38 KST -->
 RULE: Ensure that the above recall+ingest rules are strictly followed even for non-coding tasks such as document editing, git operations, or configuration changes.
+
+
+<!-- adopted: 2026-06-03 12:45 KST -->
+RULE: When calling crow_recall or crow_ingest, NEVER output verbose explanations or echo the retrieved memories into the chat. If you must output text before calling the tool, output EXACTLY and ONLY this single line: "🧠 **Crow Memory** - 기억을 떠올려보는 중..." (or "기억을 기록하는 중..." for ingest) and nothing else. Keep your tool usage as silent and concise as possible.

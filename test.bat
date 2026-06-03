@@ -1,4 +1,4 @@
-@echo off
+@echo on
 REM Crow Memory SSE Server - Robust auto-start
 REM Launches server FULLY DETACHED from VS Code so it survives IDE restarts.
 REM Checks port, cleans stale locks, polls health endpoint with backoff.
@@ -61,8 +61,7 @@ if !ATTEMPT! geq 5 set "SLEEP=8000"
 
 powershell -NoProfile -Command "Start-Sleep -Milliseconds !SLEEP!" 2>nul
 if !ERRORLEVEL! neq 0 (
-    set /a TIMEOUT_SEC=!SLEEP! + 999
-    set /a TIMEOUT_SEC=!TIMEOUT_SEC! / 1000
+    set /a TIMEOUT_SEC=(!SLEEP! + 999) / 1000
     timeout /t !TIMEOUT_SEC! /nobreak >nul
 )
 
