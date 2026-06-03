@@ -166,8 +166,11 @@ def main():
     new_mode_dict = _yaml.safe_load(YAML_MODE) or {}
     
     for settings_dir in [ZOO_SETTINGS, ROO_MCP_DIR]:
-        if not settings_dir.parent.exists(): continue
-        settings_dir.mkdir(parents=True, exist_ok=True)
+        if settings_dir == ZOO_SETTINGS:
+            settings_dir.mkdir(parents=True, exist_ok=True)
+        else:
+            if not settings_dir.parent.parent.exists(): continue
+            settings_dir.mkdir(parents=True, exist_ok=True)
         mode_path = settings_dir / "cline_custom_modes.json"
         
         existing = {}
