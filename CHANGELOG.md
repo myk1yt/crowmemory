@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.4.3] — 2026-06-12
+
+### Added
+- **REST API Endpoints**: Added `GET /health`, `POST /ingest`, and `GET /recall` REST API routes to the SSE and dual-mode transports in `crow_mcp_server.py`. This enables direct HTTP communication for external tools (e.g., VibeZoo Bridge).
+- **Watchdog Script (`watch_crow_sse.bat`)**: Added a background watchdog script that polls port 9020 every 30 seconds and automatically restarts the server via `start_crow_sse.bat` if it goes down.
+
+### Fixed
+- **Startup Reliability**: Added auto-retry logic (max 2 attempts) in `start_crow_sse.bat` if the health check fails.
+- **Numpy Type Safety**: Changed `np.int64` scalar assignments to `np.array(..., dtype=np.int64)` in `crow_core.py` to fix deprecation/stability issues.
+
+
 ## [1.4.2] — 2026-06-03
 
 ### Added

@@ -389,43 +389,43 @@ Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Nls\CodePage" -Na
 
 ## REST API Endpoints
 
-Crow Memory Server는 MCP SSE 프로토콜과 함께 REST API도 제공합니다.
-VibeZoo Bridge 및 기타 도구가 HTTP를 통해 Crow Memory와 직접 통신할 수 있습니다.
+Crow Memory Server also provides REST API alongside the MCP SSE protocol.
+VibeZoo Bridge and other tools can communicate directly with Crow Memory over HTTP.
 
 ### `GET /health`
-서버 상태 확인:
+Check server health:
 ```json
-{"status": "ok", "version": "1.4.2", "entries": 42}
+{"status": "ok", "version": "1.4.3", "entries": 42}
 ```
 
 ### `POST /ingest`
-새 메모리 저장:
+Store new memory:
 ```json
 {"content": "...", "register": "context", "source": "rest_api", "tags": []}
 ```
 
 ### `GET /recall?query=...&register=...&limit=5`
-메모리 검색:
+Search memories:
 ```json
 {"results": [{"content": "...", "score": 0.95, ...}], "count": 1}
 ```
 
-### 실행 방법
+### How to Run
 ```bash
-# SSE + REST API (기본, 권장)
+# SSE + REST API (default, recommended)
 python crow_mcp_server.py --transport dual --port 9020 --http-port 9021
 
 # SSE only
 python crow_mcp_server.py --transport sse --port 9020
 
-# REST API + 헬스체크 확인
+# Verify REST API + health check
 curl http://127.0.0.1:9020/health
 ```
 
-### Windows 자동 실행 (Startup)
-Windows 부팅 시 자동 실행을 위해 [`start_crow_sse.bat`](start_crow_sse.bat)를 사용하세요:
-1. `start_crow_sse.bat`는 포트 중복 검사, 락 파일 정리, 헬스체크를 수행합니다.
-2. `watch_crow_sse.bat`는 30초 간격으로 서버 상태를 모니터링하고 자동 재시작합니다.
+### Windows Startup (Auto-Start)
+Use [`start_crow_sse.bat`](start_crow_sse.bat) for automatic startup at Windows boot:
+1. `start_crow_sse.bat` performs port conflict detection, lock file cleanup, and health checks.
+2. `watch_crow_sse.bat` monitors server status every 30 seconds and auto-restarts if needed.
 
 ---
 
@@ -441,7 +441,7 @@ MIT License — see [`LICENSE`](LICENSE) for details.
 
 ---
 
-## Commercial Services / 맞춤형 개발 문의
+## Commercial Services
 
 Crow Memory is open-source and free to use under MIT. But every organization has unique needs — different security requirements, proprietary LLM integrations, custom encoding schemes, or industry-specific compliance mandates.
 
@@ -454,8 +454,6 @@ Crow Memory is open-source and free to use under MIT. But every organization has
 - 🌐 **Additional language support** — Beyond the 36 VS Code locales, we can add translation support for any language or domain-specific terminology
 - 📊 **Enterprise analytics** — Memory usage dashboards, team-wide style consistency monitoring, drift alerting
 
-> **보안강화형, 기업용 혹은 특정 LLM이나 소프트웨어 맞춤형 Crow Memory 개발을 원하시는 분은 아래로 연락주세요.**
->
 > **For security-enhanced, enterprise-grade, or custom LLM/software-tailored Crow Memory development:**
 
 📧 **myk1yt@gmail.com**
@@ -464,5 +462,5 @@ Crow Memory is open-source and free to use under MIT. But every organization has
 
 ---
 
-*Crow Memory v1.4.2 — June 2026*
+*Crow Memory v1.4.3 — June 2026*
 *Co-designed by Stefano,Kim & AI*
