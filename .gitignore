@@ -41,6 +41,7 @@ venv/
 # Logs
 debug.log
 sse_server.log
+sse_server_stdout.log
 *.log
 
 # Tests (local only)

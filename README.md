@@ -387,6 +387,48 @@ Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Nls\CodePage" -Na
 
 ---
 
+## REST API Endpoints
+
+Crow Memory Server는 MCP SSE 프로토콜과 함께 REST API도 제공합니다.
+VibeZoo Bridge 및 기타 도구가 HTTP를 통해 Crow Memory와 직접 통신할 수 있습니다.
+
+### `GET /health`
+서버 상태 확인:
+```json
+{"status": "ok", "version": "1.4.2", "entries": 42}
+```
+
+### `POST /ingest`
+새 메모리 저장:
+```json
+{"content": "...", "register": "context", "source": "rest_api", "tags": []}
+```
+
+### `GET /recall?query=...&register=...&limit=5`
+메모리 검색:
+```json
+{"results": [{"content": "...", "score": 0.95, ...}], "count": 1}
+```
+
+### 실행 방법
+```bash
+# SSE + REST API (기본, 권장)
+python crow_mcp_server.py --transport dual --port 9020 --http-port 9021
+
+# SSE only
+python crow_mcp_server.py --transport sse --port 9020
+
+# REST API + 헬스체크 확인
+curl http://127.0.0.1:9020/health
+```
+
+### Windows 자동 실행 (Startup)
+Windows 부팅 시 자동 실행을 위해 [`start_crow_sse.bat`](start_crow_sse.bat)를 사용하세요:
+1. `start_crow_sse.bat`는 포트 중복 검사, 락 파일 정리, 헬스체크를 수행합니다.
+2. `watch_crow_sse.bat`는 30초 간격으로 서버 상태를 모니터링하고 자동 재시작합니다.
+
+---
+
 ## Architecture
 
 See [`CROW_MEMORY_ARCHITECTURE.md`](CROW_MEMORY_ARCHITECTURE.md) for the full technical specification including mathematical foundations, Hebbian EMA update rules, spectral clipping, and capacity bounds.

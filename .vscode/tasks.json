@@ -19,14 +19,41 @@
       }
     },
     {
+      "label": "Crow SSE Server — Start (Manual)",
+      "detail": "수동으로 Crow SSE 서버 시작",
+      "type": "shell",
+      "command": "cmd /c \"${workspaceFolder}\\start_crow_sse.bat\"",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "showReuseMessage": false,
+        "clear": true
+      }
+    },
+    {
       "label": "Crow SSE Server — Stop",
-      "detail": "Stops the Crow Memory SSE server.",
+      "detail": "Crow SSE 서버 중지 (포트 9020 점유 프로세스 종료)",
       "type": "shell",
       "command": "for /f \"tokens=5\" %a in ('netstat -ano ^| findstr :9020.*LISTENING') do @taskkill /PID %a /F 2>nul",
       "problemMatcher": [],
       "presentation": {
         "reveal": "always",
         "panel": "dedicated"
+      }
+    },
+    {
+      "label": "Crow SSE Server — Watch",
+      "detail": "30초마다 포트 9020 확인, 서버가 꺼져있으면 자동 재시작 (백그라운드 실행)",
+      "type": "shell",
+      "command": "cmd /c \"${workspaceFolder}\\watch_crow_sse.bat\"",
+      "isBackground": true,
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "silent",
+        "panel": "dedicated",
+        "showReuseMessage": false,
+        "clear": true
       }
     }
   ]

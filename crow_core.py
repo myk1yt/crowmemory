@@ -195,8 +195,8 @@ class CrowMemory:
         data["proj_W"] = (rng.normal(0, 0.01, (DIM, EMBED_DIM))
                           .astype(np.float16))
         data["proj_b"] = np.zeros(DIM, dtype=np.float16)
-        data["update_count"] = np.int64(0)
-        data["schema_version"] = np.int64(1)
+        data["update_count"] = np.array(0, dtype=np.int64)
+        data["schema_version"] = np.array(1, dtype=np.int64)
         return data
 
     # ------------------------------------------------------------------
@@ -332,7 +332,7 @@ class CrowMemory:
                          v.astype(np.float32)) * (1.0 - lam) * polarity
         S += delta.astype(np.float16)
 
-        self.data["update_count"] = np.int64(int(self.data["update_count"]) + 1)
+        self.data["update_count"] = np.array(int(self.data["update_count"]) + 1, dtype=np.int64)
         self._maybe_clip(register)
         self._append_value_bank(key, value, v, register, polarity)
         self._persist()

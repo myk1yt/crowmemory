@@ -17,6 +17,7 @@ import os
 import sys
 import io
 from pathlib import Path
+from urllib.parse import parse_qs
 
 # Fix Windows cp949 encoding issues with Unicode characters
 if sys.platform == "win32":
@@ -195,7 +196,8 @@ TOOL_DEFINITIONS = [
 # Server factory
 # ---------------------------------------------------------------------------
 
-def create_server(state_path: str) -> Server:
+def create_server(state_path: str) -> tuple[Server, CrowMemory]:
+    """Create MCP server and return (server, crow) tuple."""
     server = Server(
         name="crow_memory",
         version="1.4.2",
@@ -279,7 +281,7 @@ def create_server(state_path: str) -> Server:
         except Exception as exc:
             return _error(f"Tool error [{name}]: {exc}")
 
-    return server
+    return server, crow
 
 
 # ---------------------------------------------------------------------------
@@ -488,8 +490,138 @@ async def main():
             )
 
 
-async def _run_sse(server, host: str, port: int):
-    """Run Crow MCP server over SSE (HTTP) transport."""
+# ---------------------------------------------------------------------------
+# REST API helpers — Bridge-compatible REST endpoints
+# ---------------------------------------------------------------------------
+
+async def _receive_body(receive):
+    """Read the full HTTP request body from an ASGI receive channel."""
+    body = b""
+    more = True
+    while more:
+        msg = await receive()
+        if msg["type"] == "http.request":
+            body += msg.get("body", b"")
+            more = msg.get("more_body", False)
+    return body
+
+
+def add_rest_routes(app, crow, server):
+    """ASGI middleware: wrap an existing app with Crow REST API routes.
+
+    Routes added:
+      GET  /health   → health check (status, version, entries count)
+      POST /ingest   → ingest a memory entry
+      GET  /recall   → recall memories by query
+
+    These match the contract expected by Bridge's crow_client.py
+    (formerly served by the FAKE Crow server at mcp-servers/crow_memory_server.py).
+    """
+    from urllib.parse import parse_qs
+
+    async def rest_app(scope, receive, send):
+        if scope["type"] != "http":
+            return await app(scope, receive, send)
+
+        path = scope["path"]
+        method = scope["method"]
+
+        # GET /health
+        if path == "/health" and method == "GET":
+            stats = crow.stats()
+            body = json.dumps({
+                "status": "ok",
+                "version": "1.4.2",
+                "entries": stats.get("value_bank_size", 0) + stats.get("update_count", 0),
+            }).encode("utf-8")
+            await send({
+                "type": "http.response.start",
+                "status": 200,
+                "headers": [[b"content-type", b"application/json"]],
+            })
+            await send({"type": "http.response.body", "body": body})
+            return
+
+        # POST /ingest
+        if path == "/ingest" and method == "POST":
+            try:
+                raw = await _receive_body(receive)
+                data = json.loads(raw) if raw else {}
+                content = data.get("content", "")
+                register = data.get("register", "context")
+                # Bridge sends (content, register, source, tags).
+                # REAL Crow expects (key, value, polarity, register).
+                # Map content to both key and value with neutral polarity.
+                result = crow.ingest(
+                    key=content[:200],          # key is truncated description
+                    value=content,
+                    polarity=1.0,                # neutral-positive by default
+                    register=register,
+                )
+                resp = json.dumps({"status": "ok", "message": result}).encode("utf-8")
+                await send({
+                    "type": "http.response.start",
+                    "status": 200,
+                    "headers": [[b"content-type", b"application/json"]],
+                })
+                await send({"type": "http.response.body", "body": resp})
+            except Exception as e:
+                err = json.dumps({"status": "error", "error": str(e)}).encode("utf-8")
+                await send({
+                    "type": "http.response.start",
+                    "status": 400,
+                    "headers": [[b"content-type", b"application/json"]],
+                })
+                await send({"type": "http.response.body", "body": err})
+            return
+
+        # GET /recall
+        if path.startswith("/recall") and method == "GET":
+            try:
+                qs = parse_qs(scope.get("query_string", b"").decode("utf-8"))
+                query = qs.get("query", [""])[0]
+                register = qs.get("register", [None])[0] or "all"
+                limit = min(int(qs.get("limit", ["5"])[0]), 20)
+                # REAL Crow's recall returns {"hints": [...], "confidence": ..., "register": ...}
+                # Bridge expects {"results": [{content, score, ...}], "count": int}
+                if register == "all":
+                    # Query all registers via domain=all
+                    from crow_core import DOMAINS
+                    all_hints = []
+                    for reg in DOMAINS.get("all", []):
+                        r = crow.recall(query, reg, max(1, limit // len(DOMAINS.get("all", [reg]))))
+                        for hint in r.get("hints", []):
+                            all_hints.append({"content": hint, "score": r.get("confidence", 0.0)})
+                    results = all_hints[:limit]
+                else:
+                    r = crow.recall(query, register, top_k=limit)
+                    results = [{"content": h, "score": r.get("confidence", 0.0)} for h in r.get("hints", [])]
+
+                resp = json.dumps({"results": results, "count": len(results)}).encode("utf-8")
+                await send({
+                    "type": "http.response.start",
+                    "status": 200,
+                    "headers": [[b"content-type", b"application/json"]],
+                })
+                await send({"type": "http.response.body", "body": resp})
+            except Exception as e:
+                err = json.dumps({"results": [], "count": 0, "error": str(e)}).encode("utf-8")
+                await send({
+                    "type": "http.response.start",
+                    "status": 200,  # Return 200 with empty results for resilience
+                    "headers": [[b"content-type", b"application/json"]],
+                })
+                await send({"type": "http.response.body", "body": err})
+            return
+
+        # Pass through to the original app for non-REST routes
+        return await app(scope, receive, send)
+
+    return rest_app
+
+
+async def _run_sse(server, crow, host: str, port: int):
+    """Run Crow MCP server over SSE (HTTP) transport with REST API."""
     from mcp.server.sse import SseServerTransport
     import uvicorn
 
@@ -507,7 +639,6 @@ async def _run_sse(server, host: str, port: int):
         elif scope["path"].startswith("/messages/"):
             await sse.handle_post_message(scope, receive, send)
         else:
-            # Health check / root
             body = b"Crow Memory MCP SSE Server"
             await send({
                 "type": "http.response.start",
@@ -519,8 +650,11 @@ async def _run_sse(server, host: str, port: int):
                 "body": body,
             })
 
+    # Wrap with REST API
+    final_app = add_rest_routes(app, crow, server)
+
     config = uvicorn.Config(
-        app, host=host, port=port,
+        final_app, host=host, port=port,
         log_level="warning",
     )
     http_server = uvicorn.Server(config)
@@ -530,7 +664,7 @@ async def _run_sse(server, host: str, port: int):
     await http_server.serve()
 
 
-async def _run_streamable_http(server, host: str, port: int):
+async def _run_streamable_http(server, crow, host: str, port: int):
     """Run Crow MCP server over Streamable HTTP transport."""
     import anyio
     from mcp.server.streamable_http import StreamableHTTPServerTransport
@@ -561,10 +695,11 @@ async def _run_streamable_http(server, host: str, port: int):
             tg.start_soon(http_server.serve)
 
 
-async def _run_dual_port(server, host: str, sse_port: int, http_port: int):
+async def _run_dual_port(server, crow, host: str, sse_port: int, http_port: int):
     """Run Crow MCP server with SSE and Streamable HTTP on separate ports.
 
     Uses a single CrowMemory instance so both transports share crow.bin.
+    The SSE port also gets REST API routes for Bridge compatibility.
     """
     from mcp.server.sse import SseServerTransport
     from mcp.server.streamable_http import StreamableHTTPServerTransport
@@ -594,7 +729,10 @@ async def _run_dual_port(server, host: str, sse_port: int, http_port: int):
                     "body": body,
                 })
 
-        sse_config = uvicorn.Config(sse_app, host=host, port=sse_port, log_level="warning")
+        # Wrap SSE app with REST API
+        final_sse_app = add_rest_routes(sse_app, crow, server)
+
+        sse_config = uvicorn.Config(final_sse_app, host=host, port=sse_port, log_level="warning")
         sse_server = uvicorn.Server(sse_config)
 
         async def http_app(scope, receive, send):
@@ -622,6 +760,59 @@ async def _run_dual_port(server, host: str, sse_port: int, http_port: int):
             )
 
         await asyncio.gather(run_sse(), run_http(), run_server())
+
+
+# ---------------------------------------------------------------------------
+# Entry point
+# ---------------------------------------------------------------------------
+
+async def main():
+    global _ready_file_path
+
+    parser = argparse.ArgumentParser(description="Crow Memory MCP Server")
+    parser.add_argument("--state", default=DEFAULT_STATE_PATH,
+                        help=f"Path to crow.bin (default: {DEFAULT_STATE_PATH})")
+    parser.add_argument("--transport", choices=["stdio", "sse", "streamable-http", "dual"], default="dual",
+                        help="Transport protocol (default: dual)")
+    parser.add_argument("--port", type=int, default=9020,
+                        help="Port for SSE transport (default: 9020)")
+    parser.add_argument("--http-port", type=int, default=9021,
+                        help="Port for Streamable HTTP transport (default: 9021)")
+    parser.add_argument("--host", default="127.0.0.1",
+                        help="Host for SSE transport (default: 127.0.0.1)")
+    parser.add_argument("--ready-file", default=None,
+                        help="Path to a ready marker file created when server starts listening (default: none)")
+    args = parser.parse_args()
+
+    _ready_file_path = args.ready_file
+
+    # Remove stale ready file from any previous crashed instance
+    if _ready_file_path:
+        try:
+            Path(_ready_file_path).unlink(missing_ok=True)
+        except OSError:
+            pass
+
+    state_path = str(Path(args.state).resolve())
+    server, crow = create_server(state_path)
+
+    # Register cleanup on shutdown
+    import atexit
+    atexit.register(_remove_ready_file)
+
+    if args.transport == "sse":
+        await _run_sse(server, crow, args.host, args.port)
+    elif args.transport == "streamable-http":
+        await _run_streamable_http(server, crow, args.host, args.http_port)
+    elif args.transport == "dual":
+        await _run_dual_port(server, crow, args.host, args.port, args.http_port)
+    else:
+        print("Crow Memory MCP server running on stdio")
+        async with stdio_server() as (read_stream, write_stream):
+            await server.run(
+                read_stream, write_stream,
+                server.create_initialization_options(),
+            )
 
 
 if __name__ == "__main__":
