@@ -269,18 +269,106 @@ else:
 }
 Write-StepDone
 
-# Step 5: Start SSE server + auto-start registration
-Write-Step-Header "5" "Starting Crow SSE server + auto-start" "step_5_start_server"
+# Step 5: Register auto-start via Task Scheduler + start server now
+Write-Step-Header "5" "Registering Crow Memory auto-start (Task Scheduler)" "step_5_start_server"
 $BatPath = "$CrowDir\start_crow_sse.bat"
 
-# Start SSE server now using the robust bat
+# --- 5a: Cleanup old Startup folder entry (migration from v1.4.x) ---
+$StartupDir = [Environment]::GetFolderPath("Startup")
+$OldStartupBat = "$StartupDir\Crow_Memory_SSE.bat"
+if (Test-Path $OldStartupBat) {
+    Remove-Item $OldStartupBat -Force
+    Write-Host "  [Migration] Removed old Startup folder entry." -ForegroundColor DarkGray
+}
+
+# --- 5b: Register with Windows Task Scheduler (admin-free via schtasks.exe + XML) ---
+$TaskName = "CrowMemoryAuto"
+$TaskXml = @"
+<?xml version="1.0" encoding="UTF-16"?>
+<Task version="1.2" xmlns="http://schemas.microsoft.com/windows/2004/02/mit/task">
+  <RegistrationInfo>
+    <Description>Crow Memory SSE MCP Server — Auto-start at user logon</Description>
+  </RegistrationInfo>
+  <Triggers>
+    <LogonTrigger>
+      <Enabled>true</Enabled>
+      <Delay>PT30S</Delay>
+    </LogonTrigger>
+  </Triggers>
+  <Principals>
+    <Principal id="Author">
+      <UserId>$env:USERDOMAIN\$env:USERNAME</UserId>
+      <LogonType>InteractiveToken</LogonType>
+      <RunLevel>LeastPrivilege</RunLevel>
+    </Principal>
+  </Principals>
+  <Settings>
+    <MultipleInstancesPolicy>IgnoreNew</MultipleInstancesPolicy>
+    <DisallowStartIfOnBatteries>false</DisallowStartIfOnBatteries>
+    <StopIfGoingOnBatteries>false</StopIfGoingOnBatteries>
+    <AllowHardTerminate>true</AllowHardTerminate>
+    <StartWhenAvailable>true</StartWhenAvailable>
+    <RunOnlyIfNetworkAvailable>false</RunOnlyIfNetworkAvailable>
+    <IdleSettings>
+      <StopOnIdleEnd>false</StopOnIdleEnd>
+      <RestartOnIdle>false</RestartOnIdle>
+    </IdleSettings>
+    <AllowStartOnDemand>true</AllowStartOnDemand>
+    <Enabled>true</Enabled>
+    <Hidden>true</Hidden>
+    <RunOnlyIfIdle>false</RunOnlyIfIdle>
+    <WakeToRun>false</WakeToRun>
+    <ExecutionTimeLimit>PT0S</ExecutionTimeLimit>
+    <Priority>7</Priority>
+    <RestartOnFailure>
+      <Interval>PT3M</Interval>
+      <Count>3</Count>
+    </RestartOnFailure>
+  </Settings>
+  <Actions Context="Author">
+    <Exec>
+      <Command>cmd.exe</Command>
+      <Arguments>/c "$BatPath"</Arguments>
+      <WorkingDirectory>$CrowDir</WorkingDirectory>
+    </Exec>
+  </Actions>
+</Task>
+"@
+$TempXmlPath = [System.IO.Path]::GetTempFileName() + ".xml"
+$TaskXml | Set-Content $TempXmlPath -Encoding Unicode
+
+$SchtasksArgs = @(
+    "/create",
+    "/tn", $TaskName,
+    "/xml", $TempXmlPath,
+    "/f"
+)
+$SchtasksResult = & schtasks.exe $SchtasksArgs 2>&1
+$SchtasksExit = $LASTEXITCODE
+Remove-Item $TempXmlPath -Force -ErrorAction SilentlyContinue
+
+if ($SchtasksExit -eq 0) {
+    Write-Host "  [Auto-start] Registered in Windows Task Scheduler: $TaskName" -ForegroundColor DarkGreen
+} else {
+    Write-Host "  [Warning] Task Scheduler registration failed (exit $SchtasksExit)." -ForegroundColor Yellow
+    Write-Host "  [Fallback] Using Startup folder instead." -ForegroundColor Yellow
+    
+    # Fallback: Startup folder with delayed-launch wrapper
+    $FallbackBatContent = @"
+@echo off
+REM Crow Memory SSE — Startup folder fallback (10s delay)
+timeout /t 10 /nobreak >nul
+call "$BatPath"
+"@
+    $FallbackBatPath = "$StartupDir\Crow_Memory_SSE.bat"
+    $FallbackBatContent | Set-Content $FallbackBatPath -Encoding ASCII
+    Write-Host "  [Auto-start] Registered in Startup folder (10s delay): $FallbackBatPath" -ForegroundColor DarkGreen
+}
+
+# --- 5c: Start the server now ---
+Write-Host "  Starting Crow Memory server now..."
 Start-Process -FilePath "cmd.exe" -ArgumentList "/c `"$BatPath`"" -WorkingDirectory $CrowDir -NoNewWindow
 
-# Register auto-start via Windows Startup folder (copy the robust bat)
-$StartupDir = [Environment]::GetFolderPath("Startup")
-$BatDst = "$StartupDir\Crow_Memory_SSE.bat"
-Copy-Item $BatPath $BatDst -Force
-Write-Host "  [Auto-start] Registered in Startup folder: $BatDst" -ForegroundColor DarkGreen
 Write-StepDone
 
 # Done

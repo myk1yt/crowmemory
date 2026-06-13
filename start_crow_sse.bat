@@ -63,7 +63,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -Command "$p = Start-Process -File
 REM =====================================================================
 REM Phase 4: Health Check 대기 (backoff: 2s -> 2s -> 3s -> 5s...)
 REM =====================================================================
-set "MAX_ATTEMPTS=20"
+set "MAX_ATTEMPTS=12"
 set "ATTEMPT=0"
 set "READY=0"
 echo [%date% %time%] [INFO] Waiting for server health endpoint (max %MAX_ATTEMPTS% checks)... >> "%LOG_FILE%"
@@ -79,10 +79,10 @@ if !ERRORLEVEL! equ 0 (
     goto :wait_done
 )
 
-REM Backoff: 2s -> 2s -> 3s -> 5s (after attempt 4+)
-if !ATTEMPT! leq 2 set "SLEEP=2000"
-if !ATTEMPT! equ 3 set "SLEEP=3000"
-if !ATTEMPT! geq 4 set "SLEEP=5000"
+REM Backoff: 1s -> 1s -> 2s -> 3s (after attempt 4+)
+if !ATTEMPT! leq 2 set "SLEEP=1000"
+if !ATTEMPT! equ 3 set "SLEEP=2000"
+if !ATTEMPT! geq 4 set "SLEEP=3000"
 
 REM Sleep (try PowerShell first, fallback to timeout)
 powershell -NoProfile -Command "Start-Sleep -Milliseconds !SLEEP!" 2>nul

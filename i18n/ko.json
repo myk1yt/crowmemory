@@ -150,7 +150,7 @@
     "next_step_1": "1. Zoo Code를 재시작하세요",
     "next_step_2": "2. 모드를 \"Orchestrator + Crow\"로 전환하세요",
     "next_step_3": "3. Crow가 자동으로 활성화됩니다 — 수동 설정이 필요하지 않습니다",
-    "next_step_4": "4. SSE 서버가 Windows와 함께 자동 시작됩니다 (시작 프로그램에 등록됨)"
+    "next_step_4": "4. Windows Task Scheduler에 등록되어 PC 로그온 시 Crow 서버가 자동 실행됩니다"
   },
 
   "system_prompt": {

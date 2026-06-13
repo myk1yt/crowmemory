@@ -150,7 +150,7 @@
     "next_step_1": "1. Restart Zoo Code",
     "next_step_2": "2. Switch mode to \"Orchestrator + Crow\"",
     "next_step_3": "3. Crow auto-activates \u2014 no manual setup needed",
-    "next_step_4": "4. SSE server auto-starts with Windows (registered in Startup)"
+    "next_step_4": "4. Crow server auto-starts with Windows via Task Scheduler"
   },
 
   "system_prompt": {

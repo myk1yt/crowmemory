@@ -8,6 +8,7 @@ import os
 import sys
 import json
 import subprocess
+import tempfile
 from pathlib import Path
 
 # ---------------------------------------------------------------------------
@@ -216,23 +217,108 @@ def main():
                 json.dump(existing, f, indent=2, ensure_ascii=False)
     ok()
 
-    # Step 5: Start SSE server + auto-start registration
-    step.count += 1; step(MSGS.get("step_5_start_server", "Starting Crow SSE server + auto-start"))
+    # Step 5: Register auto-start via Task Scheduler + start server now
+    step.count += 1; step(MSGS.get("step_5_start_server", "Registering Crow Memory auto-start (Task Scheduler)"))
     bat_path = CROW_DIR / "start_crow_sse.bat"
 
     if os.name == "nt":
+        # 5a: Cleanup old Startup folder entry (migration from v1.4.x)
+        startup_dir = Path(os.environ.get("APPDATA", "")) / "Microsoft" / "Windows" / "Start Menu" / "Programs" / "Startup"
+        old_startup_bat = startup_dir / "Crow_Memory_SSE.bat"
+        if old_startup_bat.exists():
+            old_startup_bat.unlink()
+            print(f"\n  [Migration] Removed old Startup folder entry.")
+
+        # 5b: Register with Windows Task Scheduler (admin-free via schtasks.exe + XML)
+        task_name = "CrowMemoryAuto"
+        user_domain = os.environ.get("USERDOMAIN", "")
+        user_name = os.environ.get("USERNAME", "")
+        user_full = f"{user_domain}\\{user_name}" if user_domain else user_name
+        
+        task_xml = f'''<?xml version="1.0" encoding="UTF-16"?>
+<Task version="1.2" xmlns="http://schemas.microsoft.com/windows/2004/02/mit/task">
+  <RegistrationInfo>
+    <Description>Crow Memory SSE MCP Server — Auto-start at user logon</Description>
+  </RegistrationInfo>
+  <Triggers>
+    <LogonTrigger>
+      <Enabled>true</Enabled>
+      <Delay>PT30S</Delay>
+    </LogonTrigger>
+  </Triggers>
+  <Principals>
+    <Principal id="Author">
+      <UserId>{user_full}</UserId>
+      <LogonType>InteractiveToken</LogonType>
+      <RunLevel>LeastPrivilege</RunLevel>
+    </Principal>
+  </Principals>
+  <Settings>
+    <MultipleInstancesPolicy>IgnoreNew</MultipleInstancesPolicy>
+    <DisallowStartIfOnBatteries>false</DisallowStartIfOnBatteries>
+    <StopIfGoingOnBatteries>false</StopIfGoingOnBatteries>
+    <AllowHardTerminate>true</AllowHardTerminate>
+    <StartWhenAvailable>true</StartWhenAvailable>
+    <RunOnlyIfNetworkAvailable>false</RunOnlyIfNetworkAvailable>
+    <IdleSettings>
+      <StopOnIdleEnd>false</StopOnIdleEnd>
+      <RestartOnIdle>false</RestartOnIdle>
+    </IdleSettings>
+    <AllowStartOnDemand>true</AllowStartOnDemand>
+    <Enabled>true</Enabled>
+    <Hidden>true</Hidden>
+    <RunOnlyIfIdle>false</RunOnlyIfIdle>
+    <WakeToRun>false</WakeToRun>
+    <ExecutionTimeLimit>PT0S</ExecutionTimeLimit>
+    <Priority>7</Priority>
+    <RestartOnFailure>
+      <Interval>PT3M</Interval>
+      <Count>3</Count>
+    </RestartOnFailure>
+  </Settings>
+  <Actions Context="Author">
+    <Exec>
+      <Command>cmd.exe</Command>
+      <Arguments>/c "{bat_path}"</Arguments>
+      <WorkingDirectory>{CROW_DIR}</WorkingDirectory>
+    </Exec>
+  </Actions>
+</Task>'''
+        
+        tmp_xml = tempfile.NamedTemporaryFile(mode='w', suffix='.xml', delete=False, encoding='utf-16')
+        try:
+            tmp_xml.write(task_xml)
+            tmp_xml.close()
+            schtasks_cmd = [
+                "schtasks.exe", "/create",
+                "/tn", task_name,
+                "/xml", tmp_xml.name,
+                "/f"
+            ]
+            result = subprocess.run(schtasks_cmd, capture_output=True, text=True)
+        finally:
+            os.unlink(tmp_xml.name)
+
+        if result.returncode == 0:
+            print(f"\n  [Auto-start] Registered in Windows Task Scheduler: {task_name}")
+        else:
+            print(f"\n  [Warning] Task Scheduler registration failed (exit {result.returncode}).")
+            print("  [Fallback] Using Startup folder instead.")
+            # Fallback: Startup folder with delayed-launch wrapper
+            if not startup_dir.exists():
+                startup_dir.mkdir(parents=True, exist_ok=True)
+            fallback_content = f'@echo off\r\nREM Crow Memory SSE -- Startup folder fallback (10s delay)\r\ntimeout /t 10 /nobreak >nul\r\ncall "{bat_path}"\r\n'
+            fallback_bat = startup_dir / "Crow_Memory_SSE.bat"
+            fallback_bat.write_text(fallback_content, encoding="ascii")
+            print(f"\n  [Auto-start] Registered in Startup folder (10s delay): {fallback_bat}")
+
+        # 5c: Start the server now
         subprocess.Popen(
             [str(bat_path)],
             cwd=str(CROW_DIR),
             stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
             creationflags=subprocess.CREATE_NO_WINDOW if hasattr(subprocess, "CREATE_NO_WINDOW") else 0
         )
-        startup_dir = Path(os.environ.get("APPDATA", "")) / "Microsoft" / "Windows" / "Start Menu" / "Programs" / "Startup"
-        if startup_dir.exists():
-            import shutil
-            bat_dst = startup_dir / "Crow_Memory_SSE.bat"
-            shutil.copy2(str(bat_path), str(bat_dst))
-            print(f"\n  [Auto-start] Registered in Startup: {bat_dst}")
     ok()
 
     print()
@@ -246,7 +332,7 @@ def main():
     for step_item in MSGS.get("next_steps", [
         "1. Restart your IDE (Zoo Code / Kimi Code / Roo Code)",
         "2. For Zoo Code: Switch mode to 'Orchestrator + Crow'",
-        "3. Server auto-starts with Windows (registered in Startup)"
+        "3. Server auto-starts with Windows via Task Scheduler"
     ]):
         print(f"  {step_item}")
     print()
