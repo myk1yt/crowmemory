@@ -54,25 +54,25 @@ python install.py
 The installer automatically:
 - Installs Python dependencies
 - Initializes `crow.bin` (140MB fixed-size weight matrix)
-- Creates `.vscode/tasks.json` — **auto-starts the SSE server when you open the workspace** (no manual commands needed)
+- Registers `CrowMemoryAuto` in Windows Task Scheduler — **auto-starts the SSE server at user logon** (no manual commands needed)
 - Creates an **"Orchestrator + Crow"** custom mode with `allowedMcpServers` + AUTO-INGEST (Crow Memory integrated into the Orchestrator workflow)
 - Configures Crow Memory via **global MCP settings** (no project-level `.roo/mcp.json` needed)
 - Registers a Startup `.bat` so the SSE server also starts with Windows
 - Pre-authorizes all 10 Crow tools (`alwaysAllow`)
 
-> ⚡ **That's it.** No manual server commands. The SSE server auto-starts when you open VS Code and **survives IDE restarts** (runs as a detached background process).
+> ⚡ **That's it.** No manual server commands. The SSE server auto-starts when you log into Windows and **survives IDE restarts** (runs as a detached background process).
 
-### How Auto-Start Works (v1.3.1)
+### How Auto-Start Works (v1.5.0)
 
-[`start_crow_sse.bat`](start_crow_sse.bat) uses a three-layer strategy to eliminate `ECONNREFUSED` errors:
+The installer registers a Windows Task Scheduler task (`CrowMemoryAuto`) that launches the server at user logon:
 
-| Layer | Mechanism | Purpose |
-|-------|-----------|---------|
-| **Detached Process** | PowerShell `Start-Process -WindowStyle Hidden` | Server survives VS Code close; ready on next open |
-| **Health Polling** | HTTP `GET /sse` with exponential backoff (0.5s→8s, max 30s) | Waits for server readiness before task exits |
-| **Ready File** | `memory/.crow_ready` written by server on listen, deleted on shutdown | Alternative readiness signal for external scripts |
+1. **User logs into Windows** → Task Scheduler triggers `CrowMemoryAuto` (30s delay)
+2. [`start_crow_sse.bat`](start_crow_sse.bat) launches the server as a detached process
+3. Server begins listening on `127.0.0.1:9020` (SSE) + `127.0.0.1:9021` (Streamable HTTP)
+4. Health check confirms readiness (max ~55s)
+5. **Open VS Code** → Zoo Code / Kimi Code / Roo Code detects the running server via Global MCP config → Crow activates immediately
 
-This means: **first open** → bat starts server detached + polls until ready. **Subsequent opens** → server already running → bat exits instantly → MCP connects immediately.
+**Reliability**: If the server fails to start, Task Scheduler automatically retries every 3 minutes (up to 3 times). As a fallback, the installer also places a delayed launcher in the Windows Startup folder.
 
 ### 3. Restart & Switch Mode
 
@@ -94,7 +94,7 @@ Two layers ensure Crow is always active:
 
 | Layer | Mechanism |
 |-------|-----------|
-| **SSE Auto-Start** | [`.vscode/tasks.json`](.vscode/tasks.json) with `runOn: folderOpen` |
+| **SSE Auto-Start** | Windows Task Scheduler (`CrowMemoryAuto`) with `AtLogon` trigger |
 | **UNIVERSAL RECALL + AUTO-INGEST** | Custom mode system prompt (`custom_modes.yaml` for Zoo Code) |
 
 The installer copies [`system_prompt.example.md`](system_prompt.example.md) → `memory/system_prompt.md` with 3 pre-evolved rules.
@@ -262,7 +262,7 @@ The installer configures a **dual-mode** server (SSE + Streamable HTTP) by defau
        │          Crow MCP Server                │
        │  (Dual Mode: SSE port 9020 +            │
        │   Streamable HTTP port 9021)            │
-       │  Auto-started by .vscode/tasks.json     │
+       │  Auto-started by Windows Task Scheduler (AtLogon)     │
        └────────┬───────────────────────┬────────┘
                 │                       │
        ┌────────┴───────────────────────┴────────┐
@@ -336,10 +336,11 @@ The `AGENTS.md` file provides session-start recall, session-end ingest, and full
 - Verify the server is alive: visit `http://127.0.0.1:9020/` in a browser.
 
 ### SSE server not auto-starting
-- Verify [`.vscode/tasks.json`](.vscode/tasks.json) exists in the workspace root
-- Run manually once: `python crow_mcp_server.py --transport dual --port 9020`
-- Check `sse_server.log` for error messages
-- Ensure no other process is using port 9020: `netstat -ano | findstr :9020`
+- Verify Task Scheduler registration: `schtasks /query /tn "CrowMemoryAuto"`
+- Check server health: visit `http://127.0.0.1:9020/health`
+- View server logs: `type sse_server.log`
+- Manually start: run [`start_crow_sse.bat`](start_crow_sse.bat)
+- Re-register: `powershell -File scripts/register_crow_task.ps1`
 
 ### Port 9020 already in use
 - [`start_crow_sse.bat`](start_crow_sse.bat) detects this and skips duplicate starts automatically
@@ -422,10 +423,22 @@ python crow_mcp_server.py --transport sse --port 9020
 curl http://127.0.0.1:9020/health
 ```
 
-### Windows Startup (Auto-Start)
-Use [`start_crow_sse.bat`](start_crow_sse.bat) for automatic startup at Windows boot:
-1. `start_crow_sse.bat` performs port conflict detection, lock file cleanup, and health checks.
-2. `watch_crow_sse.bat` monitors server status every 30 seconds and auto-restarts if needed.
+### Windows Auto-Start (v1.5.0+)
+
+The server is registered as a Windows Task Scheduler task during installation. To manually register or unregister:
+
+```bash
+# Register auto-start
+powershell -File scripts/register_crow_task.ps1
+
+# Check status
+schtasks /query /tn "CrowMemoryAuto"
+
+# Remove auto-start
+schtasks /delete /tn "CrowMemoryAuto" /f
+```
+
+For manual server start without auto-registration, use [`start_crow_sse.bat`](start_crow_sse.bat).
 
 ---
 
