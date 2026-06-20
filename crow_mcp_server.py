@@ -200,7 +200,7 @@ def create_server(state_path: str) -> tuple[Server, CrowMemory]:
     """Create MCP server and return (server, crow) tuple."""
     server = Server(
         name="crow_memory",
-        version="1.5.1",
+        version="1.4.4",
         instructions=(
             "Crow Memory — External synaptic memory for AI coding agents. "
             "Stores your coding style, bug intuition, and architectural "
@@ -531,9 +531,9 @@ def add_rest_routes(app, crow, server):
             stats = crow.stats()
             body = json.dumps({
                 "status": "ok",
-                "version": "1.5.1",
+                "version": "1.4.4",
                 "entries": stats.get("value_bank_size", 0) + stats.get("update_count", 0),
-            }).encode("utf-8")
+            }, ensure_ascii=False).encode("utf-8")
             await send({
                 "type": "http.response.start",
                 "status": 200,
@@ -558,7 +558,7 @@ def add_rest_routes(app, crow, server):
                     polarity=1.0,                # neutral-positive by default
                     register=register,
                 )
-                resp = json.dumps({"status": "ok", "message": result}).encode("utf-8")
+                resp = json.dumps({"status": "ok", "message": result}, ensure_ascii=False).encode("utf-8")
                 await send({
                     "type": "http.response.start",
                     "status": 200,
@@ -566,7 +566,7 @@ def add_rest_routes(app, crow, server):
                 })
                 await send({"type": "http.response.body", "body": resp})
             except Exception as e:
-                err = json.dumps({"status": "error", "error": str(e)}).encode("utf-8")
+                err = json.dumps({"status": "error", "error": str(e)}, ensure_ascii=False).encode("utf-8")
                 await send({
                     "type": "http.response.start",
                     "status": 400,
@@ -597,7 +597,7 @@ def add_rest_routes(app, crow, server):
                     r = crow.recall(query, register, top_k=limit)
                     results = [{"content": h, "score": r.get("confidence", 0.0)} for h in r.get("hints", [])]
 
-                resp = json.dumps({"results": results, "count": len(results)}).encode("utf-8")
+                resp = json.dumps({"results": results, "count": len(results)}, ensure_ascii=False).encode("utf-8")
                 await send({
                     "type": "http.response.start",
                     "status": 200,
@@ -605,7 +605,7 @@ def add_rest_routes(app, crow, server):
                 })
                 await send({"type": "http.response.body", "body": resp})
             except Exception as e:
-                err = json.dumps({"results": [], "count": 0, "error": str(e)}).encode("utf-8")
+                err = json.dumps({"results": [], "count": 0, "error": str(e)}, ensure_ascii=False).encode("utf-8")
                 await send({
                     "type": "http.response.start",
                     "status": 200,  # Return 200 with empty results for resilience

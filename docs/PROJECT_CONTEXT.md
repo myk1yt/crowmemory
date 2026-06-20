@@ -1,6 +1,6 @@
 # 🧠 Crow Memory — 프로젝트 컨텍스트 문서
 
-> **버전:** v1.5.1 | **라이선스:** MIT | **저장소:** [myk1yt/crowmemory](https://github.com/myk1yt/crowmemory)
+> **버전:** v1.4.4 | **라이선스:** MIT | **저장소:** [myk1yt/crowmemory](https://github.com/myk1yt/crowmemory)
 > **최종 갱신:** 2026-06-21 | **문서 목적:** 인간 및 AI를 위한 온보딩 가이드
 
 ## 1. 프로젝트 정체성

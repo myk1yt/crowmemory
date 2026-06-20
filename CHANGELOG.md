@@ -5,14 +5,12 @@ All notable changes to Crow Memory will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.5.1] — 2026-06-21
+## [1.4.4] — 2026-06-21
 
 ### Fixed
 - **Unicode escape sequence noise (`\uXXXX`) in MCP responses**: Fixed raw Unicode characters (like `\ubc18\ub4dc\uc2dc`) showing in tool output by changing `json.dumps` to use `ensure_ascii=False` in response formatting.
 - **cp949 UnicodeEncodeError on Windows stdout**: Reconfigured `sys.stdout` and `sys.stderr` to use UTF-8 encoding on startup, ensuring Windows consoles handle all Unicode characters safely without crash.
-
-
-## [1.5.0] — 2026-06-13
+- **Startup folder race condition (ECONNREFUSED)**: Root cause fixed. Server now starts before VS Code via Task Scheduler `AtLogon` trigger, eliminating the race between MCP client connection and server startup.
 
 ### Changed
 - **Auto-start mechanism migrated from Startup folder to Windows Task Scheduler**: The unreliable Startup folder (race condition with VS Code launch) has been replaced with a Task Scheduler `AtLogon` trigger (`CrowMemoryAuto`). The server now starts 30 seconds after user logon with automatic retry (3-minute intervals, up to 3 times).
@@ -23,9 +21,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [`scripts/register_crow_task.ps1`](scripts/register_crow_task.ps1): Standalone script for Task Scheduler registration/unregistration.
 - [`docs/PROJECT_CONTEXT.md`](docs/PROJECT_CONTEXT.md): Comprehensive project onboarding document.
 - [`docs/CROW_MEMORY_AUTOSTART_DESIGN.md`](docs/CROW_MEMORY_AUTOSTART_DESIGN.md): Detailed auto-start architecture design document.
-
-### Fixed
-- **Startup folder race condition (ECONNREFUSED)**: Root cause fixed. Server now starts before VS Code via Task Scheduler `AtLogon` trigger, eliminating the race between MCP client connection and server startup.
 
 
 ## [1.4.3] — 2026-06-12
