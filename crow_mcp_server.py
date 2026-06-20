@@ -200,7 +200,7 @@ def create_server(state_path: str) -> tuple[Server, CrowMemory]:
     """Create MCP server and return (server, crow) tuple."""
     server = Server(
         name="crow_memory",
-        version="1.4.2",
+        version="1.5.1",
         instructions=(
             "Crow Memory — External synaptic memory for AI coding agents. "
             "Stores your coding style, bug intuition, and architectural "
@@ -406,10 +406,10 @@ def _project_info(crow: CrowMemory, args: dict) -> list:
     return _error(f"Unknown project action: {action}")
 
 def _ok(data) -> list:
-    return [{"type": "text", "text": json.dumps(data, ensure_ascii=True)}]
+    return [{"type": "text", "text": json.dumps(data, ensure_ascii=False)}]
 
 def _error(message: str) -> list:
-    return [{"type": "text", "text": json.dumps({"error": message}, ensure_ascii=True)}]
+    return [{"type": "text", "text": json.dumps({"error": message}, ensure_ascii=False)}]
 
 
 # ---------------------------------------------------------------------------
@@ -531,7 +531,7 @@ def add_rest_routes(app, crow, server):
             stats = crow.stats()
             body = json.dumps({
                 "status": "ok",
-                "version": "1.4.2",
+                "version": "1.5.1",
                 "entries": stats.get("value_bank_size", 0) + stats.get("update_count", 0),
             }).encode("utf-8")
             await send({
@@ -818,5 +818,10 @@ async def main():
 if __name__ == "__main__":
     import sys
     if sys.platform == "win32":
+        try:
+            sys.stdout.reconfigure(encoding='utf-8')
+            sys.stderr.reconfigure(encoding='utf-8')
+        except AttributeError:
+            pass
         asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
     asyncio.run(main())

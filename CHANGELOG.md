@@ -5,6 +5,13 @@ All notable changes to Crow Memory will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.1] — 2026-06-21
+
+### Fixed
+- **Unicode escape sequence noise (`\uXXXX`) in MCP responses**: Fixed raw Unicode characters (like `\ubc18\ub4dc\uc2dc`) showing in tool output by changing `json.dumps` to use `ensure_ascii=False` in response formatting.
+- **cp949 UnicodeEncodeError on Windows stdout**: Reconfigured `sys.stdout` and `sys.stderr` to use UTF-8 encoding on startup, ensuring Windows consoles handle all Unicode characters safely without crash.
+
+
 ## [1.5.0] — 2026-06-13
 
 ### Changed
