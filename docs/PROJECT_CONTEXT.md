@@ -1,7 +1,7 @@
 # 🧠 Crow Memory — 프로젝트 컨텍스트 문서
 
-> **버전:** v1.4.4 | **라이선스:** MIT | **저장소:** [myk1yt/crowmemory](https://github.com/myk1yt/crowmemory)
-> **최종 갱신:** 2026-06-21 | **문서 목적:** 인간 및 AI를 위한 온보딩 가이드
+> **버전:** v1.4.5 | **라이선스:** MIT | **저장소:** [myk1yt/crowmemory](https://github.com/myk1yt/crowmemory)
+> **최종 갱신:** 2026-08-30 | **문서 목적:** 인간 및 AI를 위한 온보딩 가이드
 
 ## 1. 프로젝트 정체성
 
@@ -49,7 +49,7 @@ Crow Memory/
 | 직렬화 | safetensors | >=0.4.0 |
 | 임베딩 | sentence-transformers | >=2.7.0 |
 | 벡터 검색 | faiss-cpu | >=1.7.4 |
-| 프로토콜 | mcp | >=1.0.0 |
+| 프로토콜 | mcp | ==2.1.1 (MCPServer high-level API) |
 | 웹 서버 | uvicorn | >=0.29.0 |
 
 ## 4. 진입점
@@ -85,34 +85,43 @@ memory/ (영속 저장소: crow.bin + value_bank.json + recall_stats.json + syst
 
 ### 5.1 Windows 자동 시작 (v1.5.0+)
 
-Windows 로그온 시 Crow Memory MCP 서버가 자동으로 시작되도록 Windows Task Scheduler에 등록됩니다.
+Windows 로그온 시 Crow Memory MCP 서버가 자동으로 시작됩니다. 두 가지 등록 경로가 존재하며, 현재 실제 활성 경로는 **Startup 폴더**입니다.
 
 ```
 Windows 로그온
     │
-    ▼
-Task Scheduler: CrowMemoryAuto
-    │  트리거: AtLogon (30초 지연)
-    │  실행: cmd /c "start_crow_sse.bat"
-    │  재시작: 3분 간격, 최대 3회
+    ├─ [활성] Startup 폴더
+    │  %APPDATA%\Microsoft\Windows\Start Menu\Programs\Startup\Crow_Memory_SSE.bat
+    │  → start_crow_sse.bat 호출 (venv Python 우선 로직 포함)
+    │
+    ├─ [비활성] Task Scheduler: CrowMemoryAuto
+    │  ※ 2026-08-30 세션에서 등록 시도 → 액세스 거부 (Access Denied)
+    │  → Startup 폴더 폴백이 실질적 자동 시작 경로
     │
     ▼
 start_crow_sse.bat
-    │  Phase 1: 중복 실행 방지 (netstat)
+    │  Phase 0: venv Python 우선 탐지 (PYTHON_EXE 로직)
+    │  Phase 1: 중복 실행 방지 (netstat port 9020/9021)
     │  Phase 2: 스테일 lock/ready 정리
-    │  Phase 3: Python 서버 시작 (detached)
-    │  Phase 4: Health Check (최대 12회, ~55초)
+    │  Phase 3: Python 서버 시작 (detached, hidden window)
+    │  Phase 4: Health Check (최대 12회, exponential backoff)
     │
     ▼
 crow_mcp_server.py (port 9020 + 9021)
+    │  mcp.sse_app() + mcp.streamable_http_app()
+    │  → asyncio.gather로 동시 실행
     │
     ▼
-VS Code Global MCP → 연결 성공
+MCP 클라이언트 연결
+    │  Zoo/Roo Code → SSE (port 9020)
+    │  Kimi Code → HTTP (port 9021/mcp)
+    │  글로벌 MCP 등록: Zoo Code mcp_settings.json (crow-memory, global:true)
 ```
 
-- 등록 방식: `install.ps1` 또는 `install.py` 실행 시 `schtasks.exe /create`로 자동 등록 (관리자 권한 불필요)
-- 폴백: Task Scheduler 등록 실패 시 Startup 폴더에 10초 지연 래퍼 등록
-- 마이그레이션: 설치 시 기존 Startup 폴더의 `Crow_Memory_SSE.bat` 자동 제거
+- **등록 경로 1 (활성)**: Startup 폴더 — `Crow_Memory_SSE.bat`이 로그온 시 자동 실행
+- **등록 경로 2 (시도됨)**: Task Scheduler (`CrowMemoryAuto`) — `schtasks /create /sc onlogon`으로 등록 시도했으나 액세스 거부
+- **venv Python 우선 로직**: `start_crow_sse.bat` 내 `PYTHON_EXE` 변수로 `.venv/Scripts/python.exe` 탐지 후 없으면 시스템 Python 폴백
+- **글로벌 MCP 등록**: Zoo Code의 `mcp_settings.json`에 `crow-memory` 서버 등록 (global: true)
 
 ### 데이터 흐름
 1. 세션 시작 → crow_recall → [User Bias] 블록 생성
@@ -129,11 +138,12 @@ VS Code Global MCP → 연결 성공
 - 업데이트: Hebbian EMA S = λ*S + (1-λ)*polarity*k*v^T
 - 정규화: 1000회마다 SVD 스펙트럴 클리핑
 
-### crow_mcp_server.py (823줄) — MCP Server
-- 10개 MCP 도구: crow_recall, crow_ingest, crow_evolve_propose, crow_diagnostics, crow_check_drift, crow_ingest_from_build, crow_get_user_bias, crow_manage_prompt, crow_manage_backup, crow_project_info
-- 2개 MCP 프롬프트: crow_memory_bias, crow_evolved_rules
-- 4개 전송 모드: stdio, sse(port 9020), streamable-http(port 9021), dual(기본값)
-- REST API (v1.4.3+): GET /health, POST /ingest, GET /recall
+### crow_mcp_server.py (647줄) — MCP Server (SDK 2.1.1)
+- 10개 MCP 도구 (`@mcp.tool()` 타입힌트 자동 스키마): crow_recall, crow_ingest, crow_evolve_propose, crow_diagnostics, crow_check_drift, crow_ingest_from_build, crow_get_user_bias, crow_manage_prompt, crow_manage_backup, crow_project_info
+- 2개 MCP 프롬프트 (`@mcp.prompt()`): crow_memory_bias, crow_evolved_rules
+- 3개 REST 라우트 (`@mcp.custom_route()`): GET /health, POST /ingest, GET /recall
+- 4개 전송 모드: stdio, SSE(port 9020), Streamable HTTP(port 9021, path `/mcp`), dual(기본값)
+- dual 모드: `mcp.sse_app()` + `mcp.streamable_http_app()` → uvicorn 2개 `asyncio.gather`
 
 ### crow_i18n.py (473줄) — 국제화
 - 36개 언어 지원

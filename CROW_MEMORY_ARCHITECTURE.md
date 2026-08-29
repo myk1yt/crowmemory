@@ -1,8 +1,8 @@
 # Crow (까마귀) Memory Architecture
 ## A Synaptic State Cache for Recursive Agent Development
 
-**Version:** 1.4.2
-**Date:** 2026-06-01
+**Version:** 1.4.5
+**Date:** 2026-08-30
 **Author:** Stefano,Kim & AI Collaborative Design
 **Target Runtime:** Any MCP-compatible IDE + LLM API + Local Python MCP Server
 
@@ -80,14 +80,18 @@ The `crow.bin` file is forever fixed at ~140MB (configurable). It does not grow 
 |                                         |
 |                           +-------------v-------------+
 |                           |  Local Python MCP Server  |
-|                           |  (SSE HTTP, port 9020,    |
-|                           |   Streamable HTTP 9021)   |
+|                           |  (MCP SDK 2.1.1,          |
+|                           |   MCPServer high-level)   |
+|                           |  - SSE: port 9020         |
+|                           |  - Streamable HTTP: 9021  |
+|                           |    (path: /mcp)           |
 |                           |  - Detached process       |
 |                           |    (survives IDE restart) |
 |                           |  - Auto-started by        |
-|                           |    Windows Task Scheduler |
-|                           |    (AtLogon trigger)      |
-|                           |    + start_crow_sse.bat   |
+|                           |    Startup folder fallback |
+|                           |    (Crow_Memory_SSE.bat)  |
+|                           |    + Task Scheduler        |
+|                           |    (CrowMemoryAuto)        |
 |                           |  - Health polling with    |
 |                           |    exponential backoff    |
 |                           |  - Ready file signal      |
@@ -675,6 +679,8 @@ The name is not merely poetic. It is a **behavioral contract**: we are not build
 
 ## 11. Appendix C: Minimal Viable Server (Python)
 
+> **Note (v1.4.5):** The example below uses `MCPServer` (MCP Python SDK 2.1.1 high-level API) which provides `@mcp.tool()`, `@mcp.prompt()`, `@mcp.custom_route()`, and built-in transport apps (`sse_app()`, `streamable_http_app()`). The previous 1.x `Server` class with `@server.list_tools()` / `@server.call_tool()` decorators is no longer supported in SDK 2.x.
+
 ### C.1 stdio Transport (single client)
 
 ```python
@@ -690,8 +696,7 @@ import torch
 import torch.nn as nn
 from sentence_transformers import SentenceTransformer
 from safetensors.numpy import load_file, save_file
-from mcp.server import Server
-from mcp.server.stdio import stdio_server
+from mcp.server.mcpserver import MCPServer
 
 DIM = 4096
 REGISTERS = {
@@ -707,7 +712,7 @@ REGISTERS = {
     "life_context": (2048, DIM,   0.9500),
 }
 
-class CrowMemory:
+class CrowMemory:  # unchanged from production
     def __init__(self, path: str):
         self.path = path
         try:
@@ -772,25 +777,32 @@ class CrowMemory:
         import os
         os.replace(self.path + ".tmp", self.path)
 
-app = Server("crow_memory")
+mcp = MCPServer(
+    name="crow_memory",
+    version="1.4.5",
+    instructions="Crow Memory — External synaptic memory for AI coding agents.",
+)
 crow = CrowMemory("./memory/crow.bin")
 
-@app.call_tool()
-async def handle_tool(name: str, arguments: dict):
-    if name == "crow_recall":
-        return crow.recall(arguments["query"], arguments["register"])
-    elif name == "crow_ingest":
-        crow.ingest(arguments["key"], arguments["value"],
-                    arguments["polarity"], arguments["register"])
-        return {"status": "ingested"}
-    elif name == "crow_evolve_propose":
-        return {"proposal": "RULE: Prefer early return guards in all async functions.",
-                "confidence": 0.91, "requires_human_approval": True}
-    raise ValueError(f"Unknown tool: {name}")
+@mcp.tool()
+async def crow_recall(query: str, register: str | None = None, top_k: int = 2, domain: str = "all") -> str:
+    """Recall user-specific coding style, bug intuition, or architectural preference."""
+    result = crow.recall(query, register or "all")
+    return json.dumps(result)
+
+@mcp.tool()
+async def crow_ingest(key: str, value: str, polarity: float, register: str) -> str:
+    """Ingest a coding experience into long-term synaptic memory."""
+    crow.ingest(key, value, polarity, register)
+    return json.dumps({"status": "ingested"})
+
+@mcp.prompt()
+async def crow_memory_bias() -> str:
+    """Return user bias block for system prompt injection."""
+    return crow.get_user_bias_block("current task")
 
 async def main():
-    async with stdio_server() as streams:
-        await app.run(streams[0], streams[1], app.create_initialization_options())
+    await mcp.run_stdio_async()
 
 if __name__ == "__main__":
     asyncio.run(main())
@@ -798,17 +810,39 @@ if __name__ == "__main__":
 
 ### C.2 Dual Transport (SSE + Streamable HTTP)
 
-For multi-client safety, run the server in **dual mode** so multiple clients (Zoo Code, etc.) share a single `crow.bin`:
+For multi-client safety, run the server in **dual mode** so multiple clients (Zoo Code, Kimi Code, etc.) share a single `crow.bin`:
 
 ```bash
 python crow_mcp_server.py --transport dual --port 9020 --http-port 9021
 ```
 
-This launches two Uvicorn servers — one for SSE (`/sse`) and one for Streamable HTTP — using a single `CrowMemory` instance. All reads and writes are serialized through the same process, eliminating race conditions.
+This launches two Uvicorn servers concurrently via `asyncio.gather`:
 
-> ⚠️ **Do not use stdio mode with multiple editors.** Each editor spawns its own `crow_mcp_server.py` process, and concurrent writes to `crow.bin` will cause silent data loss. Always use SSE or dual mode for multi-client setups.
+| App | Port | Path | Purpose |
+|-----|------|------|---------|
+| `mcp.sse_app()` | 9020 | `/sse` | SSE transport (Zoo/Roo Code) |
+| `mcp.streamable_http_app()` | 9021 | `/mcp` | Streamable HTTP (Kimi Code) |
+
+- `json_response=True` on the HTTP app ensures plain-text JSON responses for simpler clients.
+- The HTTP app's `lifespan` automatically runs `mcp.session_manager.run()`.
+- Both apps include the 3 custom routes (`/health`, `/ingest`, `/recall`) via SDK's `_custom_starlette_routes` list.
+- All reads and writes are serialized through a single `CrowMemory` instance, eliminating race conditions.
+
+> ⚠️ **Do not use stdio mode with multiple editors.** Each editor spawns its own `crow_mcp_server.py` process, and concurrent writes to `crow.bin` will cause silent data loss. Always use dual mode for multi-client setups.
 
 ---
 
-*End of Document.*  
+## 12. Version History
+
+| Version | Date | Change |
+|---------|------|--------|
+| 1.4.0 | 2026-06-21 | Initial architecture document |
+| 1.4.1 | 2026-06-21 | Added life domain registers (v1.1+) |
+| 1.4.2 | 2026-06-21 | Added i18n support (36 languages) |
+| 1.4.3 | 2026-06-21 | Added REST API (custom_route), dual transport |
+| 1.4.5 | 2026-08-30 | **MCP SDK 2.1.1 migration**: `MCPServer` high-level API, `@mcp.tool()` type-hint auto-schema, `@mcp.prompt()`, `@mcp.custom_route()` (3 REST routes). Replaced low-level `Server` + decorators. `sse_app()` / `streamable_http_app()` with `asyncio.gather`. |
+
+---
+
+*End of Document.*
 *Crow remembers not the code, but the hand that wrote it.*

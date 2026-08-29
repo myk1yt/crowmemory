@@ -5,6 +5,22 @@ All notable changes to Crow Memory will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.5] — 2026-08-30
+
+### Changed
+- Migrated MCP server implementation to MCP Python SDK 2.1.1 (MCPServer class, typed tool wrappers)
+- Dual transport preserved: SSE (9020) + Streamable HTTP 9021 (/mcp endpoint)
+- REST API endpoints now served via SDK custom_route on both ports
+
+### Fixed
+- Duplicate main() definition removed (L444 legacy stub)
+- start_crow_sse.bat now prefers project .venv Python interpreter
+
+### Security
+- Removed hardcoded user absolute path from scripts/run_elevated.bat (%~dp0 based)
+- docs/ session folders excluded from repository
+- memory/ directory fully excluded from repository (was file-by-file)
+
 ## [1.4.4] — 2026-06-21
 
 ### Fixed

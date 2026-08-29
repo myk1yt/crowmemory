@@ -15,7 +15,7 @@ Add this to your Kimi Code `~/.kimi/mcp.json`:
   "mcpServers": {
     "crow_memory": {
       "transport": "http",
-      "url": "http://127.0.0.1:9021/"
+      "url": "http://127.0.0.1:9021/mcp"
     }
   }
 }
