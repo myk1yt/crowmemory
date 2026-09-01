@@ -5,7 +5,7 @@ Implements the 8-register synaptic weight matrix with Hebbian EMA updates,
 spectral clipping, FAISS-powered value bank retrieval, build hook integration,
 system prompt evolution, backup rotation, and drift auto-recovery.
 
-Design: Architecture document v1.4.5, Sections 3–7.
+Design: Architecture document v1.4.2, Sections 3–7.
 """
 
 import json

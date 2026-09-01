@@ -396,7 +396,7 @@ VibeZoo Bridge and other tools can communicate directly with Crow Memory over HT
 ### `GET /health`
 Check server health:
 ```json
-{"status": "ok", "version": "1.4.5", "entries": 42}
+{"status": "ok", "version": "1.4.4", "entries": 42}
 ```
 
 ### `POST /ingest`
@@ -475,5 +475,5 @@ Crow Memory is open-source and free to use under MIT. But every organization has
 
 ---
 
-*Crow Memory v1.4.5 — August 2026*
+*Crow Memory v1.4.4 — June 2026*
 *Co-designed by Stefano,Kim & AI*

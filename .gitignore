@@ -1,7 +1,4 @@
 # Crow Memory — personal memory files (DO NOT SHARE)
-memory/
-
-# Legacy individual memory entries (kept for clarity, covered by memory/ above)
 memory/crow.bin
 memory/crow.bin.tmp
 memory/*.bak*
@@ -19,9 +16,6 @@ memory/project_*/
 # Transient runtime files (locks, ready signals)
 memory/crow.bin.lock
 memory/.crow_ready
-
-# Local backup directories (personal, not for distribution)
-.git_corrupted_bak*/
 
 # Test files (outdated, not for end users)
 test_crow.py
@@ -52,11 +46,6 @@ sse_server_stdout.log
 
 # Tests (local only)
 tests/
-
-# Local working docs (personal context, not for distribution)
-docs/260830_0001_session_mcp2-migration/
-docs/feedbacks/
-docs/plans/
 
 # OS
 .DS_Store

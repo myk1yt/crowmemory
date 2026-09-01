@@ -5,7 +5,6 @@
 - **Date:** 2026-06-13
 - **Status:** Revision after Ask-mode conditional approval
 - **Scope:** Windows 10/11, standard user account (non-elevated), Zoo Code / Roo Code / Kimi Code clients
-- **Current Status (2026-08-30):** Task Scheduler 등록은 액세스 거부(Access Denied)로 실패. **Startup 폴더 경로가 실질적 자동 시작 경로.** `start_crow_sse.bat`의 venv Python 우선 탐지 로직(`PYTHON_EXE`) 추가됨. 글로벌 MCP 등록은 Zoo Code `mcp_settings.json`에서 `crow-memory` (global: true)로 설정.
 
 ---
 
@@ -92,10 +91,9 @@ Example content:
 
 | Endpoint | Purpose |
 |----------|---------|
-| `GET http://127.0.0.1:9020/health` | Lightweight liveness probe (SSE app, custom_route) |
-| `GET http://127.0.0.1:9021/health` | HTTP app health endpoint (Kimi Code, custom_route) |
+| `GET http://127.0.0.1:9020/` | Lightweight liveness probe used by `start_crow_sse.bat` |
+| `GET http://127.0.0.1:9021/` | Kimi Code HTTP transport health check |
 | `GET http://127.0.0.1:9020/sse` | Zoo/Roo Code SSE endpoint |
-| `GET http://127.0.0.1:9021/mcp` | Kimi Code Streamable HTTP endpoint |
 
 ---
 
@@ -378,62 +376,6 @@ If the client does **not** retry automatically, the fallback is:
 - [ ] Simulate server crash → Task Scheduler restarts after 3 minutes, up to 3 times.
 - [ ] Leave port already listening → second launcher exits immediately (no duplicate).
 - [ ] First install on clean machine → model warm-up prevents health-check timeout.
-
----
-
-## 6. Current Implementation Notes (2026-08-30)
-
-### 6.1 Startup Folder as Primary Auto-Start Path
-
-Task Scheduler 등록(`CrowMemoryAuto`)은 Windows 표준 사용자 계정에서 `schtasks /create /sc onlogon` 실행 시 **액세스 거부(Access Denied)**로 실패했습니다. 따라서 현재 실질적 자동 시작 경로는 **Startup 폴더**입니다:
-
-```text
-%APPDATA%\Microsoft\Windows\Start Menu\Programs\Startup\Crow_Memory_SSE.bat
-```
-
-이 배치 파일은 `start_crow_sse.bat`를 직접 호출하며, Windows 로그온 시 자동 실행됩니다.
-
-### 6.2 venv Python Priority Logic
-
-`start_crow_sse.bat`는 Python 인터프리터 탐지 시 다음 우선순위를 적용합니다:
-
-```batch
-REM PYTHON_EXE 로직 (start_crow_sse.bat 내)
-if exist "%~dp0.venv\Scripts\python.exe" (
-    set "PYTHON_EXE=%~dp0.venv\Scripts\python.exe"
-) else (
-    set "PYTHON_EXE=python"
-)
-```
-
-1. 프로젝트 디렉토리 내 `.venv/Scripts/python.exe` 우선 탐지
-2. 없으면 시스템 PATH의 `python` 폴백
-
-### 6.3 Global MCP Registration
-
-Zoo Code / Roo Code에서 Crow Memory 서버에 연결하기 위해 글로벌 MCP 설정에 등록됩니다:
-
-```json
-// %USERPROFILE%/.zoo/mcp_settings.json (또는 .roo/mcp.json)
-{
-  "mcpServers": {
-    "crow-memory": {
-      "url": "http://127.0.0.1:9020/sse",
-      "global": true
-    }
-  }
-}
-```
-
-`global: true` 설정으로 모든 프로젝트에서 공유 사용 가능합니다.
-
-### 6.4 MCP SDK 2.1.1 Impact on Transport
-
-MCP Python SDK 2.1.1 마이그레이션 이후:
-- `streamable_http_app()`의 기본 경로는 `/mcp` (기존 루트 `/` 아님)
-- `json_response=True` 옵션으로 단순 JSON 응답 호환
-- `session_manager.run()`은 `streamable_http_app()`의 lifespan에 자동 포함
-- Kimi Code `~/.kimi/mcp.json`의 URL은 `http://127.0.0.1:9021/mcp` 권장
 
 ---
 
