@@ -23,81 +23,34 @@
 
   "tools": {
     "crow_recall": {
-      "description": "Crow 시냅틱 메모리에서 사용자별 코딩 스타일, 버그 직관, 아키텍처 선호도 또는 개인 컨텍스트를 회상합니다. 사용자의 귀납적 편향에 맞춰 응답하기 위해 매 응답 전에 호출하세요. 기본값(register 미지정, domain=all)은 8개 레지스터를 모두 조회합니다.",
+      "description": "Crow 시냅틱 메모리에서 사용자별 코딩 스타일, 버그 직관, 아키텍처 선호도 또는 개인 컨텍스트를 회상합니다. 사용자의 귀납적 편향에 맞춰 응답하기 위해 매 응답 전에 호출하세요. 기본값(register=all 또는 미지정, domain=all)은 8개 레지스터를 모두 조회하고 유효 유사도 기준으로 전역 병합합니다.",
       "parameters": {
         "query": "현재 작업에 대한 자연어 설명입니다.",
-        "register": "레지스터를 선택합니다. 'all'은 모든 레지스터를 조회합니다(domain=all과 동일). Code: style/bug/arch/context. Life: life_pref/life_avoid/life_phil/life_context.",
-        "top_k": "힌트 개수 (1-3개)입니다.",
-        "domain": "도메인 필터 단축키입니다. 'code' = style/bug/arch/context, 'life' = life_pref/life_avoid/life_phil/life_context, 'all' = 전체 8개 레지스터(기본값)."
+        "register": "레지스터를 선택합니다. 'all'(또는 미지정)은 선택한 도메인의 모든 레지스터를 조회합니다. Code: style/bug/arch/context. Life: life_pref/life_avoid/life_phil/life_context.",
+        "domain": "register가 'all'이거나 미지정일 때 사용되는 도메인 필터입니다. 'code' = style/bug/arch/context, 'life' = life_pref/life_avoid/life_phil/life_context, 'all' = 전체 8개 레지스터(기본값).",
+        "top_k": "힌트 개수 (1-5개)입니다.",
+        "format": "출력 형식입니다. 'hint'는 JSON 힌트를 반환하고(기본값), 'bias_block'은 시스템 프롬프트 주입용 [User Bias] 텍스트 블록을 반환합니다.",
+        "project": "같은 프로젝트 힌트를 부스트하고 다른 프로젝트 힌트를 필터링/감점하는 데 사용되는 프로젝트 태그입니다.",
+        "strict_project": "true이면 다른 프로젝트의 힌트를 결과에서 완전히 제외합니다."
       }
     },
     "crow_ingest": {
-      "description": "코딩 경험을 Crow의 장기 시냅틱 메모리에 저장합니다. 빌드/테스트 결과 또는 사용자의 명시적 피드백 후에 호출하세요.",
+      "description": "코딩 경험을 Crow의 장기 시냅틱 메모리에 저장합니다. 빌드/테스트 결과 또는 사용자의 명시적 피드백 후에 호출하세요. 명시적 polarity 또는 빌드 exit_code 중 하나를 제공하면 자동으로 극성이 매핑됩니다. 내용은 먼저 정화(sanitize)되며, 순수 노이즈 입력은 메모리를 건드리지 않고 거부됩니다.",
       "parameters": {
         "key": "상황에 대한 추상적 설명입니다.",
         "value": "적용된 코드 패턴 또는 결정입니다.",
-        "polarity": "강화 강도 [-2.0, 2.0]입니다.",
-        "register": "저장할 레지스터입니다 (style/bug/arch/context/life_pref/life_avoid/life_phil/life_context)."
+        "register": "저장할 레지스터입니다 (style/bug/arch/context/life_pref/life_avoid/life_phil/life_context).",
+        "polarity": "강화 강도 [-2.0, 2.0]입니다. exit_code가 제공되면 생략 가능하며, 둘 다 제공되면 명시적 polarity가 우선합니다.",
+        "exit_code": "빌드 종료 코드 (0 = 성공)입니다. 명시적 polarity가 없으면 자동으로 극성에 매핑됩니다(성공 +1.5/+0.5, 실패 -0.5/-1.0).",
+        "user_edited": "사용자가 AI의 출력을 편집했는지 여부입니다. exit_code에서 파생된 극성을 조정합니다.",
+        "project": "나중에 프로젝트 인지 회상을 위해 메모리 항목에 저장되는 프로젝트 태그입니다."
       }
     },
-    "crow_evolve_propose": {
-      "description": "최근 메모리 패턴을 분석하고 영구적인 시스템 프롬프트 변이를 제안합니다. 제안만 반환하며, 적용하려면 사람의 승인이 필요합니다.",
+    "crow_admin": {
+      "description": "Crow 관리 작업을 하나의 툴로 통합합니다. 액션: diagnostics(메모리 통계), drift(드리프트 확인), prompt(system_prompt.md 읽기/추가/통계), backup(생성/순환/목록/복구), evolve(프롬프트 변이 제안), project_info(프로젝트 인스턴스 조회/생성).",
       "parameters": {
-        "min_confidence": "최소 신뢰도 임계값 (기본값: 0.85)입니다.",
-        "min_occurrences": "최소 발생 횟수 (기본값: 3)입니다."
-      }
-    },
-    "crow_diagnostics": {
-      "description": "Crow 메모리 상태에 대한 진단 정보(레지스터 노름, 희소성, 업데이트 횟수, 값 뱅크 크기, 프롬프트 통계)를 반환합니다.",
-      "parameters": {}
-    },
-    "crow_check_drift": {
-      "description": "최근 회상 결과에 메모리 드리프트 징후가 있는지 확인합니다.",
-      "parameters": {
-        "threshold": "저신뢰도 감지를 위한 신뢰도 임계값 (기본값: 0.5)입니다.",
-        "min_low_confidence_count": "드리프트를 트리거할 최소 저신뢰도 레코드 수 (기본값: 5)입니다."
-      }
-    },
-    "crow_ingest_from_build": {
-      "description": "빌드 종료 코드와 사용자 편집 상태에서 자동으로 극성(polarity)을 결정한 후 경험을 저장합니다. npm run build 완료 후에 사용하세요.",
-      "parameters": {
-        "key": "추상적 설명입니다.",
-        "value": "적용된 코드 패턴입니다.",
-        "exit_code": "빌드 종료 코드 (0 = 성공)입니다.",
-        "user_edited": "사용자가 AI의 출력을 편집했는지 여부입니다.",
-        "register": "저장할 레지스터입니다 (style/bug/arch/context, 기본값: arch).",
-        "explicit_polarity": "자동 극성 감지를 재정의합니다."
-      }
-    },
-    "crow_get_user_bias": {
-      "description": "시스템 프롬프트에 주입할 [User Bias] 블록을 생성합니다. 모든 레지스터를 조회하고 프롬프트 앞에 추가할 형식으로 힌트를 정리합니다.",
-      "parameters": {
-        "query": "현재 작업 설명입니다.",
-        "registers": "조회할 레지스터 목록 (기본값: all)입니다."
-      }
-    },
-    "crow_manage_prompt": {
-      "description": "system_prompt.md 파일을 읽거나, 추가하거나, 통계를 조회합니다. 'read'는 현재 프롬프트를 보기, 'append'는 진화된 규칙을 채택하기, 'stats'는 메트릭 확인에 사용합니다.",
-      "parameters": {
-        "action": "액션: read, append 또는 stats입니다.",
-        "rule": "규칙 텍스트 (append 액션에 필수)입니다.",
-        "auto_backup": "추가 전 자동 백업 생성 여부 (기본값: true)입니다."
-      }
-    },
-    "crow_manage_backup": {
-      "description": "Crow 메모리 백업을 관리합니다. 생성, 순환, 목록 조회 또는 드리프트로부터 복구합니다.",
-      "parameters": {
-        "action": "액션: create, rotate, list 또는 recover입니다.",
-        "tag": "백업 태그: daily, weekly 또는 manual (기본값: daily)입니다.",
-        "max_daily": "보관할 최대 일일 백업 수 (기본값: 7)입니다.",
-        "max_weekly": "보관할 최대 주간 백업 수 (기본값: 4)입니다."
-      }
-    },
-    "crow_project_info": {
-      "description": "프로젝트별로 격리된 Crow 메모리 인스턴스를 조회하거나 생성합니다.",
-      "parameters": {
-        "action": "액션: list 또는 create입니다.",
-        "project_name": "프로젝트 이름 (create 액션에 필수)입니다."
+        "action": "실행할 관리 작업입니다: diagnostics, drift, prompt, backup, evolve, project_info.",
+        "args": "선택된 작업에 전달되는 액션별 인자 객체입니다."
       }
     }
   },

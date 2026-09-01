@@ -47,7 +47,8 @@ _BASE_TOOL_DEFINITIONS = [
             "Recall user-specific coding style, bug intuition, architectural "
             "preference, or personal context from the Crow synaptic memory. "
             "Call this BEFORE every response to align with user's inductive bias. "
-            "By default (no register, domain=all), queries all 8 registers."
+            "By default (register=all or omitted, domain=all), queries all 8 "
+            "registers and merges results globally by effective similarity."
         ),
         "inputSchema": {
             "type": "object",
@@ -56,14 +57,29 @@ _BASE_TOOL_DEFINITIONS = [
                 "register": {
                     "type": "string",
                     "enum": ["style", "bug", "arch", "context", "life_pref", "life_avoid", "life_phil", "life_context", "all"],
-                    "description": "Which register. Use 'all' to query every register (same as domain=all). Code: style/bug/arch/context. Life: life_pref/life_avoid/life_phil/life_context.",
+                    "description": "Which register. Use 'all' (or omit) to query every register in the selected domain. Code: style/bug/arch/context. Life: life_pref/life_avoid/life_phil/life_context.",
                 },
-                "top_k": {"type": "integer", "default": 2, "description": "Number of hints (1-3)."},
                 "domain": {
                     "type": "string",
                     "enum": ["code", "life", "all"],
                     "default": "all",
-                    "description": "Domain filter shortcut. 'code' = style/bug/arch/context, 'life' = life_pref/life_avoid/life_phil/life_context, 'all' = all 8 registers (default).",
+                    "description": "Domain filter used when register is 'all' or omitted. 'code' = style/bug/arch/context, 'life' = life_pref/life_avoid/life_phil/life_context, 'all' = all 8 registers (default).",
+                },
+                "top_k": {"type": "integer", "default": 2, "minimum": 1, "maximum": 5, "description": "Number of hints (1-5)."},
+                "format": {
+                    "type": "string",
+                    "enum": ["hint", "bias_block"],
+                    "default": "hint",
+                    "description": "Output format. 'hint' returns JSON hints (default); 'bias_block' returns the [User Bias] text block for system prompt injection.",
+                },
+                "project": {
+                    "type": "string",
+                    "description": "Project tag used to boost same-project hints and filter/penalize cross-project ones.",
+                },
+                "strict_project": {
+                    "type": "boolean",
+                    "default": False,
+                    "description": "When true, hard-filters cross-project hints out of the results.",
                 },
             },
             "required": ["query"],
@@ -73,126 +89,62 @@ _BASE_TOOL_DEFINITIONS = [
         "name": "crow_ingest",
         "description": (
             "Ingest a coding experience into Crow's long-term synaptic memory. "
-            "Call AFTER build/test results or user explicit feedback."
+            "Call AFTER build/test results or user explicit feedback. Provide "
+            "either an explicit polarity or a build exit_code for automatic "
+            "polarity mapping. Content is sanitized first; pure-noise input "
+            "is rejected without touching the memory."
         ),
         "inputSchema": {
             "type": "object",
             "properties": {
                 "key": {"type": "string", "description": "Abstract description of the situation."},
                 "value": {"type": "string", "description": "Code pattern or decision applied."},
-                "polarity": {"type": "number", "description": "Reinforcement strength [-2.0, 2.0]."},
                 "register": {
                     "type": "string",
                     "enum": ["style", "bug", "arch", "context", "life_pref", "life_avoid", "life_phil", "life_context"],
                 },
+                "polarity": {
+                    "type": "number",
+                    "description": "Reinforcement strength [-2.0, 2.0]. Optional if exit_code is given; explicit polarity wins when both are provided.",
+                },
+                "exit_code": {
+                    "type": "integer",
+                    "description": "Build exit code (0 = success). Maps automatically to polarity (+1.5/+0.5 on success, -0.5/-1.0 on failure) unless an explicit polarity is given.",
+                },
+                "user_edited": {
+                    "type": "boolean",
+                    "default": False,
+                    "description": "Whether the user edited the AI's output. Adjusts the exit_code-derived polarity.",
+                },
+                "project": {
+                    "type": "string",
+                    "description": "Project tag stored with the memory entry for later project-aware recall.",
+                },
             },
-            "required": ["key", "value", "polarity", "register"],
+            "required": ["key", "value", "register"],
         },
     },
     {
-        "name": "crow_evolve_propose",
+        "name": "crow_admin",
         "description": (
-            "Analyze recent memory patterns and propose a permanent system prompt mutation. "
-            "Returns a suggestion only; human approval is required for adoption."
+            "Crow administrative operations in one tool. Actions: diagnostics "
+            "(memory stats), drift (drift check), prompt (read/append/stats "
+            "system_prompt.md), backup (create/rotate/list/recover), evolve "
+            "(propose prompt mutations), project_info (list/create project "
+            "instances)."
         ),
         "inputSchema": {
             "type": "object",
             "properties": {
-                "min_confidence": {"type": "number", "default": 0.85},
-                "min_occurrences": {"type": "integer", "default": 3},
-            },
-        },
-    },
-    {
-        "name": "crow_diagnostics",
-        "description": "Return diagnostic information about the Crow memory state (register norms, sparsity, update count, value bank size, prompt stats).",
-        "inputSchema": {"type": "object", "properties": {}},
-    },
-    {
-        "name": "crow_check_drift",
-        "description": "Check if recent recalls show signs of memory drift.",
-        "inputSchema": {
-            "type": "object",
-            "properties": {
-                "threshold": {"type": "number", "default": 0.5},
-                "min_low_confidence_count": {"type": "integer", "default": 5},
-            },
-        },
-    },
-    {
-        "name": "crow_ingest_from_build",
-        "description": (
-            "Auto-determine polarity from build exit code and user edit status, "
-            "then ingest the experience. Use this after npm run build completes."
-        ),
-        "inputSchema": {
-            "type": "object",
-            "properties": {
-                "key": {"type": "string", "description": "Abstract description."},
-                "value": {"type": "string", "description": "Code pattern applied."},
-                "exit_code": {"type": "integer", "description": "Build exit code (0 = success)."},
-                "user_edited": {"type": "boolean", "default": False},
-                "register": {"type": "string", "enum": ["style", "bug", "arch", "context"], "default": "arch"},
-                "explicit_polarity": {"type": "number", "description": "Override auto-polarity."},
-            },
-            "required": ["key", "value", "exit_code"],
-        },
-    },
-    {
-        "name": "crow_get_user_bias",
-        "description": (
-            "Generate the [User Bias] block for injection into the system prompt. "
-            "Queries all registers and formats hints for prompt prepending."
-        ),
-        "inputSchema": {
-            "type": "object",
-            "properties": {
-                "query": {"type": "string", "description": "Current task description."},
-                "registers": {"type": "array", "items": {"type": "string"}, "description": "Registers to query (default: all)."},
-            },
-            "required": ["query"],
-        },
-    },
-    {
-        "name": "crow_manage_prompt",
-        "description": (
-            "Read, append to, or get statistics about the system_prompt.md file. "
-            "Use 'read' to view current prompt, 'append' to adopt an evolved rule, 'stats' for metrics."
-        ),
-        "inputSchema": {
-            "type": "object",
-            "properties": {
-                "action": {"type": "string", "enum": ["read", "append", "stats"]},
-                "rule": {"type": "string", "description": "Rule text (required for append action)."},
-                "auto_backup": {"type": "boolean", "default": True},
-            },
-            "required": ["action"],
-        },
-    },
-    {
-        "name": "crow_manage_backup",
-        "description": (
-            "Manage Crow memory backups. Create, rotate, list, or recover from drift."
-        ),
-        "inputSchema": {
-            "type": "object",
-            "properties": {
-                "action": {"type": "string", "enum": ["create", "rotate", "list", "recover"]},
-                "tag": {"type": "string", "default": "daily", "enum": ["daily", "weekly", "manual"]},
-                "max_daily": {"type": "integer", "default": 7},
-                "max_weekly": {"type": "integer", "default": 4},
-            },
-            "required": ["action"],
-        },
-    },
-    {
-        "name": "crow_project_info",
-        "description": "List or create project-isolated Crow memory instances.",
-        "inputSchema": {
-            "type": "object",
-            "properties": {
-                "action": {"type": "string", "enum": ["list", "create"]},
-                "project_name": {"type": "string", "description": "Project name (required for create)."},
+                "action": {
+                    "type": "string",
+                    "enum": ["diagnostics", "drift", "prompt", "backup", "evolve", "project_info"],
+                    "description": "Which admin operation: diagnostics, drift, prompt, backup, evolve, or project_info.",
+                },
+                "args": {
+                    "type": "object",
+                    "description": "Action-specific arguments, e.g. {\"threshold\": 0.5} for drift, {\"action\": \"append\", \"rule\": \"...\"} for prompt, {\"action\": \"create\", \"tag\": \"daily\"} for backup, {\"min_confidence\": 0.85} for evolve, {\"action\": \"create\", \"project_name\": \"myapp\"} for project_info.",
+                },
             },
             "required": ["action"],
         },
