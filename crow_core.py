@@ -9,6 +9,7 @@ Design: Architecture document v1.4.2, Sections 3–7.
 """
 
 import json
+import math
 import os
 import sys
 import time
@@ -24,6 +25,9 @@ from collections import OrderedDict
 
 import numpy as np
 from safetensors.numpy import load_file, save_file
+
+# AD-1 / Batch A integration: sanitizer (ingest gate + display scrub)
+from crow_sanitize import scrub_text, scrub_display
 
 # ---------------------------------------------------------------------------
 # Logging
@@ -96,8 +100,21 @@ def _release_file_lock(lock_path: str):
 DIM = 4096
 EMBED_DIM = 768
 MAX_SV = 2.0
-NEG_DAMPEN = 0.6
 VALUE_BANK_MAX = 500
+
+# REQ-002: recall precision cutoffs (read once at import, env-overridable)
+SIM_CUTOFF = float(os.environ.get("CROW_SIM_CUTOFF", "0.35"))
+CROSS_PROJECT_CUTOFF = float(os.environ.get(
+    "CROW_SIM_CUTOFF_CROSS_PROJECT", str(SIM_CUTOFF + 0.07)))
+PROJECT_BOOST = float(os.environ.get("CROW_PROJECT_BOOST", "1.05"))
+
+# REQ-011: per-register negative polarity damping.
+# bug/life_avoid exist to remember failures — damping them weakens exactly
+# the signal they are for (AD-7).
+NEG_DAMPEN_DEFAULT = 0.6
+NEG_DAMPEN_BY_REGISTER = {"bug": 1.0, "life_avoid": 1.0}
+# Backward-compat alias: external code may reference the old scalar name.
+NEG_DAMPEN = NEG_DAMPEN_DEFAULT
 
 # 8 registers: 4 coding (original) + 4 personal life
 REGISTERS: dict[str, tuple[int, int, float]] = {
@@ -233,7 +250,9 @@ class CrowMemory:
             self._encode_cache: OrderedDict[str, np.ndarray] = OrderedDict()
         # Truncate long inputs — nomic-embed-text-v1.5 works on sentence/paragraph level
         truncated = text[:2000]
-        cache_key = truncated[:200]
+        # REQ-010: hash the FULL truncated text — the old [:200] slice key
+        # collided for any two texts sharing a 200-char prefix.
+        cache_key = hashlib.sha256(truncated.encode("utf-8")).hexdigest()
         if cache_key in self._encode_cache:
             self._encode_cache.move_to_end(cache_key)
             return self._encode_cache[cache_key]
@@ -259,7 +278,14 @@ class CrowMemory:
     # Recall (Protocol Alpha)
     # ------------------------------------------------------------------
 
-    def recall(self, query: str, register: str, top_k: int = 2) -> dict:
+    def recall(self, query: str, register: str, top_k: int = 2,
+               project: Optional[str] = None,
+               strict_project: bool = False) -> dict:
+        """Single-register recall. Returns hint strings (backward compat).
+
+        AD-2/REQ-001: no fabricated fallback — empty match ⇒ hints == [].
+        REQ-008: project-aware acceptance via `_accept` / strict filter.
+        """
         if register not in REGISTERS:
             return {"hints": [], "confidence": 0.0, "register": register,
                     "error": f"Unknown register: {register}"}
@@ -275,51 +301,186 @@ class CrowMemory:
         r_norm = float(np.linalg.norm(r))
         confidence = round(min(r_norm / (S_norm + 1e-8), 1.0), 4)
 
-        hints = self._nearest_hints(r, register, top_k)
-        self._track_recall(register, query, confidence, hints)
+        hint_dicts = self._nearest_hints(r, register, top_k,
+                                         project=project,
+                                         strict_project=strict_project)
+        # Public format: display-scrubbed strings (backward-compat contract)
+        hints = [f"[{register}] {scrub_display(str(h['text']))[:200]}"
+                 f" (sim={h['sim']:.2f})"
+                 for h in hint_dicts]
+        if hints:
+            self._track_recall(register, query, confidence, hints)
 
         return {"hints": hints, "confidence": confidence, "register": register}
 
-    def _nearest_hints(self, r: np.ndarray, register: str, top_k: int) -> list[str]:
+    def recall_multi(self, query: str, registers: list[str], top_k: int = 2,
+                     project: Optional[str] = None,
+                     strict_project: bool = False) -> dict:
+        """AD-3 (REQ-004): query each register, merge ALL accepted candidates
+        globally by effective similarity desc, slice top_k.
+
+        - Registers with zero accepted hints contribute nothing and are NOT
+          tracked in recall_stats (no pollution).
+        - Merged confidence = weighted mean over registers that produced >=1
+          accepted hint (NOT divided by the number of registers queried).
+        - Returns {"hints": [dict...], "confidence": float,
+                   "registers_hit": [str...]}.
+        """
+        merged: list[dict] = []   # each: {"register","text","sim","eff_sim"}
+        hit_confidences: dict[str, float] = {}
+
+        for register in registers:
+            if register not in REGISTERS:
+                continue
+            q = self.encode(query)
+            S = self.data[f"{register}_S"]
+            S_f32 = S.astype(np.float32)
+            q_f32 = q.astype(np.float32)
+            key_dim = REGISTERS[register][0]
+            r = S_f32.T @ q_f32[:key_dim]
+
+            S_norm = float(np.linalg.norm(S_f32))
+            r_norm = float(np.linalg.norm(r))
+            confidence = round(min(r_norm / (S_norm + 1e-8), 1.0), 4)
+
+            hint_dicts = self._nearest_hints(r, register, top_k,
+                                             project=project,
+                                             strict_project=strict_project)
+            if not hint_dicts:
+                continue  # zero accepted hints — skip entirely (REQ-001)
+            hit_confidences[register] = confidence
+            for h in hint_dicts:
+                merged.append({
+                    "register": register,
+                    "text": str(h["text"]),
+                    "sim": float(h["sim"]),
+                    "eff_sim": float(h["eff_sim"]),
+                })
+
+        merged.sort(key=lambda h: h["eff_sim"], reverse=True)
+        top = merged[:max(1, top_k)]
+
+        # Stats hygiene (AD-3c): only track registers that produced >=1 hint
+        for register, confidence in hit_confidences.items():
+            reg_hints = [h for h in top if h["register"] == register]
+            if reg_hints:
+                formatted = [
+                    f"[{register}] {scrub_display(h['text'])[:200]}"
+                    f" (sim={h['sim']:.2f})"
+                    for h in reg_hints
+                ]
+                self._track_recall(register, query, confidence, formatted)
+
+        # Merged confidence: importance-weighted mean over hit registers
+        if hit_confidences:
+            weights = []
+            confs = []
+            for register, conf in hit_confidences.items():
+                w = sum(1 for h in top if h["register"] == register)
+                weights.append(w)
+                confs.append(conf)
+            merged_confidence = round(
+                sum(c * w for c, w in zip(confs, weights)) / sum(weights), 4)
+        else:
+            merged_confidence = 0.0
+
+        return {
+            "hints": top,
+            "confidence": merged_confidence,
+            "registers_hit": [reg for reg in registers if reg in hit_confidences],
+        }
+
+    # ------------------------------------------------------------------
+    # Acceptance logic (AD-2 L127-136 + AD-4 REQ-008)
+    # ------------------------------------------------------------------
+
+    def _accept(self, sim: float, importance: float,
+                entry_project: Optional[str],
+                query_project: Optional[str],
+                strict_project: bool = False) -> tuple[bool, float]:
+        """Single acceptance decision for a value_bank candidate.
+
+        Returns (accepted, effective_sim).
+        - REQ-003: importance boost capped at x1.15 total.
+        - REQ-008: same-project boost x PROJECT_BOOST (within cap);
+          cross-project cutoff = CROSS_PROJECT_CUTOFF;
+          untagged entries (project=None) are always global-eligible;
+          strict_project hard-filters cross-project entries.
+        - Backdoor removed: raw sim must always >= SIM_CUTOFF.
+        """
+        if strict_project and query_project \
+                and entry_project not in (None, query_project):
+            return False, 0.0
+
+        boost = min(1.0 + 0.12 * math.log(max(importance, 0.1) + 1.0), 1.15)
+        if query_project and entry_project == query_project:
+            boost = min(boost * PROJECT_BOOST, 1.15)
+
+        cutoff = SIM_CUTOFF
+        if query_project and entry_project not in (None, query_project):
+            cutoff = CROSS_PROJECT_CUTOFF
+
+        eff = sim * boost
+        return (sim >= SIM_CUTOFF and eff > cutoff), eff
+
+    def _nearest_hints(self, r: np.ndarray, register: str, top_k: int,
+                       project: Optional[str] = None,
+                       strict_project: bool = False) -> list[dict]:
+        """Return accepted hint dicts {"text", "sim", "eff_sim"} (internal).
+
+        AD-2/REQ-001: no candidates → []; no accepted hints → []; NO
+        fabricated fallback text. Merges FAISS results with the value_bank
+        scan and applies `_accept` (cutoff + boost + project logic).
+        """
         # Try FAISS first, fall back to numpy
         ids, sims = self._faiss_search(r, register, top_k)
 
         candidates = [e for e in self._value_bank if e.get("register") == register]
         if not candidates:
-            return [f"Crow recalls a faint {register} bias. Few memories stored yet."]
+            return []
 
-        import math
-        hints = []
+        hints: list[dict] = []
         for idx, sim in zip(ids, sims):
-            if idx < len(candidates):
-                entry = candidates[idx]
-                importance = entry.get("importance", 1.0)
-                # Importance-weighted similarity: frequently-ingested / frequently-recalled
-                # patterns get a lower visibility threshold (higher effective similarity).
-                importance_boost = 1.0 + 0.12 * math.log(max(importance, 0.1) + 1.0)
-                effective_sim = sim * importance_boost
-                # Base threshold 0.28, high-importance entries get additional leeway
-                if effective_sim > 0.28 or (importance > 5.0 and sim > 0.15):
-                    hints.append(
-                        f"[{register}] {entry['value'][:200]}"
-                        f" (sim={sim:.2f})"
-                    )
+            if idx >= len(candidates):
+                continue
+            entry = candidates[idx]
+            importance = entry.get("importance", 1.0)
+            entry_project = entry.get("project")
+            accepted, eff = self._accept(float(sim), importance,
+                                         entry_project, project,
+                                         strict_project)
+            if accepted:
+                hints.append({
+                    "text": entry["value"][:200],
+                    "sim": float(sim),
+                    "eff_sim": float(eff),
+                })
 
-        if not hints:
-            hints = [f"Crow recalls a faint {register} bias. Few memories stored yet."]
-        return hints
+        hints.sort(key=lambda h: h["eff_sim"], reverse=True)
+        return hints[:max(1, top_k)]
 
     # ------------------------------------------------------------------
     # Ingest (Protocol Beta)
     # ------------------------------------------------------------------
 
-    def ingest(self, key: str, value: str, polarity: float, register: str) -> dict:
+    def ingest(self, key: str, value: str, polarity: float, register: str,
+               project: Optional[str] = None) -> dict:
         if register not in REGISTERS:
             return {"status": "error", "message": f"Unknown register: {register}"}
 
+        # AD-1: ingest gate — sanitize BEFORE encode. Pure-noise content
+        # (e.g. ">.< ㅋㅋㅋ") scrubs to "" and is rejected without touching
+        # the S matrix or value_bank.
+        key = scrub_text(key)
+        value = scrub_text(value)
+        if not value:
+            return {"status": "rejected", "reason": "empty_after_sanitize"}
+
         polarity = float(np.clip(polarity, -2.0, 2.0))
+        # REQ-011 / AD-7: per-register negative damping
         if polarity < 0:
-            polarity *= NEG_DAMPEN
+            dampen = NEG_DAMPEN_BY_REGISTER.get(register, NEG_DAMPEN_DEFAULT)
+            polarity *= dampen
 
         key_dim, value_dim, lam = REGISTERS[register]
         k = self.encode(key)
@@ -334,7 +495,8 @@ class CrowMemory:
 
         self.data["update_count"] = np.array(int(self.data["update_count"]) + 1, dtype=np.int64)
         self._maybe_clip(register)
-        self._append_value_bank(key, value, v, register, polarity)
+        self._append_value_bank(key, value, v, register, polarity,
+                                project=project)
         self._persist()
 
         return {
@@ -408,7 +570,8 @@ class CrowMemory:
     # ------------------------------------------------------------------
 
     def _append_value_bank(self, key: str, value: str, vector: np.ndarray,
-                           register: str, polarity: float = 1.0):
+                           register: str, polarity: float = 1.0,
+                           project: Optional[str] = None):
         key_trunc = key[:500]
 
         # Duplicate key handling: accumulate importance on re-ingest
@@ -437,6 +600,9 @@ class CrowMemory:
             "timestamp": time.time(),
             "importance": abs(polarity),
             "ingest_count": 1,
+            # REQ-008: optional project tag; None/absent = global. Backward
+            # compatible — old entries without the field read as None.
+            "project": project,
         }
         self._value_bank.append(entry)
 
