@@ -130,16 +130,19 @@ The [`templates/`](templates/) directory contains reusable configuration templat
 
 ```
 User query → LLM (via MCP over SSE)
-                ↓ crow_recall("query", "style")
-           Crow MCP Server (SSE, port 9020)
-                ↓ encode() → Sᵀ @ q → nearest neighbor
-           crow.bin (8-register weight matrix)
+                ↓ crow_recall("query", domain="all", project="my-app")
+           Crow MCP Server (SSE 9020 / HTTP 9021)
+                ↓ encode() (sha256-cached) → Sᵀ @ q → confidence
+                ↓ value_bank nearest-neighbor (FAISS) + effective-sim ranking
+                ↓ scrub gate + similarity cutoff (0.35; cross-project 0.42)
+                ↓ same-project boost ×1.05 (capped ×1.15)
+           crow.bin (8-register weight matrix + tagged value_bank)
                 ↓
            [User Bias] hints returned → injected into context
                 ↓
            LLM generates response aligned with your preferences
 
-Multi-client safe: One SSE server → many AI clients share one crow.bin
+Multi-client safe: One dual-mode server → many AI clients share one crow.bin
 ```
 
 ### The 8 Registers (Hybrid: Code + Life)
@@ -363,8 +366,8 @@ The `AGENTS.md` file provides session-start recall, session-end ingest, and full
 - [`start_crow_sse.bat`](start_crow_sse.bat) detects this and skips duplicate starts automatically
 - To force restart: kill the process on port 9020, delete `memory\crow.bin.lock`, then re-open the workspace
 
-### Recall returns only "Few memories stored yet"
-- Normal! Crow needs 20-30+ ingestions before meaningful hints emerge. Keep coding.
+### Recall returns empty hints (no fabricated text)
+- Normal! Crow only returns memories above the similarity cutoff (0.35). Below it, you get an empty hints list with confidence 0 — no filler text (v1.5.0 removed the old "faint bias" placeholders). Crow needs 20-30+ ingestions before meaningful hints emerge. Keep coding.
 - Enable AUTO-INGEST by switching to **"Orchestrator + Crow"** mode — the AI will learn proactively.
 
 ### UnicodeEncodeError: 'cp949' codec can't encode character (Korean Windows)
@@ -422,8 +425,8 @@ Store new memory:
 {"content": "...", "register": "context", "source": "rest_api", "tags": [], "project": null}
 ```
 
-### `GET /recall?query=...&register=...&limit=5`
-Search memories:
+### `GET /recall?query=...&register=...&limit=5&project=...&strict_project=false`
+Search memories (params: `query`, `register` (single or `all` → multi-register merge), `limit` (1-20, default 5), `project`, `strict_project`):
 ```json
 {"results": [{"content": "...", "score": 0.95, ...}], "count": 1}
 ```
