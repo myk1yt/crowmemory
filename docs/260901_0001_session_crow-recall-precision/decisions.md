@@ -12,3 +12,8 @@
 ## [2026-09-01 23:27] — 3개 개선사항 진행 승인
 - "좋아 이 3개에 대해 엄격한 분석을 통해 수정해보도록 하자" → [ACTION: APPROVED — full pipeline P3→P7]
 - Scope: recall noise removal, workspace-aware recall (revised to global+tagging), tool consolidation 10→3.
+
+## [2026-09-02 06:28] — value_bank 병합 수용 (Option A)
+- "(a) 병합 수용 — 두 value_bank를 하나로 합치고 global로 사용" → [ACTION: APPROVED — merge both value_bank sets into one global set]
+- Rationale: consistent with "crow는 언제나 global". CROW_STATE_TAG keeps managing the .bin only; value_bank filename stays unsuffixed (option (b) tag-suffix development REJECTED for now).
+- Note: "레거시기억 정화는 뭐야? 기존 레거시 기억은 그대로 사용하되, 잡음이 사라지도록 하는거야?" — user confirmed understanding: migration preserves memories, removes noise only.
