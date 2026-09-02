@@ -444,8 +444,68 @@ class StateTagPathTests(MigrateTestBase):
         # dry-run: file unchanged, no backups, sibling set not created
         self.assertEqual(
             [f for f in os.listdir(self.mem)
-             if f.startswith("value_bank")],
+              if f.startswith("value_bank")],
             ["value_bank-myk1yt.json"])
+
+
+class EncoderTempDirTests(MigrateTestBase):
+    """F2 regression: build_real_encode_fn must clean up its temp state
+    copy instead of leaking a multi-MB crow.bin under %TEMP% forever."""
+
+    class _RawEmbedEncoder:
+        """Stand-in for the RAW SentenceTransformer output (EMBED_DIM
+        length); crow_core.encode() projects it to DIM (crow_core.py:259).
+        The module-level FakeEncoder mimics the POST-projection output and
+        cannot be used through the real encode() path."""
+
+        def encode(self, text, **kwargs):
+            seed = int(hashlib.sha256(text.encode("utf-8")).hexdigest()[:16], 16)
+            rng = np.random.default_rng(seed)
+            return rng.normal(size=crow_core.EMBED_DIM).astype(np.float32)
+
+    def test_temp_state_dir_removed_after_build(self):
+        # Build a minimal valid state file via a real CrowMemory instance
+        state_path = os.path.join(self.mem, "crow.bin")
+        cm = crow_core.CrowMemory(state_path)
+        cm._persist()  # write the safetensors state file to disk
+        cm_lock = state_path + ".lock"
+        self.addCleanup(lambda: os.path.exists(cm_lock) and os.remove(cm_lock))
+        self.assertTrue(os.path.exists(state_path))
+
+        # Patch the lazy SentenceTransformer loader at class level so the
+        # encode function returned by build_real_encode_fn (whose internal
+        # CrowMemory we never see) works without sentence_transformers.
+        saved_prop = crow_core.CrowMemory.encoder
+        fake = self._RawEmbedEncoder()
+        crow_core.CrowMemory.encoder = property(lambda self: fake)
+        self.addCleanup(setattr, crow_core.CrowMemory, "encoder", saved_prop)
+
+        before = set(os.listdir(tempfile.gettempdir()))
+
+        encode_fn = mig.build_real_encode_fn(state_path)
+
+        after = set(os.listdir(tempfile.gettempdir()))
+        # F2 core assertion: no crow_migrate_state_* dir survives the build
+        leaked = {d for d in (after - before)
+                  if d.startswith("crow_migrate_state_")}
+        self.assertEqual(leaked, set())
+        # The returned encode function still works after cleanup (all state
+        # was loaded into RAM at construction)
+        vec = encode_fn("hello world")
+        self.assertEqual(vec.shape[0], crow_core.DIM)
+
+        # Docstring previously FALSELY claimed "removed at process exit"
+        # while no cleanup existed (F2 root cause) — now it must describe
+        # the real mechanism.
+        doc = mig.build_real_encode_fn.__doc__
+        self.assertIsNotNone(doc)
+        self.assertNotIn("removed at process exit", doc)
+        self.assertIn("removed eagerly right after construction", doc)
+        self.assertIn("atexit fallback", doc)
+        # Cleanup helper is idempotent and safe on missing dirs
+        gone_dir = os.path.join(tempfile.gettempdir(),
+                                "crow_migrate_state_nonexistent_9d41f")
+        mig._cleanup_temp_state_dir(gone_dir)  # must not raise
 
 
 if __name__ == "__main__":

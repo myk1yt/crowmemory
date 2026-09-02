@@ -368,6 +368,37 @@ class RecallMultiTests(PrecisionTestBase):
         self.assertEqual(out["confidence"], 0.0)
         self.assertEqual(out["registers_hit"], [])
 
+    def test_legacy_kaomoji_value_scrubbed_in_multi_hints(self):
+        """F1 regression (REQ-006): the DEFAULT recall path (register omitted/
+        "all" -> recall_multi) must display-scrub hint text exactly like
+        recall() does. A legacy pre-gate entry with raw kaomoji in its stored
+        value must never leak verbatim into recall_multi output."""
+        # Legacy-style entry: injected straight into the bank (ingest gate
+        # would have scrubbed/rejected it — legacy entries predate the gate).
+        entry = self.inject_entry("style", "keep tests fast >.< ㅋㅋㅋ ok", 64)
+        # Force S so recall_multi("probe") hits this entry with sim ~1
+        qk = self.cm.encode("probe").astype(np.float32)
+        self.cm.data["style_S"] = np.outer(
+            qk[:64] / max(np.linalg.norm(qk[:64]), 1e-8),
+            self.stored_vec(entry)).astype(np.float16)
+        out = self.cm.recall_multi("probe", ["style", "arch"], top_k=2)
+        self.assertEqual(out["registers_hit"], ["style"])
+        self.assertEqual(len(out["hints"]), 1)
+        hint_text = out["hints"][0]["text"]
+        # Clean core survives...
+        self.assertIn("keep tests fast", hint_text)
+        self.assertIn("ok", hint_text)
+        # ...kaomoji garbage does not (scrub_display applied on this path)
+        self.assertNotIn(">.<", hint_text)
+        self.assertNotIn("ㅋㅋㅋ", hint_text)
+        # Content contract matches recall()'s public strings: scrubbed AND
+        # 200-truncated (payload-shape unification, F1 secondary fix)
+        expected = crow_core.scrub_display("keep tests fast >.< ㅋㅋㅋ ok")[:200]
+        self.assertEqual(hint_text, expected)
+        single = self.cm.recall("probe", "style")
+        # Both paths now surface identical cleaned content
+        self.assertIn(expected, single["hints"][0])
+
 
 # ---------------------------------------------------------------------------
 # REQ-010: sha256 encode cache key

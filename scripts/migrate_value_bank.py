@@ -62,6 +62,7 @@ MIGRATE/<function>/NNN codes annotate every error path.
 """
 
 import argparse
+import atexit
 import importlib
 import json
 import os
@@ -196,15 +197,32 @@ def build_real_encode_fn(state_path: str):
     """Return crow.encode built from a TEMP COPY of the state file.
 
     Read-only guarantees: the real crow.bin and its lock file are never
-    touched; no ingest/_persist is ever called on the instance; the temp
-    copy is removed at process exit. Requires sentence_transformers at
-    first encode (crow_core lazy-loads the model) (MIGRATE/encoder/001).
+    touched; no ingest/_persist is ever called on the instance. The temp
+    dir is removed eagerly right after construction (CrowMemory loads
+    state + value_bank fully into RAM at __init__, so nothing keeps a
+    handle on the files), with an atexit fallback for early returns
+    (MIGRATE/encoder/002). Requires sentence_transformers at first encode
+    (crow_core lazy-loads the model) (MIGRATE/encoder/001).
     """
     tmp_dir = tempfile.mkdtemp(prefix="crow_migrate_state_")
+    # F2 fix: guarantee cleanup even if CrowMemory() raises below.
+    atexit.register(_cleanup_temp_state_dir, tmp_dir)
     tmp_state = os.path.join(tmp_dir, os.path.basename(state_path))
     shutil.copy2(state_path, tmp_state)
-    crow = crow_core.CrowMemory(tmp_state)  # never persisted, never ingests
+    try:
+        crow = crow_core.CrowMemory(tmp_state)  # never persisted, never ingests
+    except Exception:
+        _cleanup_temp_state_dir(tmp_dir)
+        raise
+    # Eager cleanup: construction copied everything into RAM; the files
+    # are no longer needed (encode() only reads in-memory proj_W/proj_b).
+    _cleanup_temp_state_dir(tmp_dir)
     return crow.encode
+
+
+def _cleanup_temp_state_dir(tmp_dir: str):
+    """F2 fix: remove a crow_migrate_state_* temp dir (idempotent)."""
+    shutil.rmtree(tmp_dir, ignore_errors=True)
 
 
 # ---------------------------------------------------------------------------

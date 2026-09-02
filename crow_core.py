@@ -325,6 +325,10 @@ class CrowMemory:
           accepted hint (NOT divided by the number of registers queried).
         - Returns {"hints": [dict...], "confidence": float,
                    "registers_hit": [str...]}.
+        - F1 fix (REQ-006): hint "text" is display-scrubbed with the exact
+          same scrub_display()[:200] treatment as recall()'s public strings,
+          so legacy pre-gate value_bank entries never leak kaomoji on this
+          (default) path.
         """
         merged: list[dict] = []   # each: {"register","text","sim","eff_sim"}
         hit_confidences: dict[str, float] = {}
@@ -352,7 +356,11 @@ class CrowMemory:
             for h in hint_dicts:
                 merged.append({
                     "register": register,
-                    "text": str(h["text"]),
+                    # F1 fix (REQ-006): display-scrub hint text on this path
+                    # too — recall_multi is the DEFAULT recall path (register
+                    # omitted / "all"), so raw legacy value_bank text must
+                    # never reach the LLM. Same expression as recall() L308.
+                    "text": scrub_display(str(h["text"]))[:200],
                     "sim": float(h["sim"]),
                     "eff_sim": float(h["eff_sim"]),
                 })
