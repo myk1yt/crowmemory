@@ -13,12 +13,14 @@ set "STATE_PATH=%~dp0memory\crow.bin"
 set "READY_FILE=%~dp0memory\.crow_ready"
 set "PYTHONIOENCODING=utf-8"
 set "PYTHONUTF8=1"
-REM AD-8.2 (Batch E): user-instance tag. crow_mcp_server.resolve_state_path()
-REM rewrites memory\crow.bin -> memory\crow-myk1yt.bin when this is set, so the
-REM -myk1yt instance keeps its own synaptic state file. NOTE: value_bank.json
-REM and recall_stats.json siblings are NOT tag-suffixed by crow_core (they
-REM resolve through memory_dir only) - see Batch E report caveat.
-set "CROW_STATE_TAG=myk1yt"
+REM REVISED 2026-09-02 (VP correction): CROW_STATE_TAG removed.
+REM File timestamps proved the LIVE state is memory\crow.bin (modified
+REM continuously by the running server) while crow-myk1yt.bin is a stale
+REM 2026-08-31 snapshot. Tagging here would have made the server adopt
+REM the stale snapshot as its active state. Crow is global per user
+REM decision - the -myk1yt data set is preserved as historical archive.
+REM (Set CROW_STATE_TAG here ONLY if a separate isolated instance is
+REM ever intentionally needed.)
 
 REM Prefer project virtualenv Python when present (dependencies live there)
 set "PYTHON_EXE=python"
@@ -41,8 +43,10 @@ REM =====================================================================
 if exist "%LOCK_FILE%" (
     echo [%date% %time%] [INFO] Removing stale lock file: %LOCK_FILE% >> "%LOG_FILE%"
     del "%LOCK_FILE%" 2>nul
-) else (
-    echo [%date% %time%] [INFO] No stale lock file found. >> "%LOG_FILE%"
+)
+if exist "%~dp0memory\crow.bin.lock" (
+    echo [%date% %time%] [INFO] Removing stale legacy lock file: %~dp0memory\crow.bin.lock >> "%LOG_FILE%"
+    del "%~dp0memory\crow.bin.lock" 2>nul
 )
 if exist "%READY_FILE%" (
     echo [%date% %time%] [INFO] Removing stale ready file: %READY_FILE% >> "%LOG_FILE%"

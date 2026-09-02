@@ -17,3 +17,10 @@
 - "(a) 병합 수용 — 두 value_bank를 하나로 합치고 global로 사용" → [ACTION: APPROVED — merge both value_bank sets into one global set]
 - Rationale: consistent with "crow는 언제나 global". CROW_STATE_TAG keeps managing the .bin only; value_bank filename stays unsuffixed (option (b) tag-suffix development REJECTED for now).
 - Note: "레거시기억 정화는 뭐야? 기존 레거시 기억은 그대로 사용하되, 잡음이 사라지도록 하는거야?" — user confirmed understanding: migration preserves memories, removes noise only.
+
+## [2026-09-02 07:08] — VP CORRECTION: live state is crow.bin, NOT crow-myk1yt.bin
+- User question "왜 crow.bin이 아니고 crow-myk1yt.bin이야?" triggered re-verification → [ACTION: CORRECTED — CROW_STATE_TAG removed from start_crow_sse-myk1yt.bat]
+- Evidence (file mtimes): memory/crow.bin modified 2026-09-02 15:53 (continuously updated by live server); crow-myk1yt.bin modified 2026-08-31 05:02 (stale snapshot). The Batch E / REQ-012 claim "active state file is crow-myk1yt.bin" was WRONG — the entire -myk1yt set (bin + value_bank + recall_stats) is a dead copy.
+- Consequence: had the tagged bat been run, the server would have adopted the stale 08-31 snapshot as active state, diverging from live memory. Fix: tag setting removed; LOCK_FILE corrected to crow.bin.lock; server continues on crow.bin unchanged.
+- Corrected activation sequence: (1) stop server → (2) merge_value_bank.py --apply (merges the dead copy's 26 unique entries into the live bank, scrub included) → (3) restart via start_crow_sse-myk1yt.bat (now untagged, identical behavior to start_crow_sse.bat).
+- The -myk1yt data files are retained untouched as historical archive. CROW_STATE_TAG remains a supported feature for future intentional isolation.
