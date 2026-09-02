@@ -185,7 +185,7 @@ class MixAndContractTests(unittest.TestCase):
 
 class ProjectSlugTests(unittest.TestCase):
     def test_normal_path(self):
-        self.assertEqual(project_slug("d:/OneDrive/Projects/Crow Memory"), "crow-memory")
+        self.assertEqual(project_slug("d:/work/Crow Memory"), "crow-memory")
 
     def test_trailing_slash(self):
         self.assertEqual(project_slug("C:\\work\\MyProject\\"), "myproject")

@@ -120,7 +120,7 @@ def project_slug(workspace_path: str | None) -> str | None:
     """Derive a kebab-case project slug from a workspace path (REQ-008).
 
     Examples:
-        'd:/OneDrive/Projects/Crow Memory' -> 'crow-memory'
+        'd:/work/Crow Memory'              -> 'crow-memory'
         'C:\\work\\MyProject\\'             -> 'myproject'   (trailing slash ok)
         'd:/work/한글프로젝트'              -> None          (non-ASCII name)
         None / ''                          -> None
