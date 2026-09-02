@@ -208,17 +208,16 @@ The former 10-tool surface was consolidated into **3 tools**. Legacy capabilitie
 | `crow_memory_bias` | Full context: evolved rules + recent memory hints. Loaded automatically at session start. |
 | `crow_evolved_rules` | Permanent rules from `system_prompt.md`. |
 
-### Fork Files (`-myk1yt`) & Data Layout
+### Fork Files (`-myk1yt`) Consolidation & Data Layout
 
-Files named `*-myk1yt.*` (e.g. [`crow_core-myk1yt.py`](crow_core-myk1yt.py), [`crow_mcp_server-myk1yt.py`](crow_mcp_server-myk1yt.py)) are **deprecated re-export shims** (`__deprecated_shim__ = True`) that delegate to the canonical modules via `runpy` — historical compatibility only. The `-myk1yt` data set under `memory/` is a **historical archive snapshot**; the active memory is the untagged set:
+All `-myk1yt` file copies (docs, code, bats, requirements) have been **fully merged into the canonical originals and removed** — the canonical files are the single source of truth. Only the historical **memory data archive** remains:
 
 | File | Status |
 |------|--------|
 | `memory/crow.bin` + `memory/value_bank.json` | ✅ **Active** |
-| `memory/crow-myk1yt.bin` / `value_bank-myk1yt.json` / `recall_stats-myk1yt.json` | 🗄️ Historical archive (not read by the server) |
-| `crow-core-myk1yt.py` / `crow-mcp-server-myk1yt.py` shims | Deprecated re-exports → canonical `crow_core.py` / `crow_mcp_server.py` |
+| `memory/crow-myk1yt.bin` / `value_bank-myk1yt.json` / `recall_stats-myk1yt.json` | 🗄️ Historical archive (not read by the server, preserved untouched) |
 
-> The `CROW_STATE_TAG` mechanism ([`crow_mcp_server.py`](crow_mcp_server.py) `resolve_state_path()`) can still create isolated instances (`crow-<tag>.bin`) when intentionally set — but no tag is currently in use, and `start_crow_sse-myk1yt.bat` behaves identically to `start_crow_sse.bat`.
+> The `CROW_STATE_TAG` mechanism ([`crow_mcp_server.py`](crow_mcp_server.py) `resolve_state_path()`) can still create isolated instances (`crow-<tag>.bin`) when intentionally set — no tag is currently in use.
 
 ### Tests
 

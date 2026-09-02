@@ -36,8 +36,6 @@ Crow Memory/
 ├── crow_core.py              # 핵심 엔진
 ├── crow_sanitize.py          # 입력 정화 (kaomoji/emoji/jamo-run)
 ├── crow_mcp_server.py        # MCP 서버 (3 도구 + REST)
-├── crow_core-myk1yt.py       # 재수출 shim (__deprecated_shim__)
-├── crow_mcp_server-myk1yt.py # 재수출 shim
 ├── crow_i18n.py              # 국제화 (473줄)
 ├── install.py / install.ps1  # 설치 스크립트
 ├── start_crow_sse.bat        # 서버 시작
@@ -54,7 +52,7 @@ Crow Memory/
 | 직렬화 | safetensors | >=0.4.0 |
 | 임베딩 | sentence-transformers | >=2.7.0 |
 | 벡터 검색 | faiss-cpu | >=1.7.4 |
-| 프로토콜 | mcp | >=1.0.0 |
+| 프로토콜 | mcp | ==2.1.1 (MCPServer high-level API) |
 | 웹 서버 | uvicorn | >=0.29.0 |
 
 ## 4. 진입점
@@ -90,34 +88,43 @@ memory/ (영속 저장소: crow.bin + value_bank.json + recall_stats.json + syst
 
 ### 5.1 Windows 자동 시작 (v1.5.0+)
 
-Windows 로그온 시 Crow Memory MCP 서버가 자동으로 시작되도록 Windows Task Scheduler에 등록됩니다.
+Windows 로그온 시 Crow Memory MCP 서버가 자동으로 시작됩니다. 두 가지 등록 경로가 존재하며, 현재 실제 활성 경로는 **Startup 폴더**입니다.
 
 ```
 Windows 로그온
     │
-    ▼
-Task Scheduler: CrowMemoryAuto
-    │  트리거: AtLogon (30초 지연)
-    │  실행: cmd /c "start_crow_sse.bat"
-    │  재시작: 3분 간격, 최대 3회
+    ├─ [활성] Startup 폴더
+    │  %APPDATA%\Microsoft\Windows\Start Menu\Programs\Startup\Crow_Memory_SSE.bat
+    │  → start_crow_sse.bat 호출 (venv Python 우선 로직 포함)
+    │
+    ├─ [비활성] Task Scheduler: CrowMemoryAuto
+    │  ※ 2026-08-30 세션에서 등록 시도 → 액세스 거부 (Access Denied)
+    │  → Startup 폴더 폴백이 실질적 자동 시작 경로
     │
     ▼
 start_crow_sse.bat
-    │  Phase 1: 중복 실행 방지 (netstat)
+    │  Phase 0: venv Python 우선 탐지 (PYTHON_EXE 로직)
+    │  Phase 1: 중복 실행 방지 (netstat port 9020/9021)
     │  Phase 2: 스테일 lock/ready 정리
-    │  Phase 3: Python 서버 시작 (detached)
-    │  Phase 4: Health Check (최대 12회, ~55초)
+    │  Phase 3: Python 서버 시작 (detached, hidden window)
+    │  Phase 4: Health Check (최대 12회, exponential backoff)
     │
     ▼
 crow_mcp_server.py (port 9020 + 9021)
+    │  mcp.sse_app() + mcp.streamable_http_app()
+    │  → asyncio.gather로 동시 실행
     │
     ▼
-VS Code Global MCP → 연결 성공
+MCP 클라이언트 연결
+    │  Zoo/Roo Code → SSE (port 9020)
+    │  Kimi Code → HTTP (port 9021/mcp)
+    │  글로벌 MCP 등록: Zoo Code mcp_settings.json (crow-memory, global:true)
 ```
 
-- 등록 방식: `install.ps1` 또는 `install.py` 실행 시 `schtasks.exe /create`로 자동 등록 (관리자 권한 불필요)
-- 폴백: Task Scheduler 등록 실패 시 Startup 폴더에 10초 지연 래퍼 등록
-- 마이그레이션: 설치 시 기존 Startup 폴더의 `Crow_Memory_SSE.bat` 자동 제거
+- **등록 경로 1 (활성)**: Startup 폴더 — `Crow_Memory_SSE.bat`이 로그온 시 자동 실행
+- **등록 경로 2 (시도됨)**: Task Scheduler (`CrowMemoryAuto`) — `schtasks /create /sc onlogon`으로 등록 시도했으나 액세스 거부
+- **venv Python 우선 로직**: `start_crow_sse.bat` 내 `PYTHON_EXE` 변수로 `.venv/Scripts/python.exe` 탐지 후 없으면 시스템 Python 폴백
+- **글로벌 MCP 등록**: Zoo Code의 `mcp_settings.json`에 `crow-memory` 서버 등록 (global: true)
 
 ### 데이터 흐름
 1. 세션 시작 → crow_recall → [User Bias] 블록 생성
@@ -142,12 +149,12 @@ VS Code Global MCP → 연결 성공
 - kaomoji·emoji·jamo-run 정화, C++ 코드/URL/식별자/한글 보호
 
 ### crow_mcp_server.py — MCP Server (SDK 2.1.1, v1.5.0)
-- 3개 MCP 도구 (AD-5 통합): crow_recall (format="bias_block"으로 get_user_bias 흡수), crow_ingest (exit_code로 build-result 흡수, polarity 선택적), crow_admin (diagnostics/drift/prompt/backup/evolve/project_info 6-action dispatch)
-- 2개 MCP 프롬프트: crow_memory_bias, crow_evolved_rules
-- 4개 전송 모드: stdio, sse(port 9020), streamable-http(port 9021), dual(기본값)
-- REST API: GET /health, POST /ingest, GET /recall (project/strict_project 파라미터 지원)
+- 3개 MCP 도구 (AD-5 통합, `@mcp.tool()` 타입힌트 자동 스키마): crow_recall (format="bias_block"으로 get_user_bias 흡수), crow_ingest (exit_code로 build-result 흡수, polarity 선택적), crow_admin (diagnostics/drift/prompt/backup/evolve/project_info 6-action dispatch)
+- 2개 MCP 프롬프트 (`@mcp.prompt()`): crow_memory_bias, crow_evolved_rules
+- 3개 REST 라우트 (`@mcp.custom_route()`): GET /health, POST /ingest, GET /recall (project/strict_project 파라미터 지원)
+- 4개 전송 모드: stdio, SSE(port 9020), Streamable HTTP(port 9021, path `/mcp`), dual(기본값)
+- dual 모드: `mcp.sse_app()` + `mcp.streamable_http_app()` → uvicorn 2개 `asyncio.gather`
 - resolve_state_path(): CROW_STATE_TAG 지원 (현재 미사용 — 활성 state는 memory/crow.bin)
-- -myk1yt 변형(crow_mcp_server-myk1yt.py)은 재수출 shim (__deprecated_shim__ = True)
 
 ### crow_i18n.py (473줄) — 국제화
 - 36개 언어 지원

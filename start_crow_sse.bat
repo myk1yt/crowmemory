@@ -13,6 +13,18 @@ set "STATE_PATH=%~dp0memory\crow.bin"
 set "READY_FILE=%~dp0memory\.crow_ready"
 set "PYTHONIOENCODING=utf-8"
 set "PYTHONUTF8=1"
+REM REVISED 2026-09-02 (VP correction): CROW_STATE_TAG removed.
+REM File timestamps proved the LIVE state is memory\crow.bin (modified
+REM continuously by the running server) while crow-myk1yt.bin is a stale
+REM 2026-08-31 snapshot. Tagging here would have made the server adopt
+REM the stale snapshot as its active state. Crow is global per user
+REM decision - the -myk1yt data set is preserved as historical archive.
+REM (Set CROW_STATE_TAG here ONLY if a separate isolated instance is
+REM ever intentionally needed.)
+
+REM Prefer project virtualenv Python when present (dependencies live there)
+set "PYTHON_EXE=python"
+if exist "%~dp0.venv\Scripts\python.exe" set "PYTHON_EXE=%~dp0.venv\Scripts\python.exe"
 
 REM =====================================================================
 REM Phase 1: 중복 실행 방지 - 포트가 이미 LISTEN 중이면 종료
@@ -31,8 +43,10 @@ REM =====================================================================
 if exist "%LOCK_FILE%" (
     echo [%date% %time%] [INFO] Removing stale lock file: %LOCK_FILE% >> "%LOG_FILE%"
     del "%LOCK_FILE%" 2>nul
-) else (
-    echo [%date% %time%] [INFO] No stale lock file found. >> "%LOG_FILE%"
+)
+if exist "%~dp0memory\crow.bin.lock" (
+    echo [%date% %time%] [INFO] Removing stale legacy lock file: %~dp0memory\crow.bin.lock >> "%LOG_FILE%"
+    del "%~dp0memory\crow.bin.lock" 2>nul
 )
 if exist "%READY_FILE%" (
     echo [%date% %time%] [INFO] Removing stale ready file: %READY_FILE% >> "%LOG_FILE%"
@@ -56,9 +70,8 @@ for /f "tokens=5" %%a in ('netstat -ano ^| findstr ":%PORT% " ^| findstr "LISTEN
     taskkill /PID %%a /F 2>nul
 )
 
-REM 파이썬 서버 시작 (detached, hidden window)
-echo [%date% %time%] [INFO] Launching: python -X utf8 crow_mcp_server.py --state %STATE_PATH% --transport dual --port %PORT% --http-port %HTTP_PORT% --ready-file %READY_FILE% >> "%LOG_FILE%"
-powershell -NoProfile -ExecutionPolicy Bypass -Command "$p = Start-Process -FilePath 'python' -ArgumentList '-X utf8 \"%~dp0crow_mcp_server.py\" --state \"%STATE_PATH%\" --transport dual --port %PORT% --http-port %HTTP_PORT% --ready-file \"%READY_FILE%\"' -WindowStyle Hidden -PassThru; Write-Output (\"[%date% %time%] [INFO] Launched server PID: \" + $p.Id)" >> "%LOG_FILE%" 2>&1
+REM 파이썬 서버 시작 (detached, hidden window) — venv Python 우선
+powershell -NoProfile -ExecutionPolicy Bypass -Command "$p = Start-Process -FilePath '%PYTHON_EXE%' -ArgumentList @('-X', 'utf8', '\"%~dp0crow_mcp_server.py\"', '--state', '\"%STATE_PATH%\"', '--transport', 'dual', '--port', '%PORT%', '--http-port', '%HTTP_PORT%', '--ready-file', '\"%READY_FILE%\"') -WorkingDirectory '%~dp0' -WindowStyle Hidden -PassThru; Write-Output (\"[%date% %time%] [INFO] Launched server PID: \" + $p.Id)" >> "%LOG_FILE%" 2>&1
 
 REM =====================================================================
 REM Phase 4: Health Check 대기 (backoff: 2s -> 2s -> 3s -> 5s...)
@@ -72,7 +85,7 @@ echo [%date% %time%] [INFO] Waiting for server health endpoint (max %MAX_ATTEMPT
 set /a ATTEMPT+=1
 if !ATTEMPT! gtr !MAX_ATTEMPTS! goto :wait_done
 
-powershell -NoProfile -ExecutionPolicy Bypass -Command "try { $r = Invoke-WebRequest -Uri 'http://127.0.0.1:%PORT%/' -TimeoutSec 2 -UseBasicParsing; exit 0 } catch { exit 1 }" >nul 2>&1
+powershell -NoProfile -ExecutionPolicy Bypass -Command "try { $r = Invoke-WebRequest -Uri 'http://127.0.0.1:%PORT%/health' -TimeoutSec 2 -UseBasicParsing; exit 0 } catch { exit 1 }" >nul 2>&1
 
 if !ERRORLEVEL! equ 0 (
     set "READY=1"
@@ -96,12 +109,12 @@ goto :wait_loop
 
 :wait_done
 if "!READY!" equ "1" (
-    echo [%date% %time%] [OK] Crow SSE server ready (attempt !RETRY_COUNT!/2, health check !ATTEMPT!/!MAX_ATTEMPTS!). >> "%LOG_FILE%"
+    echo [%date% %time%] [OK] Crow SSE server ready [attempt !RETRY_COUNT!/2, health check !ATTEMPT!/!MAX_ATTEMPTS!] >> "%LOG_FILE%"
     exit /b 0
 ) else (
-    echo [%date% %time%] [WARN] Server health check failed on attempt !RETRY_COUNT!/2 (!ATTEMPT! checks). >> "%LOG_FILE%"
+    echo [%date% %time%] [WARN] Server health check failed on attempt !RETRY_COUNT!/2 [!ATTEMPT! checks] >> "%LOG_FILE%"
     if !RETRY_COUNT! lss 2 (
-        echo [%date% %time%] [INFO] Retrying in 5 seconds (retry !RETRY_COUNT!/2)... >> "%LOG_FILE%"
+        echo [%date% %time%] [INFO] Retrying in 5 seconds [retry !RETRY_COUNT!/2]... >> "%LOG_FILE%"
         timeout /t 5 /nobreak >nul
         goto :retry_start
     ) else (

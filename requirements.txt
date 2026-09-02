@@ -4,6 +4,7 @@ torch>=2.0.0
 safetensors>=0.4.0
 sentence-transformers>=2.7.0
 faiss-cpu>=1.7.4
-mcp>=1.0.0
+einops>=0.7.0
+mcp==2.1.1
 uvicorn>=0.29.0     # Required for SSE transport (default)
 PyYAML>=6.0          # Required for install.py custom_modes merge

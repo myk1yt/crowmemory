@@ -777,17 +777,17 @@ This launches two Uvicorn servers — one for SSE (`/sse`) and one for Streamabl
 
 ## 12. Fork Files & State Tagging
 
-### 12.1 `-myk1yt` Files: Shims + Archive (v1.5.0)
+### 12.1 `-myk1yt` Consolidation (v1.5.0)
 
-Files named `*-myk1yt.py` ([`crow_core-myk1yt.py`](crow_core-myk1yt.py), [`crow_mcp_server-myk1yt.py`](crow_mcp_server-myk1yt.py)) are **deprecated re-export shims** (`__deprecated_shim__ = True`): importing them loads the canonical module and direct execution delegates the full CLI surface (argv, `CROW_STATE_TAG`, `--state/--transport/--port/...`) to it via `runpy`. They exist purely for backward compatibility of old import paths and scripts.
+All `-myk1yt` file copies (docs, code shims, bats, requirements) have been **fully merged into the canonical originals and removed** — the untagged files are the single source of truth.
 
-The `-myk1yt` data files under `memory/` are a **historical archive snapshot** — the active memory is the untagged set (`memory/crow.bin`, `memory/value_bank.json`).
+The `-myk1yt` **data files** under `memory/` remain as a **historical archive snapshot** — the active memory is the untagged set (`memory/crow.bin`, `memory/value_bank.json`).
 
 ### 12.2 `CROW_STATE_TAG` (AD-8.2)
 
 [`crow_mcp_server.py`](crow_mcp_server.py) `resolve_state_path()` honors the `CROW_STATE_TAG` environment variable: when set (e.g. `myk1yt`), the default state path `memory/crow.bin` becomes `memory/crow-<tag>.bin`. This enables intentional isolated instances.
 
-**Current status: no tag is in use.** [`start_crow_sse-myk1yt.bat`](start_crow_sse-myk1yt.bat) had a tag set briefly, then it was removed — file timestamps proved the live state is `memory/crow.bin`, so the bat now behaves identically to `start_crow_sse.bat`. Set `CROW_STATE_TAG` only when a deliberately isolated instance is needed.
+**Current status: no tag is in use.** [`start_crow_sse.bat`](start_crow_sse.bat) had a tag set briefly (in the now-removed fork copy), then it was removed — file timestamps proved the live state is `memory/crow.bin`. Set `CROW_STATE_TAG` only when a deliberately isolated instance is needed.
 
 ---
 

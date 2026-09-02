@@ -1,4 +1,7 @@
 # Crow Memory — personal memory files (DO NOT SHARE)
+memory/
+
+# Legacy individual memory entries (kept for clarity, covered by memory/ above)
 memory/crow.bin
 memory/crow.bin.tmp
 memory/*.bak*
@@ -46,6 +49,14 @@ sse_server_stdout.log
 
 # Tests (local only)
 tests/
+
+# Local backup directories (personal, not for distribution)
+.git_corrupted_bak*/
+
+# Local working docs (personal context, not for distribution)
+docs/260830_0001_session_mcp2-migration/
+docs/feedbacks/
+docs/plans/
 
 # OS
 .DS_Store

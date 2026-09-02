@@ -29,3 +29,9 @@
 - User: "지금 진행 — Search: 패턴 기억 일괄 정리" → [ACTION: APPROVED — purge search-log debris entries from value_bank]
 - Trigger: post-activation recall smoke test showed life_context returning "Search: translationMode → 0 AST matches" debris instead of actual life memories. Root cause: past sessions ingested VibeZoo search logs as memories; accumulated importance let them survive cap eviction. Evidence: merge dry-run pruned 26 entries all of this pattern.
 - Scope: remove entries whose text matches search-log debris patterns (e.g. key/value starting "Search:", "Web search success:") from the live value_bank.json; backup first; dry-run default; --apply gated. The weight matrix S is NOT touched (residual trace decays via λ).
+
+## [2026-09-02 07:41] — -myk1yt 파일 전면 정리 + 원본 최신화 우선
+- User: "start_crow_sse-myk1yt.bat이 start_crow_sse.bat보다 최신인데? 최신의 파일들이 -myk1yt여선 안 되니 직접 일일히 대조해서, 원본파일의 최신화를 유지하면서 -myk1yt 파일들을 정리하도록 해" → [ACTION: APPROVED — best-of-both merge into originals, then remove -myk1yt files; memory/*-myk1yt data preserved as archive]
+- CRITICAL constraint surfaced by user: originals must end up NEWER-or-equal in content vs their -myk1yt counterparts. Where -myk1yt carries improvements (e.g. start_crow_sse-myk1yt.bat's LOCK_FILE fix, venv-python preference), merge them INTO the original before deleting the copy.
+- In scope: -myk1yt docs (6), code shims (2), bats (start_crow_sse-myk1yt.bat, scripts/run_elevated-myk1yt.bat), requirements-myk1yt.txt, -myk1yt.gitignore + dangling reference cleanup (install scripts, docs describing fork shims).
+- Preserved: memory/crow-myk1yt.bin, value_bank-myk1yt.json, recall_stats-myk1yt.json (historical archive).

@@ -22,6 +22,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Reliable embedding cache**: The encode cache is keyed by `sha256` instead of a 200-character prefix, eliminating cache-key collisions between similar-looking texts.
 - **Importance boost capped**: Recall boosts from entry importance are capped at ×1.15 total, so a single over-ingested entry can no longer dominate results.
 
+## [1.4.5] — 2026-08-30
+
+### Changed
+- Migrated MCP server implementation to MCP Python SDK 2.1.1 (MCPServer class, typed tool wrappers)
+- Dual transport preserved: SSE (9020) + Streamable HTTP 9021 (/mcp endpoint)
+- REST API endpoints now served via SDK custom_route on both ports
+
+### Fixed
+- Duplicate main() definition removed (L444 legacy stub)
+- start_crow_sse.bat now prefers project .venv Python interpreter
+
+### Security
+- Removed hardcoded user absolute path from scripts/run_elevated.bat (%~dp0 based)
+- docs/ session folders excluded from repository
+- memory/ directory fully excluded from repository (was file-by-file)
+
 ## [1.4.4] — 2026-06-21
 
 ### Fixed
