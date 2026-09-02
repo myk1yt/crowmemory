@@ -35,8 +35,8 @@ Or use the bundled script: `start_crow_sse.bat` (Windows) — it starts in dual 
 
 ### SESSION START (MANDATORY)
 At the beginning of every conversation session (i.e., your very first response to the user), you MUST call `crow_recall` to retrieve context about the user:
-- Call `crow_recall` with `domain="user"` to understand the user's personality, preferences, working style, and past interactions.
-- Call `crow_recall` with `domain="project"` to understand the current project context and recent activities.
+- Call `crow_recall` with a query about the user's personality, preferences, working style, and past interactions (use `domain="life"` to scope to personal-life registers).
+- Call `crow_recall` with a query about the current project context and recent activities (use `domain="code"` to scope to coding registers).
 - Incorporate the recalled information into your understanding before proceeding with the task.
 
 ### SESSION END (MANDATORY)
@@ -56,24 +56,19 @@ During the conversation, you may call `crow_recall` or `crow_ingest` as needed:
 - Use `crow_recall` when you need to refresh context about the user or project.
 - Use `crow_ingest` after important milestones, architectural decisions, or bug discoveries.
 - If you encounter important information, user preferences, or architectural decisions during a task and judge "I should remember this for the future", actively use crow_ingest to memorize it—just like a human repeating important information to remember it.
-- Use `crow_diagnostics` to check memory health.
-- Use `crow_check_drift` to verify memory consistency.
+- Use `crow_admin` with `action="diagnostics"` to check memory health.
+- Use `crow_admin` with `action="drift"` to verify memory consistency.
 - These calls are not required for every response — use your judgment.
 
 ### AVAILABLE TOOLS
 
+The MCP server exposes exactly 3 tools (AD-5 consolidation):
+
 | Tool | Purpose |
 |------|---------|
-| `crow_recall` | Retrieve user/project context from memory |
-| `crow_ingest` | Store new experiences into memory |
-| `crow_ingest_from_build` | Auto-ingest based on build exit code |
-| `crow_evolve_propose` | Propose system prompt improvements |
-| `crow_diagnostics` | Check memory health and statistics |
-| `crow_check_drift` | Detect memory drift |
-| `crow_get_user_bias` | Generate [User Bias] block for system prompt |
-| `crow_manage_prompt` | Manage the system_prompt.md file |
-| `crow_manage_backup` | Create/rotate/recover memory backups |
-| `crow_project_info` | List/create project-isolated memory instances |
+| `crow_recall` | Retrieve context from memory. Parameters: `query` (required), `register` (single register or `all`), `domain` (`code`/`life`/`all`), `top_k` (1–5), `project`/`strict_project` scoping, `format="bias_block"` to generate the [User Bias] block for the system prompt (absorbs `crow_get_user_bias`) |
+| `crow_ingest` | Store new experiences into memory. Parameters: `key`, `value`, `register` (required); `polarity` optional — omit it and pass `exit_code` for automatic build-result ingest (absorbs `crow_ingest_from_build`); `user_edited`, `project` |
+| `crow_admin` | Administrative operations via `action` + `args`: `diagnostics` (memory health/statistics), `drift` (consistency check), `prompt` (manage the system_prompt.md file), `backup` (create/rotate/recover memory backups), `evolve` (propose system prompt improvements), `project_info` (list/create project-isolated memory instances) |
 
 ### REGISTER REFERENCE
 
