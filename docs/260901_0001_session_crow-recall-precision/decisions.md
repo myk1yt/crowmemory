@@ -24,3 +24,8 @@
 - Consequence: had the tagged bat been run, the server would have adopted the stale 08-31 snapshot as active state, diverging from live memory. Fix: tag setting removed; LOCK_FILE corrected to crow.bin.lock; server continues on crow.bin unchanged.
 - Corrected activation sequence: (1) stop server → (2) merge_value_bank.py --apply (merges the dead copy's 26 unique entries into the live bank, scrub included) → (3) restart via start_crow_sse-myk1yt.bat (now untagged, identical behavior to start_crow_sse.bat).
 - The -myk1yt data files are retained untouched as historical archive. CROW_STATE_TAG remains a supported feature for future intentional isolation.
+
+## [2026-09-02 07:18] — "Search:" 로그 잔해 기억 일괄 정리 승인
+- User: "지금 진행 — Search: 패턴 기억 일괄 정리" → [ACTION: APPROVED — purge search-log debris entries from value_bank]
+- Trigger: post-activation recall smoke test showed life_context returning "Search: translationMode → 0 AST matches" debris instead of actual life memories. Root cause: past sessions ingested VibeZoo search logs as memories; accumulated importance let them survive cap eviction. Evidence: merge dry-run pruned 26 entries all of this pattern.
+- Scope: remove entries whose text matches search-log debris patterns (e.g. key/value starting "Search:", "Web search success:") from the live value_bank.json; backup first; dry-run default; --apply gated. The weight matrix S is NOT touched (residual trace decays via λ).
