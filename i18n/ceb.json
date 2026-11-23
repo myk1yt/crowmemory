@@ -1,0 +1,119 @@
+{
+  "_meta": {
+    "locale": "ceb",
+    "language_name": "Cebuano",
+    "version": "1.0.0",
+    "last_updated": "2026-11-24"
+  },
+
+  "server": {
+    "instructions": "Crow Memory — Externo nga synaptic memory alang sa mga AI coding agent. Gitipigan niini ang imong estilo sa pag-code, intuwisyon bahin sa bug, ug mga gusto bahin sa arkitektura isip compressed nga weight matrix sa crow.bin.",
+
+    "prompts": {
+      "crow_memory_bias": {
+        "description": "Awtomatikong gipasok nga Crow Memory bias block. Naglangkob sa imong estilo sa pag-code, mga gusto, ug mga na-evolve nga lagda. Kinahanglan i-load kini sa host sa pagsugod sa sesyon.",
+        "body_template": "=== Crow Memory — Awtomatikong Gipasok nga Konteksto ===\n\n[Mga Permanenteng Na-evolve nga Lagda]\n{rules}\n\n[Mga Bag-ong Hint sa Memory]\n{bias}\n\nAng konteksto sa ibabaw nagrepresentar sa imong nakat-onan nga mga gusto ug estilo. Gamita kini sa paggiya sa imong mga tubag. Aron makakat-on pa, tawga ang crow_recall uban sa piho nga query ug register (style/bug/arch/context/life_pref/life_avoid/life_phil/life_context)."
+      },
+      "crow_evolved_rules": {
+        "description": "Permanent evolved rules from Crow's system_prompt.md: permanent rules (human-promoted via CROW_ADMIN_TOKEN) plus unreviewed model suggestions.",
+        "body_template": "{prompt}"
+      }
+    }
+  },
+
+  "tools": {
+    "crow_recall": {
+      "description": "I-recall ang estilo sa pag-code, intuwisyon bahin sa bug, gusto sa arkitektura, o personal nga konteksto nga piho sa user gikan sa Crow synaptic memory. Tawga kini SA WALA pa ang matag tubag aron mohaum sa inductive bias sa user. Sa default (register=all o wala gihatag, domain=all), gisusi ang tanan 8 ka register ug gihiusa ang mga resulta sa kinatibuk-an pinasikad sa epektibong similarity.",
+      "parameters": {
+        "query": "Natural nga pinulongan nga paghulagway sa kasamtangang buluhaton.",
+        "register": "Asa nga register. Gamita ang 'all' (o wala ibutang) aron i-query ang tanan nga register sa piniling domain. Code: style/bug/arch/context. Life: life_pref/life_avoid/life_phil/life_context.",
+        "domain": "Filter sa domain nga gigamit kung ang register kay 'all' o wala ibutang. 'code' = style/bug/arch/context, 'life' = life_pref/life_avoid/life_phil/life_context, 'all' = tanan 8 ka register (default).",
+        "top_k": "Gidaghanon sa mga hint (1-5).",
+        "format": "Format sa output. Ang 'hint' magbalik sa JSON hints (default); ang 'bias_block' magbalik sa [User Bias] text block alang sa injection sa system prompt.",
+        "project": "Project tag nga gigamit aron i-boost ang mga hint sa parehas nga proyekto ug i-filter o i-penalize ang gikan sa laing proyekto.",
+        "strict_project": "Kung true, hugot nga tangtangon ang mga hint gikan sa laing proyekto sa mga resulta."
+      }
+    },
+    "crow_ingest": {
+      "description": "I-ingest ang kasinatian sa pag-code ngadto sa long-term synaptic memory sa Crow. Tawga kini PAGKATAPOS sa mga resulta sa build o test, o sa klaro nga feedback sa user. Paghatag og klaro nga polarity o build exit_code alang sa awtomatikong pag-map sa polarity. Ang sulod ginalimpyohan una; ang purong saba nga input isalikway nga dili hilabtan ang memory.",
+      "parameters": {
+        "key": "Abstract nga paghulagway sa sitwasyon.",
+        "value": "Code pattern o desisyon nga gigamit.",
+        "register": "Register nga tipigan (style/bug/arch/context/life_pref/life_avoid/life_phil/life_context).",
+        "polarity": "Kusog sa reinforcement [-2.0, 2.0]. Opsyonal kung gihatag ang exit_code; ang klaro nga polarity maoy modaog kung pareho ang gihatag.",
+        "exit_code": "Exit code sa build (0 = malampuson). Awtomatikong ma-map sa polarity (+1.5/+0.5 kung malampuson, -0.5/-1.0 kung napakyas) gawas kung gihatag ang klaro nga polarity.",
+        "user_edited": "Kung gi-edit ba sa user ang output sa AI. Mag-adjust sa polarity nga nakuha gikan sa exit_code.",
+        "project": "Project tag nga tipigan uban sa entry sa memory alang sa ulahing pag-recall nga makaamgo sa proyekto."
+      }
+    },
+    "crow_admin": {
+      "description": "Mga administratibong operasyon sa Crow sa usa ka tool. Mga aksyon: diagnostics (estadistika sa memory), drift (pagsusi sa drift), prompt (pagbasa/pagdugang/estadistika sa system_prompt.md), backup (paghimo/pag-rotate/paglista/pag-recover), evolve (pagproponer og mga mutation sa prompt), project_info (paglista/paghimo sa mga instance sa proyekto).",
+      "parameters": {
+        "action": "Asa nga operasyon sa admin: diagnostics, drift, prompt, backup, evolve, o project_info.",
+        "args": "Object sa mga argumento nga piho sa aksyon nga gipasa ngadto sa piniling operasyon."
+      }
+    }
+  },
+
+  "errors": {
+    "unknown_tool": "Wala mailhi nga tool: {name}",
+    "unknown_prompt": "Wala mailhi nga prompt: {name}",
+    "unknown_action": "Wala mailhi nga {context} nga aksyon: {action}",
+    "project_name_required": "Ang project_name gikinahanglan alang sa create nga aksyon"
+  },
+
+  "recall_messages": {
+    "faint_bias": "Ang Crow nag-recall og luya nga {register} bias. Pila pa lang ka memory ang natipigan.",
+    "unknown_register": "Wala mailhi nga register: {register}"
+  },
+
+  "ingest_messages": {
+    "status_ingested": "na-ingest",
+    "unknown_register": "Wala mailhi nga register: {register}"
+  },
+
+  "evolve_messages": {
+    "no_patterns": "Wala pa makita ang estadistikong importante nga mga pattern."
+  },
+
+  "drift_messages": {
+    "healthy": "Himsog ang pagsalig sa memory.",
+    "confused": "Murag nalibog ang Crow memory. Ang bag-ong mga buluhaton basin masyadong bag-o o puno na ang memory. Ikonsiderar ang spectral reset o pag-archive."
+  },
+
+  "cli": {
+    "stdio_start": "Ang Crow Memory MCP server nagdagan sa stdio",
+    "sse_start": "Ang Crow Memory MCP SSE server nagpaminaw sa http://{host}:{port}/sse",
+    "http_start": "Ang Crow Memory MCP Streamable HTTP server nagpaminaw sa http://{host}:{port}/",
+    "dual_start_sse": "Ang Crow Memory MCP SSE server nagpaminaw sa http://{host}:{sse_port}/sse",
+    "dual_start_http": "Ang Crow Memory MCP Streamable HTTP server nagpaminaw sa http://{host}:{http_port}/"
+  },
+
+  "installer": {
+    "banner_title": "Crow Memory Installer alang sa Zoo Code",
+    "step_1_install_deps": "Nag-install sa mga dependency sa Python",
+    "step_2_init_crow": "Nag-initialize sa crow.bin",
+    "step_3_vscode_tasks": "Naghimo sa .vscode/tasks.json (awtomatikong pagsugod sa SSE kung ablihan ang folder)",
+    "step_4_custom_mode": "Naghimo sa auto-activation mode sa Zoo Code",
+    "step_5_start_server": "Gisugdan ang Crow SSE server + awtomatikong pagsugod",
+    "step_done": "Nahuman.",
+    "complete_title": "Kompleto na ang pag-install sa Crow Memory!",
+    "sse_running": "Ang SSE server nagdagan sa http://127.0.0.1:9020/sse",
+    "next_steps_label": "Sunod nga mga lakang:",
+    "next_step_1": "1. I-restart ang Zoo Code",
+    "next_step_2": "2. Ilisan ang mode ngadto sa \"Orchestrator + Crow\"",
+    "next_step_3": "3. Awtomatikong mo-activate ang Crow — walay kinahanglan nga manual setup",
+    "next_step_4": "4. Awtomatikong mosugod ang Crow server uban sa Windows pinaagi sa Task Scheduler"
+  },
+
+  "system_prompt": {
+    "header": "# Crow Memory — Mga Lagda sa System Prompt",
+    "subtitle": "> Kining mga lagda gi-evolve sa Crow ug gi-approbahan sa user.\n> Nagrepresentar kini sa estadistikong importante nga mga coding bias.\n> Ayaw kini i-edit nga manual — gamita ang Crow MCP evolve tools.",
+    "managed_by": "<!-- Kini nga file gi-manage sa crow_mcp_server.py -->",
+    "default_rules": [
+      "RULE: Sa wala pa ang matag tubag, tawga ang crow_recall(domain=\"all\") aron i-query ang tanan 8 ka register (style, bug, arch, context, life_pref, life_avoid, life_phil, life_context) alang sa estilo sa pag-code, intuwisyon bahin sa bug, mga gusto sa arkitektura, personal nga kagustohan, pilosopiya, ug kasamtangang konteksto sa user. Ipakita ang mga naibalik nga hint sa imong tubag.",
+      "RULE: Pagkatapos sa matag tubag, i-ingest ang gipadayag sa user — mga gusto, pilosopiya, mga pagtul-id, konteksto — pinaagi sa crow_ingest. Ikaw mismo ang mohukom sa angay nga register ug polarity nga dili maghulat nga moingon ang user og \"hinumdumi kini.\" Pagkatapos sa trabaho sa code, awtomatikong i-evaluate ang mga resulta sa build pinaagi sa crow_ingest_from_build.",
+      "RULE: Ayaw laktawi ang recall+ingest nga mga lagda bisan sa mga buluhaton nga dili coding sama sa pag-edit sa dokumento, git operations, o pag-usab sa configuration. Kanunay silang ipatuman."
+    ]
+  }
+}

@@ -1,0 +1,119 @@
+{
+  "_meta": {
+    "locale": "kk",
+    "language_name": "Kazakh",
+    "version": "1.0.0",
+    "last_updated": "2026-11-24"
+  },
+
+  "server": {
+    "instructions": "Crow Memory \u2014 AI кодтау агенттеріне арналған сыртқы синапстық жады. Сіздің кодтау стиліңізді, қателерге деген интуицияңызды және архитектуралық қалауларыңызды crow.bin ішінде сығылған салмақ матрицалары ретінде сақтайды.",
+
+    "prompts": {
+      "crow_memory_bias": {
+        "description": "Автоматты түрде енгізілетін Crow Memory бейімділік блогы. Сіздің кодтау стиліңізді, қалауларыңызды және дамыған ережелерді қамтиды. Хост оны сессия басында жүктеуі керек.",
+        "body_template": "=== Crow Memory \u2014 Автоматты түрде енгізілген контекст ===\n\n[Тұрақты дамыған ережелер]\n{rules}\n\n[Соңғы жады ишаралары]\n{bias}\n\nЖоғарыдағы контекст сіздің үйренген қалауларыңыз бен стиліңізді білдіреді. Оны жауаптарыңызды бағыттау үшін қолданыңыз. Толығырақ білу үшін нақты сұраумен және register-мен (style/bug/arch/context/life_pref/life_avoid/life_phil/life_context) crow_recall шақырыңыз."
+      },
+      "crow_evolved_rules": {
+        "description": "Permanent evolved rules from Crow's system_prompt.md: permanent rules (human-promoted via CROW_ADMIN_TOKEN) plus unreviewed model suggestions.",
+        "body_template": "{prompt}"
+      }
+    }
+  },
+
+  "tools": {
+    "crow_recall": {
+      "description": "Crow синапстық жадысынан пайдаланушының жеке кодтау стилін, қателерге деген интуициясын, архитектуралық қалауын немесе жеке контексін еске түсіреді. Пайдаланушының индуктивтік бейімділігіне сәйкес келу үшін әр жауаптың алдында шақырыңыз. Әдепкі бойынша (register=all немесе өткізіп жіберілген, domain=all) барлық 8 register-ді сұрайды және нәтижелерді тиімді ұқсастық бойынша жаһандық біріктіреді.",
+      "parameters": {
+        "query": "Ағымдағы тапсырманың табиғи тілдегі сипаттамасы.",
+        "register": "Қай register. Таңдалған домендегі барлық register-ді сұрау үшін 'all' қолданыңыз (немесе өткізіп жіберіңіз). Code: style/bug/arch/context. Life: life_pref/life_avoid/life_phil/life_context.",
+        "domain": "register 'all' болғанда немесе өткізіп жіберілгенде қолданылатын домен сүзгісі. 'code' = style/bug/arch/context, 'life' = life_pref/life_avoid/life_phil/life_context, 'all' = барлық 8 register (әдепкі).",
+        "top_k": "Ишаралар саны (1-5).",
+        "format": "Шығу пішімі. 'hint' JSON ишараларды қайтарады (әдепкі); 'bias_block' жүйелік промптқа енгізуге арналған [User Bias] мәтіндік блогын қайтарады.",
+        "project": "Бір жобаның ишараларын күшейту және басқа жобаның ишараларын сүзу/айыппұлдау үшін қолданылатын жоба тегі.",
+        "strict_project": "true болса, басқа жобаның ишараларын нәтижелерден қатаң түрде сүзеді."
+      }
+    },
+    "crow_ingest": {
+      "description": "Кодтау тәжірибесін Crow-дың ұзақ мерзімді синапстық жадысына сақтайды. build/тест нәтижелерінен немесе пайдаланушының нақты кері байланысынан кейін шақырыңыз. Автоматты polarity картасы үшін нақты polarity немесе build exit_code беріңіз. Мазмұн алдымен тазартылады; таза шу кірісі жадқа тимей қабылданбайды.",
+      "parameters": {
+        "key": "Жағдайдың абстрактілі сипаттамасы.",
+        "value": "Қолданылған код үлгісі немесе шешім.",
+        "register": "Сақталатын register (style/bug/arch/context/life_pref/life_avoid/life_phil/life_context).",
+        "polarity": "Күшейту күші [-2.0, 2.0]. exit_code берілсе, міндетті емес; екеуі де берілсе, нақты polarity басым болады.",
+        "exit_code": "build шығу коды (0 = сәтті). Нақты polarity берілмесе, автоматты түрде polarity-ға сәйкестендіріледі (сәттілікте +1.5/+0.5, сәтсіздікте -0.5/-1.0).",
+        "user_edited": "Пайдаланушы AI шығысын өңдеді ме. exit_code-тен алынған polarity-ды реттейді.",
+        "project": "Кейінірек жобаны ескеретін еске түсіру үшін жады жазбасымен бірге сақталатын жоба тегі."
+      }
+    },
+    "crow_admin": {
+      "description": "Crow әкімшілік операциялары бір құралда. Әрекеттер: diagnostics (жады статистикасы), drift (дрифт тексеруі), prompt (system_prompt.md оқу/қосу/статистика), backup (жасау/айналдыру/тізімдеу/қалпына келтіру), evolve (промпт мутацияларын ұсыну), project_info (жоба даналарын тізімдеу/жасау).",
+      "parameters": {
+        "action": "Қай әкімшілік операция: diagnostics, drift, prompt, backup, evolve немесе project_info.",
+        "args": "Таңдалған операцияға жіберілетін әрекетке тән аргументтер нысаны."
+      }
+    }
+  },
+
+  "errors": {
+    "unknown_tool": "Белгісіз құрал: {name}",
+    "unknown_prompt": "Белгісіз промпт: {name}",
+    "unknown_action": "Белгісіз {context} әрекеті: {action}",
+    "project_name_required": "create әрекеті үшін project_name қажет"
+  },
+
+  "recall_messages": {
+    "faint_bias": "Crow әлсіз {register} бейімділігін еске түсіреді. Әзірге жады аз сақталған.",
+    "unknown_register": "Белгісіз register: {register}"
+  },
+
+  "ingest_messages": {
+    "status_ingested": "сақталды",
+    "unknown_register": "Белгісіз register: {register}"
+  },
+
+  "evolve_messages": {
+    "no_patterns": "Статистикалық маңызды үлгілер әзірге анықталмады."
+  },
+
+  "drift_messages": {
+    "healthy": "Жады сенімділігі сау.",
+    "confused": "Crow жады шатасқан сияқты. Соңғы тапсырмалар тым жаңа болуы мүмкін немесе жады қаныққан. Спектрлік қайта орнатуды немесе мұрағаттауды қарастырыңыз."
+  },
+
+  "cli": {
+    "stdio_start": "Crow Memory MCP сервері stdio арқылы жұмыс істеп тұр",
+    "sse_start": "Crow Memory MCP SSE сервері http://{host}:{port}/sse мекенжайын тыңдап тұр",
+    "http_start": "Crow Memory MCP Streamable HTTP сервері http://{host}:{port}/ мекенжайын тыңдап тұр",
+    "dual_start_sse": "Crow Memory MCP SSE сервері http://{host}:{sse_port}/sse мекенжайын тыңдап тұр",
+    "dual_start_http": "Crow Memory MCP Streamable HTTP сервері http://{host}:{http_port}/ мекенжайын тыңдап тұр"
+  },
+
+  "installer": {
+    "banner_title": "Zoo Code үшін Crow Memory орнатушысы",
+    "step_1_install_deps": "Python тәуелділіктерін орнату",
+    "step_2_init_crow": "crow.bin инициализациялау",
+    "step_3_vscode_tasks": ".vscode/tasks.json жасау (қалта ашылғанда SSE автоматты іске қосылады)",
+    "step_4_custom_mode": "Zoo Code автоматты белсендіру режимін жасау",
+    "step_5_start_server": "Crow SSE серверін іске қосу және автоматты іске қосу",
+    "step_done": "Дайын.",
+    "complete_title": "Crow Memory орнатуы аяқталды!",
+    "sse_running": "SSE сервері http://127.0.0.1:9020/sse мекенжайында жұмыс істеп тұр",
+    "next_steps_label": "Келесі қадамдар:",
+    "next_step_1": "1. Zoo Code-ты қайта іске қосыңыз",
+    "next_step_2": "2. Режимді \"Orchestrator + Crow\"-ке ауыстырыңыз",
+    "next_step_3": "3. Crow автоматты түрде белсендіріледі \u2014 қолмен баптау қажет емес",
+    "next_step_4": "4. Crow сервері Task Scheduler арқылы Windows-пен бірге автоматты түрде іске қосылады"
+  },
+
+  "system_prompt": {
+    "header": "# Crow Memory \u2014 Жүйелік промпт ережелері",
+    "subtitle": "> Бұл ережелерді Crow дамытып, пайдаланушы бекітті.\n> Олар статистикалық маңызды кодтау бейімділіктерін білдіреді.\n> Қолмен өңдемеңіз \u2014 Crow MCP evolve құралдарын пайдаланыңыз.",
+    "managed_by": "<!-- Бұл файлды crow_mcp_server.py басқарады -->",
+    "default_rules": [
+      "RULE: Әр жауаптың алдында crow_recall(domain=\"all\") шақырып, пайдаланушының кодтау стилі, қателерге деген интуициясы, архитектуралық қалаулары, жеке талғамы, философиясы және ағымдағы контексі туралы барлық 8 register-ді (style, bug, arch, context, life_pref, life_avoid, life_phil, life_context) сұраңыз. Қайтарылған ишараларды жауабыңызда көрсетіңіз.",
+      "RULE: Әр жауаптан кейін пайдаланушы ашқан нәрсені \u2014 қалаулар, философия, түзетулер, контекст \u2014 crow_ingest арқылы сақтаңыз. Пайдаланушы \"мұны есте сақта\" деп айтуын күтпей, тиісті register мен polarity-ды өзіңіз анықтаңыз. Кодпен жұмыстан кейін build нәтижелерін crow_ingest_from_build арқылы автоматты бағалаңыз.",
+      "RULE: Құжат өңдеу, git операциялары немесе конфигурация өзгерістері сияқты кодтауға жатпайтын тапсырмаларда да recall+ingest ережелерін өткізіп жібермеңіз. Оларды әрқашан орындаңыз."
+    ]
+  }
+}

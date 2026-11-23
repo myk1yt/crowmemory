@@ -1,0 +1,119 @@
+{
+  "_meta": {
+    "locale": "eo",
+    "language_name": "Esperanto",
+    "version": "1.0.0",
+    "last_updated": "2026-11-24"
+  },
+
+  "server": {
+    "instructions": "Crow Memory — Ekstera sinapta memoro por AI-programadaj agentoj. Konservas vian programan stilon, intuicion pri cimpoj kaj arkitekturajn preferojn kiel kunpremitaj pezaj matricoj en crow.bin.",
+
+    "prompts": {
+      "crow_memory_bias": {
+        "description": "Aŭtomate enŝovita bloko de Crow Memory-biaso. Enhavas vian programan stilon, preferojn kaj evoluintajn regulojn. La gastiganto devus ŝargi ĝin ĉe la komenco de la sesio.",
+        "body_template": "=== Crow Memory — Aŭtomate enŝovita kunteksto ===\n\n[Daŭraj evoluintaj reguloj]\n{rules}\n\n[Lastatempaj memoraj sugestoj]\n{bias}\n\nLa supra kunteksto reprezentas viajn lernitajn preferojn kaj stilon. Uzu ĝin por gvidi viajn respondojn. Por lerni pli, voku crow_recall kun specifa demando kaj registro (style/bug/arch/context/life_pref/life_avoid/life_phil/life_context)."
+      },
+      "crow_evolved_rules": {
+        "description": "Permanent evolved rules from Crow's system_prompt.md: permanent rules (human-promoted via CROW_ADMIN_TOKEN) plus unreviewed model suggestions.",
+        "body_template": "{prompt}"
+      }
+    }
+  },
+
+  "tools": {
+    "crow_recall": {
+      "description": "Rekolektas uzanto-specifan programan stilon, intuicion pri cimpoj, arkitekturan preferon aŭ personan kuntekston el la sinapta memoro de Crow. Voku ĝin ANTAŬ ĉiu respondo por agordi vin al la indukta biaso de la uzanto. Defaŭlte (register=all aŭ forlasita, domain=all), ĝi pridemandas ĉiujn 8 registrojn kaj kunfandas la rezultojn tutmonde laŭ efika simileco.",
+      "parameters": {
+        "query": "Naturlingva priskribo de la nuna tasko.",
+        "register": "Kiun registron. Uzu 'all' (aŭ forlasu) por pridemandi ĉiujn registrojn en la elektita domajno. Code: style/bug/arch/context. Life: life_pref/life_avoid/life_phil/life_context.",
+        "domain": "Domajna filtrilo uzata kiam register estas 'all' aŭ forlasita. 'code' = style/bug/arch/context, 'life' = life_pref/life_avoid/life_phil/life_context, 'all' = ĉiuj 8 registroj (defaŭlte).",
+        "top_k": "Nombro da sugestoj (1-5).",
+        "format": "Eliga formato. 'hint' redonas JSON-sugestojn (defaŭlte); 'bias_block' redonas la tekstoblokon [User Bias] por enŝovo en la sisteman instrukciaron.",
+        "project": "Projekta etikedo uzata por plifortigi sugestojn de la sama projekto kaj filtri aŭ puni tiujn de aliaj projektoj.",
+        "strict_project": "Kiam vera, severe forfiltras sugestojn de aliaj projektoj el la rezultoj."
+      }
+    },
+    "crow_ingest": {
+      "description": "Enigas programadan sperton en la longdaŭran sinaptan memoron de Crow. Voku ĝin POST la rezultoj de konstruo aŭ testo, aŭ post eksplicita reago de la uzanto. Provizu aŭ eksplicitan polariton aŭ konstruan exit_code por aŭtomata konvertiĝo al polarito. La enhavo unue estas purigata; pura brua enigo estas rifuzata sen tuŝi la memoron.",
+      "parameters": {
+        "key": "Abstrakta priskribo de la situacio.",
+        "value": "Aplikita koda ŝablono aŭ decido.",
+        "register": "Registro por konservi (style/bug/arch/context/life_pref/life_avoid/life_phil/life_context).",
+        "polarity": "Forto de plifortigo [-2.0, 2.0]. Nedeviga se exit_code estas provizita; eksplicita polarito venkas kiam ambaŭ estas provizitaj.",
+        "exit_code": "Konstrua elirkodo (0 = sukceso). Aŭtomate mapiĝas al polarito (+1.5/+0.5 ĉe sukceso, -0.5/-1.0 ĉe malsukceso) krom se eksplicita polarito estas provizita.",
+        "user_edited": "Ĉu la uzanto redaktis la eligon de la AI. Ĝustigas la polariton derivitan de exit_code.",
+        "project": "Projekta etikedo konservata kun la memora ero por posta projekte konscia rekolektado."
+      }
+    },
+    "crow_admin": {
+      "description": "Administraj operacoj de Crow en unu ilo. Agoj: diagnostics (memoraj statistikoj), drift (drift-kontrolo), prompt (legi/aldoni/statistikoj de system_prompt.md), backup (krei/rotacii/listigi/rekuperi), evolve (proponi promptajn mutaciojn), project_info (listigi/krei projektajn instancojn).",
+      "parameters": {
+        "action": "Kiun administran operacon: diagnostics, drift, prompt, backup, evolve aŭ project_info.",
+        "args": "Agospecifa argumentobjekto pasata al la elektita operaco."
+      }
+    }
+  },
+
+  "errors": {
+    "unknown_tool": "Nekonata ilo: {name}",
+    "unknown_prompt": "Nekonata prompto: {name}",
+    "unknown_action": "Nekonata ago {context}: {action}",
+    "project_name_required": "project_name estas bezonata por la ago create"
+  },
+
+  "recall_messages": {
+    "faint_bias": "Crow rekolektas malfortan {register}-biaso. Ankoraŭ malmulte da memoraĵoj konservitaj.",
+    "unknown_register": "Nekonata registro: {register}"
+  },
+
+  "ingest_messages": {
+    "status_ingested": "enigita",
+    "unknown_register": "Nekonata registro: {register}"
+  },
+
+  "evolve_messages": {
+    "no_patterns": "Ankoraŭ ne detektiĝis statistike signifaj ŝablonoj."
+  },
+
+  "drift_messages": {
+    "healthy": "La memora konfido estas sana.",
+    "confused": "La memoro de Crow ŝajnas konfuzita. Lastatempaj taskoj eble tro novaj aŭ la memoro estas saturita. Konsideru spektran restarigon aŭ arkivadon."
+  },
+
+  "cli": {
+    "stdio_start": "Crow Memory MCP-servilo funkcias sur stdio",
+    "sse_start": "Crow Memory MCP SSE-servilo aŭskultas ĉe http://{host}:{port}/sse",
+    "http_start": "Crow Memory MCP Streamable HTTP-servilo aŭskultas ĉe http://{host}:{port}/",
+    "dual_start_sse": "Crow Memory MCP SSE-servilo aŭskultas ĉe http://{host}:{sse_port}/sse",
+    "dual_start_http": "Crow Memory MCP Streamable HTTP-servilo aŭskultas ĉe http://{host}:{http_port}/"
+  },
+
+  "installer": {
+    "banner_title": "Crow Memory-instalilo por Zoo Code",
+    "step_1_install_deps": "Instalado de Python-dependecoj",
+    "step_2_init_crow": "Pravalorizado de crow.bin",
+    "step_3_vscode_tasks": "Kreado de .vscode/tasks.json (aŭtomata startigo de SSE kiam la dosierujo malfermiĝas)",
+    "step_4_custom_mode": "Kreado de aŭtomata aktiviga reĝimo por Zoo Code",
+    "step_5_start_server": "Startigo de Crow SSE-servilo + aŭtomata startigo",
+    "step_done": "Farita.",
+    "complete_title": "La instalado de Crow Memory estas finita!",
+    "sse_running": "SSE-servilo funkcias ĉe http://127.0.0.1:9020/sse",
+    "next_steps_label": "Sekvaj paŝoj:",
+    "next_step_1": "1. Restartigu Zoo Code",
+    "next_step_2": "2. Ŝanĝu la reĝimon al \"Orchestrator + Crow\"",
+    "next_step_3": "3. Crow aŭtomate aktiviĝas — neniu mana agordo bezonata",
+    "next_step_4": "4. Crow-servilo aŭtomate startiĝas kun Windows per Task Scheduler"
+  },
+
+  "system_prompt": {
+    "header": "# Crow Memory — Reguloj de la sistema instrukciaro",
+    "subtitle": "> Tiujn regulojn evoluigis Crow kaj aprobis la uzanto.\n> Ili reprezentas statistike signifajn programadajn biasojn.\n> Ne redaktu mane — uzu la Crow MCP-evoluajn ilojn.",
+    "managed_by": "<!-- Ĉi tiu dosiero estas administrata de crow_mcp_server.py -->",
+    "default_rules": [
+      "RULE: Antaŭ ĉiu respondo, voku crow_recall(domain=\"all\") por pridemandi ĉiujn 8 registrojn (style, bug, arch, context, life_pref, life_avoid, life_phil, life_context) pri la programa stilo, intuicio pri cimpoj, arkitekturaj preferoj, persona gusto, filozofio kaj nuna kunteksto de la uzanto. Respegulu la redonitajn sugestojn en via respondo.",
+      "RULE: Post ĉiu respondo, enigu tion, kion la uzanto malkaŝis — preferojn, filozofion, korektojn, kuntekston — per crow_ingest. Vi mem juĝu la taŭgan registron kaj polariton sen atendi, ke la uzanto diru \"memoru ĉi tion\". Post koda laboro, aŭtomate taksu konstruajn rezultojn per crow_ingest_from_build.",
+      "RULE: Ne preterlasu la regulojn recall+ingest eĉ por neprogramadaj taskoj kiel dokumentredaktado, git-operacoj aŭ agordaj ŝanĝoj. Ĉiam plenumu ilin."
+    ]
+  }
+}

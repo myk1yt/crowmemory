@@ -1,0 +1,119 @@
+{
+  "_meta": {
+    "locale": "gl",
+    "language_name": "Galician",
+    "version": "1.0.0",
+    "last_updated": "2026-11-24"
+  },
+
+  "server": {
+    "instructions": "Crow Memory — Memoria sináptica externa para axentes de programación con IA. Almacena o teu estilo de programación, a túa intuición sobre erros e as túas preferencias arquitectónicas como matrices de pesos comprimidas en crow.bin.",
+
+    "prompts": {
+      "crow_memory_bias": {
+        "description": "Bloque de sesgo de Crow Memory inxectado automaticamente. Contén o teu estilo de programación, as túas preferencias e as regras evolucionadas. O anfitrión debería cargalo ao comezo da sesión.",
+        "body_template": "=== Crow Memory — Contexto inxectado automaticamente ===\n\n[Regras evolucionadas permanentes]\n{rules}\n\n[Suxestións de memoria recentes]\n{bias}\n\nO contexto anterior representa as túas preferencias e o teu estilo aprendidos. Úsao para orientar as túas respostas. Para saber máis, chama a crow_recall cunha consulta específica e un register (style/bug/arch/context/life_pref/life_avoid/life_phil/life_context)."
+      },
+      "crow_evolved_rules": {
+        "description": "Permanent evolved rules from Crow's system_prompt.md: permanent rules (human-promoted via CROW_ADMIN_TOKEN) plus unreviewed model suggestions.",
+        "body_template": "{prompt}"
+      }
+    }
+  },
+
+  "tools": {
+    "crow_recall": {
+      "description": "Recupera o estilo de programación, a intuición sobre erros, as preferencias arquitectónicas ou o contexto persoal do usuario desde a memoria sináptica de Crow. Chama a esta ferramenta antes de cada resposta para aliñarte co sesgo indutivo do usuario. Por defecto (register=all ou omitido, domain=all), consulta os 8 register e combina os resultados globalmente pola similitude efectiva.",
+      "parameters": {
+        "query": "Descrición en linguaxe natural da tarefa actual.",
+        "register": "Que register usar. Usa 'all' (ou omíteo) para consultar todos os register do dominio seleccionado. Code: style/bug/arch/context. Life: life_pref/life_avoid/life_phil/life_context.",
+        "domain": "Filtro de dominio usado cando register é 'all' ou se omite. 'code' = style/bug/arch/context, 'life' = life_pref/life_avoid/life_phil/life_context, 'all' = todos os 8 register (por defecto).",
+        "top_k": "Número de suxestións (1-5).",
+        "format": "Formato de saída. 'hint' devolve suxestións JSON (por defecto); 'bias_block' devolve o bloque de texto [User Bias] para a inxección no prompt do sistema.",
+        "project": "Etiqueta de proxecto usada para reforzar as suxestións do mesmo proxecto e filtrar ou penalizar as doutros proxectos.",
+        "strict_project": "Cando é true, elimina por completo as suxestións doutros proxectos dos resultados."
+      }
+    },
+    "crow_ingest": {
+      "description": "Inxire unha experiencia de programación na memoria sináptica a longo prazo de Crow. Chama a esta ferramenta despois dos resultados de build/test ou dunha retroalimentación explícita do usuario. Proporciona unha polarity explícita ou un exit_code de build para o mapeamento automático da polaridade. O contido límpase primeiro; a entrada que é puro ruído rexéitase sen tocar a memoria.",
+      "parameters": {
+        "key": "Descrición abstracta da situación.",
+        "value": "Patrón de código ou decisión aplicada.",
+        "register": "Register no que almacenar (style/bug/arch/context/life_pref/life_avoid/life_phil/life_context).",
+        "polarity": "Forza de reforzo [-2.0, 2.0]. Opcional se se dá exit_code; a polarity explícita ten prioridade cando se proporcionan ambas.",
+        "exit_code": "Código de saída do build (0 = éxito). Mapea automaticamente á polaridade (+1.5/+0.5 en caso de éxito, -0.5/-1.0 en caso de fallo) a menos que se dea unha polarity explícita.",
+        "user_edited": "Se o usuario editou a saída da IA. Axusta a polaridade derivada do exit_code.",
+        "project": "Etiqueta de proxecto almacenada coa entrada de memoria para unha recuperación posterior consciente do proxecto."
+      }
+    },
+    "crow_admin": {
+      "description": "Operacións administrativas de Crow nunha soa ferramenta. Accións: diagnostics (estatísticas da memoria), drift (comprobación de deriva), prompt (ler/engadir/estatísticas de system_prompt.md), backup (crear/rotar/listar/recuperar), evolve (propoñer mutacións do prompt), project_info (listar/crear instancias de proxecto).",
+      "parameters": {
+        "action": "Que operación administrativa: diagnostics, drift, prompt, backup, evolve ou project_info.",
+        "args": "Obxecto de argumentos específicos da acción que se pasa á operación seleccionada."
+      }
+    }
+  },
+
+  "errors": {
+    "unknown_tool": "Ferramenta descoñecida: {name}",
+    "unknown_prompt": "Prompt descoñecido: {name}",
+    "unknown_action": "Acción descoñecida de {context}: {action}",
+    "project_name_required": "project_name é obrigatorio para a acción create"
+  },
+
+  "recall_messages": {
+    "faint_bias": "Crow lembra un sesgo {register} feble. Aínda hai poucas memorias almacenadas.",
+    "unknown_register": "Register descoñecido: {register}"
+  },
+
+  "ingest_messages": {
+    "status_ingested": "inxerido",
+    "unknown_register": "Register descoñecido: {register}"
+  },
+
+  "evolve_messages": {
+    "no_patterns": "Aínda non se detectaron patróns estatisticamente significativos."
+  },
+
+  "drift_messages": {
+    "healthy": "A confianza da memoria é saudable.",
+    "confused": "A memoria de Crow parece confusa. As tarefas recentes poden ser demasiado novas ou a memoria está saturada. Considera un reinicio espectral ou o arquivado."
+  },
+
+  "cli": {
+    "stdio_start": "Servidor MCP de Crow Memory executándose en stdio",
+    "sse_start": "Servidor SSE MCP de Crow Memory escoitando en http://{host}:{port}/sse",
+    "http_start": "Servidor HTTP Streamable MCP de Crow Memory escoitando en http://{host}:{port}/",
+    "dual_start_sse": "Servidor SSE MCP de Crow Memory escoitando en http://{host}:{sse_port}/sse",
+    "dual_start_http": "Servidor HTTP Streamable MCP de Crow Memory escoitando en http://{host}:{http_port}/"
+  },
+
+  "installer": {
+    "banner_title": "Instalador de Crow Memory para Zoo Code",
+    "step_1_install_deps": "Instalando as dependencias de Python",
+    "step_2_init_crow": "Inicializando crow.bin",
+    "step_3_vscode_tasks": "Creando .vscode/tasks.json (inicio automático do SSE ao abrir o cartafol)",
+    "step_4_custom_mode": "Creando o modo de activación automática de Zoo Code",
+    "step_5_start_server": "Iniciando o servidor SSE de Crow + inicio automático",
+    "step_done": "Feito.",
+    "complete_title": "Instalación de Crow Memory completada!",
+    "sse_running": "Servidor SSE executándose en http://127.0.0.1:9020/sse",
+    "next_steps_label": "Próximos pasos:",
+    "next_step_1": "1. Reinicia Zoo Code",
+    "next_step_2": "2. Cambia o modo a \"Orchestrator + Crow\"",
+    "next_step_3": "3. Crow actívase automaticamente — non se precisa configuración manual",
+    "next_step_4": "4. O servidor de Crow iníciase automaticamente con Windows mediante o Programador de tarefas"
+  },
+
+  "system_prompt": {
+    "header": "# Crow Memory — Regras do prompt do sistema",
+    "subtitle": "> Estas regras foron evolucionadas por Crow e aprobadas polo usuario.\n> Representan sesgos de programación estatisticamente significativos.\n> Non editar manualmente — usa as ferramentas evolve de Crow MCP.",
+    "managed_by": "<!-- Este ficheiro está xestionado por crow_mcp_server.py -->",
+    "default_rules": [
+      "RULE: Antes de cada resposta, chama a crow_recall(domain=\"all\") para consultar os 8 register (style, bug, arch, context, life_pref, life_avoid, life_phil, life_context) o estilo de programación, a intuición sobre erros, as preferencias arquitectónicas, o gusto persoal, a filosofía e o contexto actual do usuario. Reflicte as suxestións devoltas na túa resposta.",
+      "RULE: Despois de cada resposta, inxire o que revelou o usuario (preferencias, filosofía, correccións, contexto) mediante crow_ingest. Xulga ti mesmo o register e a polarity axeitados sen esperar a que o usuario diga \"lembra isto\". Despois do traballo de código, avalía automaticamente os resultados do build mediante crow_ingest_from_build.",
+      "RULE: Non omitas as regras de recall+ingest nin sequera para tarefas que non son de programación, como a edición de documentos, as operacións de git ou os cambios de configuración. Execútaas sempre."
+    ]
+  }
+}

@@ -1,0 +1,108 @@
+{
+  "_meta": {
+    "locale": "am",
+    "language_name": "Amharic",
+    "version": "1.0.0",
+    "last_updated": "2026-11-24"
+  },
+  "server": {
+    "instructions": "Crow Memory — ለሰው ሰራሽ አስተውሎት ኮድ ኤጀንቶች የውጪ ሲናፕስ ትውስታ። የእርስዎን የኮድ አጻጻፍ ስልት፣ የስህተት ግንዛቤ እና የአርክቴክቸር ምርጫዎች በተጨመቁ የክብደት ማትሪክስ መልክ በ crow.bin ውስጥ ያስቀምጣል።",
+    "prompts": {
+      "crow_memory_bias": {
+        "description": "በራስ-ሰር የሚገባ የ Crow Memory አድልዎ ብሎክ። የእርስዎን የኮድ አጻጻፍ ስልት፣ ምርጫዎች እና የዳበሉ ደንቦች ይዟል። አስተናጋጁ በክፍለ-ጊዜ መጀመሪያ ላይ ይህንን መጫን አለበት።",
+        "body_template": "=== Crow Memory — በራስ-ሰር የሚገባ ዐውድ ===\n\n[ቋሚ የዳበሉ ደንቦች]\n{rules}\n\n[የቅርብ ጊዜ የትውስታ ፍንጮች]\n{bias}\n\nከላይ ያለው ዐውድ የተማሩትን ምርጫዎችና ስልት ይወክላል። መልሶችዎን ለመምራት ይጠቀሙበት። ተጨማሪ ለማወቅ crow_recall ን በተወሰነ መጠይቅና register (style/bug/arch/context/life_pref/life_avoid/life_phil/life_context) ይጥሩ።"
+      },
+      "crow_evolved_rules": {
+        "description": "Permanent evolved rules from Crow's system_prompt.md: permanent rules (human-promoted via CROW_ADMIN_TOKEN) plus unreviewed model suggestions.",
+        "body_template": "{prompt}"
+      }
+    }
+  },
+  "tools": {
+    "crow_recall": {
+      "description": "የተጠቃሚውን ልዩ የኮድ አጻጻፍ ስልት፣ የስህተት ግንዛቤ፣ የአርክቴክቸር ምርጫ ወይም የግል ዐውድ ከ Crow ሲናፕስ ትውስታ ያስታውሱ። ከተጠቃሚው ኢንዳክቲቭ አድልዎ ጋር ለመስማማት ከእያንዳንዱ መልስ በፊት ይህንን ይጥሩ። በነባሪ (register=all ወይም ካልተገለጸ፣ domain=all) ሁሉንም 8 መዝገቦች ይጠይቃል እና ውጤቶችን በዓለም አቀፍ ደረጃ በውጤታማ ተመሳሳይነት ያዋህዳል።",
+      "parameters": {
+        "query": "የአሁኑ ተግባር በተፈጥሮ ቋንቋ የተገለጸ መግለጫ።",
+        "register": "የትኛው መዝገብ። በተመረጠው ጎራ ውስጥ ያሉትን ሁሉንም መዝገቦች ለመጠየቅ 'all' ይጠቀሙ (ወይም ይተውት)። Code: style/bug/arch/context. Life: life_pref/life_avoid/life_phil/life_context.",
+        "domain": "register 'all' ሲሆን ወይም ካልተገለጸ የሚጠቀም የጎራ ማጣሪያ። 'code' = style/bug/arch/context, 'life' = life_pref/life_avoid/life_phil/life_context, 'all' = ሁሉም 8 መዝገቦች (ነባሪ)።",
+        "top_k": "የፍንጮች ብዛት (1-5)።",
+        "format": "የውጤት ቅርጸት። 'hint' የ JSON ፍንጮችን ይመልሳል (ነባሪ)፤ 'bias_block' ለስርዓት ፕሮምፕት ማስገባት የሚያገለግል የ [User Bias] ጽሑፍ ብሎክ ይመልሳል።",
+        "project": "ተመሳሳይ ፕሮጀክት ፍንጮችን ለማጠናከር እና ከፕሮጀክት ውጪ ያሉ ፍንጮችን ለማጣራት ወይም ለማስቀጣት የሚጠቀም የፕሮጀክት መለያ።",
+        "strict_project": "true ሲሆን ከፕሮጀክት ውጪ ያሉ ፍንጮችን ከውጤቶቹ ላይ በጠንካራ ሁኔታ ያጣራል።"
+      }
+    },
+    "crow_ingest": {
+      "description": "የኮድ ልምድን ወደ Crow የረጅም ጊዜ ሲናፕስ ትውስታ ያስገቡ። ከግንባታ ወይም ከሙከራ ውጤቶች ወይም ከተጠቃሚው ግልጽ ግብረመልስ በኋላ ይጥሩ። ግልጽ አድልዎ ወይም ለራስ-ሰር የአድልዎ ካርታ የግንባታ exit_code ያቅርቡ። ይዘቱ መጀመሪያ ይጸዳል፤ ንጹህ ጫጫታ ትውስታውን ሳይነካ ይቀራል።",
+      "parameters": {
+        "key": "ስለ ሁኔታው ረቂቅ መግለጫ።",
+        "value": "የተተገበረ የኮድ ቅጥ ወይም ውሳኔ።",
+        "register": "የሚቀመጥበት መዝገብ (style/bug/arch/context/life_pref/life_avoid/life_phil/life_context)።",
+        "polarity": "የማጠናከሪያ ጥንካሬ [-2.0, 2.0]። exit_code ከተሰጠ አማራጭ ነው፤ ሁለቱም ከቀረቡ ግልጽ አድልዎ ይቀድማል።",
+        "exit_code": "የግንባታ መውጫ ኮድ (0 = ስኬት)። ግልጽ አድልዎ ካልተሰጠ በራስ-ሰር ወደ አድልዎ ይቀየራል (በስኬት +1.5/+0.5፣ በውድቀት -0.5/-1.0)።",
+        "user_edited": "ተጠቃሚው የ AI ውጤትን ማርትዕ አድርጓል እንደሆነ። ከ exit_code የተገኘውን አድልዎ ያስተካክላል።",
+        "project": "ለኋላ ፕሮጀክት-አዋቂ ማስታወስ ከትውስታ ግቤቱ ጋር የሚቀመጥ የፕሮጀክት መለያ።"
+      }
+    },
+    "crow_admin": {
+      "description": "የ Crow አስተዳደራዊ ስራዎች በአንድ መሳሪያ። ተግባራት፦ diagnostics (የትውስታ ስታቲስቲክስ)፣ drift (የመንሳፈፍ ፍተሻ)፣ prompt (system_prompt.md ማንበብ/መጨመር/ስታቲስቲክስ)፣ backup (መፍጠር/ማሽከርከር/መዘርዘር/መመለስ)፣ evolve (የፕሮምፕት ለውጦችን መጠቆም)፣ project_info (የፕሮጀክት ምሳሌዎችን መዘርዘር/መፍጠር)።",
+      "parameters": {
+        "action": "የትኛው አስተዳደራዊ ስራ፦ diagnostics, drift, prompt, backup, evolve ወይም project_info።",
+        "args": "ወደተመረጠው ስራ የሚተላለፍ ከተግባር ጋር የተያያዘ የክርክር ነገር።"
+      }
+    }
+  },
+  "errors": {
+    "unknown_tool": "ያልታወቀ መሳሪያ፦ {name}",
+    "unknown_prompt": "ያልታወቀ ፕሮምፕት፦ {name}",
+    "unknown_action": "ያልታወቀ የ{context} ተግባር፦ {action}",
+    "project_name_required": "ለ create ተግባር project_name ያስፈልጋል"
+  },
+  "recall_messages": {
+    "faint_bias": "Crow ደካማ የ{register} አድልዎ ያስታውሳል። እስካሁን ጥቂት ትውስታዎች ተቀምጠዋል።",
+    "unknown_register": "ያልታወቀ መዝገብ፦ {register}"
+  },
+  "ingest_messages": {
+    "status_ingested": "ገብቷል",
+    "unknown_register": "ያልታወቀ መዝገብ፦ {register}"
+  },
+  "evolve_messages": {
+    "no_patterns": "እስካሁን ስታቲስቲካዊ ጉልህ ቅጦች አልተገኙም።"
+  },
+  "drift_messages": {
+    "healthy": "የትውስታ እምነት ጤናማ ነው።",
+    "confused": "የ Crow ትውስታ ግራ የተጋባ ይመስላል። የቅርብ ጊዜ ተግባራት በጣም አዲስ ሊሆኑ ወይም ትውስታው ሊሞላ ይችላል። ስፔክትራል ዳግም ማስጀመር ወይም ማህደር ማድረግን ያስቡ።"
+  },
+  "cli": {
+    "stdio_start": "Crow Memory MCP አገልጋይ በ stdio ላይ እየሰራ ነው",
+    "sse_start": "Crow Memory MCP SSE አገልጋይ በ http://{host}:{port}/sse ላይ እያዳመጠ ነው",
+    "http_start": "Crow Memory MCP Streamable HTTP አገልጋይ በ http://{host}:{port}/ ላይ እያዳመጠ ነው",
+    "dual_start_sse": "Crow Memory MCP SSE አገልጋይ በ http://{host}:{sse_port}/sse ላይ እያዳመጠ ነው",
+    "dual_start_http": "Crow Memory MCP Streamable HTTP አገልጋይ በ http://{host}:{http_port}/ ላይ እያዳመጠ ነው"
+  },
+  "installer": {
+    "banner_title": "የ Zoo Code የ Crow Memory ገጣሚ",
+    "step_1_install_deps": "የ Python ጥገኛዎችን በመጫን ላይ",
+    "step_2_init_crow": "crow.bin ን በማስጀመር ላይ",
+    "step_3_vscode_tasks": ".vscode/tasks.json በመፍጠር ላይ (አቃፊ ሲከፈት SSE በራስ-ሰር እንዲጀምር)",
+    "step_4_custom_mode": "የ Zoo Code ራስ-ነቃ ሁነታ በመፍጠር ላይ",
+    "step_5_start_server": "የ Crow SSE አገልጋይን በማስጀመር ላይ + ራስ-ሰር መጀመር",
+    "step_done": "ተጠናቅቋል።",
+    "complete_title": "የ Crow Memory ጭነት ተጠናቅቋል!",
+    "sse_running": "SSE አገልጋይ በ http://127.0.0.1:9020/sse ላይ እየሰራ ነው",
+    "next_steps_label": "ቀጣይ እርምጃዎች፦",
+    "next_step_1": "1. Zoo Code ን እንደገና ያስጀምሩ",
+    "next_step_2": "2. ሁነታውን ወደ \"Orchestrator + Crow\" ይቀይሩ",
+    "next_step_3": "3. Crow በራስ-ሰር ይነቃል — በእጅ ማዋቀር አያስፈልግም",
+    "next_step_4": "4. የ Crow አገልጋይ ከ Windows ጋር በ Task Scheduler በራስ-ሰር ይጀምራል"
+  },
+  "system_prompt": {
+    "header": "# Crow Memory — የስርዓት ፕሮምፕት ደንቦች",
+    "subtitle": "> እነዚህ ደንቦች በ Crow የዳበሉ እና በተጠቃሚው የጸደቁ ናቸው።\n> ስታቲስቲካዊ ጉልህ የሆኑ የኮድ አድልዎዎችን ይወክላሉ።\n> በእጅ አያርትዑ — የ Crow MCP evolve መሳሪያዎችን ይጠቀሙ።",
+    "managed_by": "<!-- ይህ ፋይል በ crow_mcp_server.py ይተዳደራል -->",
+    "default_rules": [
+      "RULE: ከእያንዳንዱ መልስ በፊት crow_recall(domain=\"all\") ን ይጥሩ እና ሁሉንም 8 መዝገቦች (style, bug, arch, context, life_pref, life_avoid, life_phil, life_context) ለተጠቃሚው የኮድ አጻጻፍ ስልት፣ የስህተት ግንዛቤ፣ የአርክቴክቸር ምርጫዎች፣ የግል ጣዕም፣ ፍልስፍና እና የአሁኑ ዐውድ ይጠይቁ። የተመለሱትን ፍንጮች በመልስዎ ውስጥ ያንጸባርቁ።",
+      "RULE: ከእያንዳንዱ መልስ በኋላ ተጠቃሚው የገለጸውን — ምርጫዎች፣ ፍልስፍና፣ እርማቶች፣ ዐውድ — በ crow_ingest ያስገቡ። ተጠቃሚው \"ይህን አስታውስ\" እስኪል ሳይጠብቁ ተገቢውን መዝገብና አድልዎ ራስዎ ይወስኑ። ከኮድ ስራ በኋላ የግንባታ ውጤቶችን በ crow_ingest_from_build በራስ-ሰር ይገምግሙ።",
+      "RULE: እንደ ሰነድ ማርትዕ፣ git ስራዎች ወይም የማዋቀሪያ ለውጦች ላሉ ኮድ-ያልሆኑ ተግባራትም ቢሆን የማስታወስና ማስገባት ደንቦችን አይዘልሉ። ሁልጊዜ ያከናውኗቸው።"
+    ]
+  }
+}

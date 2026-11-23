@@ -3,122 +3,84 @@
     "locale": "ja",
     "language_name": "日本語",
     "version": "1.0.0",
-    "last_updated": "2026-05-29"
+    "last_updated": "2026-11-24"
   },
+
   "server": {
     "instructions": "Crow Memory — AIコーディングエージェント用の外部シナプティックメモリ。コーディングスタイル、バグ直感、アーキテクチャの好みをcrow.binに圧縮重み行列として保存します。",
+
     "prompts": {
       "crow_memory_bias": {
         "description": "自動注入されるCrow Memoryバイアスブロック。コーディングスタイル、好み、進化したルールを含みます。ホストはセッション開始時にこれをロードする必要があります。",
         "body_template": "=== Crow Memory — 自動注入コンテキスト ===\n\n[恒久的な進化ルール]\n{rules}\n\n[最近のメモリヒント]\n{bias}\n\n上記のコンテキストは学習された好みとスタイルを示しています。応答のガイドに使用してください。詳細を知るには、特定のクエリとregister（style/bug/arch/context/life_pref/life_avoid/life_phil/life_context）でcrow_recallを呼び出してください。"
       },
       "crow_evolved_rules": {
-        "description": "Crowのsystem_prompt.mdから進化した恒久的なルール。HITLを通じて承認された統計的に有意なパターンです。",
+        "description": "Permanent evolved rules from Crow's system_prompt.md: permanent rules (human-promoted via CROW_ADMIN_TOKEN) plus unreviewed model suggestions.",
         "body_template": "{prompt}"
       }
     }
   },
+
   "tools": {
     "crow_recall": {
-      "description": "Crowシナプティックメモリからユーザー固有のコーディングスタイル、バグ直感、アーキテクチャの好み、または個人コンテキストを想起します。ユーザーの帰納的バイアスに合わせるため、毎回の応答前に呼び出してください。デフォルト（register未指定、domain=all）では8つのレジスタすべてを照会します。",
+      "description": "Crowシナプティックメモリからユーザー固有のコーディングスタイル、バグ直感、アーキテクチャの好み、または個人コンテキストを想起します。ユーザーの帰納的バイアスに合わせるため、毎回の応答前に呼び出してください。デフォルト（register=allまたは省略、domain=all）では、8つのレジスタすべてを照会し、有効類似度で結果をグローバルに統合します。",
       "parameters": {
         "query": "現在のタスクの自然言語による説明。",
-        "register": "レジスタを選択します。'all'はすべてのレジスタを照会します（domain=allと同じ）。Code: style/bug/arch/context。Life: life_pref/life_avoid/life_phil/life_context。",
-        "top_k": "ヒントの数（1〜3）。",
-        "domain": "ドメインフィルターショートカット。'code' = style/bug/arch/context、'life' = life_pref/life_avoid/life_phil/life_context、'all' = 全8レジスタ（デフォルト）。"
+        "register": "照会するレジスタ。'all'（または省略）は選択したドメインのすべてのレジスタを照会します。Code: style/bug/arch/context。Life: life_pref/life_avoid/life_phil/life_context。",
+        "domain": "registerが'all'または省略の場合に使用するドメインフィルター。'code' = style/bug/arch/context、'life' = life_pref/life_avoid/life_phil/life_context、'all' = 全8レジスタ（デフォルト）。",
+        "top_k": "ヒントの数（1〜5）。",
+        "format": "出力フォーマット。'hint'はJSONヒントを返します（デフォルト）。'bias_block'はシステムプロンプト注入用の[User Bias]テキストブロックを返します。",
+        "project": "同一プロジェクトのヒントを強調し、プロジェクト外のヒントをフィルタリング/減点するために使用するプロジェクトタグ。",
+        "strict_project": "trueの場合、プロジェクト外のヒントを結果から完全に除外します。"
       }
     },
     "crow_ingest": {
-      "description": "コーディング経験をCrowの長期シナプティックメモリに取り込みます。ビルド/テスト結果またはユーザーの明示的なフィードバック後に呼び出してください。",
+      "description": "コーディング経験をCrowの長期シナプティックメモリに取り込みます。ビルド/テスト結果またはユーザーの明示的なフィードバック後に呼び出してください。明示的なpolarityまたはビルドのexit_codeのどちらかを指定すると、自動的に極性がマッピングされます。コンテンツは先にサニタイズされ、純粋なノイズ入力はメモリに触れずに拒否されます。",
       "parameters": {
         "key": "状況の抽象的な説明。",
         "value": "適用されたコードパターンまたは決定。",
-        "polarity": "強化強度 [-2.0, 2.0]。",
-        "register": "保存先のレジスタ（style/bug/arch/context/life_pref/life_avoid/life_phil/life_context）。"
+        "register": "保存先のレジスタ（style/bug/arch/context/life_pref/life_avoid/life_phil/life_context）。",
+        "polarity": "強化強度 [-2.0, 2.0]。exit_codeが指定されている場合は省略可能です。両方が指定された場合は明示的なpolarityが優先されます。",
+        "exit_code": "ビルド終了コード（0 = 成功）。明示的なpolarityが指定されない限り、自動的に極性にマッピングされます（成功時 +1.5/+0.5、失敗時 -0.5/-1.0）。",
+        "user_edited": "ユーザーがAIの出力を編集したかどうか。exit_code由来の極性を調整します。",
+        "project": "後でプロジェクト単位の想起に使うため、メモリエントリと一緒に保存されるプロジェクトタグ。"
       }
     },
-    "crow_evolve_propose": {
-      "description": "最近のメモリパターンを分析し、恒久的なシステムプロンプトの変異を提案します。提案のみを返し、適用には人間の承認が必要です。",
+    "crow_admin": {
+      "description": "Crowの管理操作を1つのツールに集約します。アクション: diagnostics（メモリ統計）、drift（ドリフトチェック）、prompt（system_prompt.mdの読み取り/追記/統計）、backup（作成/ローテーション/一覧/復旧）、evolve（プロンプト変異の提案）、project_info（プロジェクトインスタンスの一覧/作成）。",
       "parameters": {
-        "min_confidence": "最小信頼度しきい値（デフォルト: 0.85）。",
-        "min_occurrences": "最小発生回数（デフォルト: 3）。"
-      }
-    },
-    "crow_diagnostics": {
-      "description": "Crowメモリ状態の診断情報（レジスタノルム、スパース性、更新回数、値バンクサイズ、プロンプト統計）を返します。",
-      "parameters": {}
-    },
-    "crow_check_drift": {
-      "description": "最近の想起結果にメモリドリフトの兆候があるか確認します。",
-      "parameters": {
-        "threshold": "低信頼度検出のための信頼度しきい値（デフォルト: 0.5）。",
-        "min_low_confidence_count": "ドリフトをトリガーする最小低信頼度レコード数（デフォルト: 5）。"
-      }
-    },
-    "crow_ingest_from_build": {
-      "description": "ビルド終了コードとユーザー編集状態から自動的に極性（polarity）を決定した後、経験を取り込みます。npm run build完了後に使用してください。",
-      "parameters": {
-        "key": "抽象的な説明。",
-        "value": "適用されたコードパターン。",
-        "exit_code": "ビルド終了コード（0 = 成功）。",
-        "user_edited": "ユーザーがAIの出力を編集したかどうか。",
-        "register": "保存先のレジスタ（style/bug/arch/context、デフォルト: arch）。",
-        "explicit_polarity": "自動極性検出を上書きします。"
-      }
-    },
-    "crow_get_user_bias": {
-      "description": "システムプロンプトに注入する[User Bias]ブロックを生成します。すべてのレジスタを照会し、プロンプトの先頭に追加する形式でヒントを整理します。",
-      "parameters": {
-        "query": "現在のタスクの説明。",
-        "registers": "照会するレジスタのリスト（デフォルト: all）。"
-      }
-    },
-    "crow_manage_prompt": {
-      "description": "system_prompt.mdファイルの読み取り、追加、統計取得を行います。'read'は現在のプロンプト表示、'append'は進化したルールの採用、'stats'はメトリクス確認に使用します。",
-      "parameters": {
-        "action": "アクション: read、append、またはstats。",
-        "rule": "ルールテキスト（appendアクションに必須）。",
-        "auto_backup": "追加前の自動バックアップ作成（デフォルト: true）。"
-      }
-    },
-    "crow_manage_backup": {
-      "description": "Crowメモリバックアップを管理します。作成、ローテーション、一覧表示、またはドリフトからの復旧を行います。",
-      "parameters": {
-        "action": "アクション: create、rotate、list、またはrecover。",
-        "tag": "バックアップタグ: daily、weekly、またはmanual（デフォルト: daily）。",
-        "max_daily": "保持する最大日次バックアップ数（デフォルト: 7）。",
-        "max_weekly": "保持する最大週次バックアップ数（デフォルト: 4）。"
-      }
-    },
-    "crow_project_info": {
-      "description": "プロジェクトごとに分離されたCrowメモリインスタンスを一覧表示または作成します。",
-      "parameters": {
-        "action": "アクション: listまたはcreate。",
-        "project_name": "プロジェクト名（createアクションに必須）。"
+        "action": "実行する管理操作: diagnostics、drift、prompt、backup、evolve、project_infoのいずれか。",
+        "args": "選択した操作にそのまま渡される、アクション固有の引数オブジェクト。"
       }
     }
   },
+
   "errors": {
     "unknown_tool": "不明なツール: {name}",
     "unknown_prompt": "不明なプロンプト: {name}",
     "unknown_action": "不明な{context}アクション: {action}",
     "project_name_required": "createアクションにはproject_nameが必要です"
   },
+
   "recall_messages": {
     "faint_bias": "Crowは{register}バイアスをかすかに想起します。まだ保存されたメモリは少ないです。",
     "unknown_register": "不明なレジスタ: {register}"
   },
+
   "ingest_messages": {
     "status_ingested": "取り込み済み",
     "unknown_register": "不明なレジスタ: {register}"
   },
+
   "evolve_messages": {
     "no_patterns": "まだ統計的に有意なパターンは検出されていません。"
   },
+
   "drift_messages": {
     "healthy": "メモリの信頼度は健全です。",
     "confused": "Crowメモリが混乱しています。最近のタスクが新しすぎるか、メモリが飽和状態である可能性があります。スペクトラルリセットまたはアーカイブを検討してください。"
   },
+
   "cli": {
     "stdio_start": "Crow Memory MCPサーバーがstdioで実行中です",
     "sse_start": "Crow Memory MCP SSEサーバーが http://{host}:{port}/sse で待受中です",
@@ -126,10 +88,12 @@
     "dual_start_sse": "Crow Memory MCP SSEサーバーが http://{host}:{sse_port}/sse で待受中です",
     "dual_start_http": "Crow Memory MCP Streamable HTTPサーバーが http://{host}:{http_port}/ で待受中です"
   },
+
   "installer": {
     "banner_title": "Zoo Code用 Crow Memory インストーラー",
     "step_1_install_deps": "Python依存関係をインストール中",
     "step_2_init_crow": "crow.binを初期化中",
+    "step_3_vscode_tasks": ".vscode/tasks.jsonを作成中（フォルダオープン時にSSE自動起動）",
     "step_4_custom_mode": "Zoo Code自動アクティベーションモードを作成中",
     "step_5_start_server": "Crow SSEサーバーを起動中 + 自動起動設定中",
     "step_done": "完了。",
@@ -139,17 +103,17 @@
     "next_step_1": "1. Zoo Codeを再起動してください",
     "next_step_2": "2. モードを「Orchestrator + Crow」に切り替えてください",
     "next_step_3": "3. Crowが自動的にアクティブになります — 手動設定は不要です",
-    "next_step_4": "4. SSEサーバーはWindowsとともに自動起動します（スタートアップに登録済み）",
-    "step_3_vscode_tasks": ".vscode/tasks.jsonを作成中（フォルダオープン時にSSE自動起動）"
+    "next_step_4": "4. CrowサーバーはTask SchedulerによりWindowsとともに自動起動します"
   },
+
   "system_prompt": {
     "header": "# Crow Memory — システムプロンプトルール",
     "subtitle": "> これらのルールはCrowによって進化され、ユーザーの承認を得ています。\n> 統計的に有意なコーディングバイアスを表します。\n> 手動で編集しないでください — Crow MCP進化ツールを使用してください。",
     "managed_by": "<!-- このファイルはcrow_mcp_server.pyによって管理されています -->",
     "default_rules": [
-      "RULE: Before every response, call crow_recall(domain=\"all\") to query all 8 registers (style, bug, arch, context, life_pref, life_avoid, life_phil, life_context) for the user's coding style, bug intuition, architectural preferences, personal taste, philosophy, and current context. Reflect the returned hints in your response.",
-      "RULE: After every response, ingest what the user revealed — preferences, philosophy, corrections, context — via crow_ingest. Judge the appropriate register and polarity yourself without waiting for the user to say \"remember this.\" After code work, auto-evaluate build results via crow_ingest_from_build.",
-      "RULE: Do not skip the recall+ingest rules even for non-coding tasks such as document editing, git operations, or configuration changes. Always execute them."
+      "RULE: 応答する前に毎回、crow_recall(domain=\"all\")を呼び出して、ユーザーのコーディングスタイル、バグ直感、アーキテクチャの好み、個人的な趣向、哲学、現在のコンテキストについて8つのレジスタ（style、bug、arch、context、life_pref、life_avoid、life_phil、life_context）をすべて照会してください。返されたヒントを応答に反映してください。",
+      "RULE: 応答した後で毎回、ユーザーが明らかにした好み、哲学、修正、コンテキストをcrow_ingestで取り込んでください。ユーザーが「覚えておいて」と言うのを待たず、適切なregisterとpolarityを自分で判断してください。コード作業の後は、crow_ingest_from_buildでビルド結果を自動評価してください。",
+      "RULE: ドキュメント編集、git操作、設定変更などのコーディング以外のタスクでもrecall+ingestルールをスキップしないでください。常に実行してください。"
     ]
   }
 }

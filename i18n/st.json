@@ -1,0 +1,108 @@
+{
+  "_meta": {
+    "locale": "st",
+    "language_name": "Sesotho",
+    "version": "1.0.0",
+    "last_updated": "2026-11-24"
+  },
+  "server": {
+    "instructions": "Crow Memory — Memori ea synaptic ea kantle bakeng sa baemeli ba AI ba ngolang khoutu. E boloka mokhoa oa hau oa ho ngola khoutu, temoho ea hau ea liphoso, le likhetho tsa hau tsa meralo, e le li-matrices tsa boima tse petelitsoeng ka har'a crow.bin.",
+    "prompts": {
+      "crow_memory_bias": {
+        "description": "Karolo ea bias ea Crow Memory e kentsoeng ka boiketsetso. E na le mokhoa oa hau oa ho ngola khoutu, likhetho, le melao e tsoetseng pele. Motsamaisi (host) o lokela ho e kenya qalong ea seboka.",
+        "body_template": "=== Crow Memory — Boitsebiso bo kentsoeng ka boiketsetso ===\n\n[Melao e sa fetoheng e tsoetseng pele]\n{rules}\n\n[Likeletso tsa memori tsa morao tjena]\n{bias}\n\nBoitsebiso bo ka holimo bo emela likhetho tsa hau le mokhoa o ithutiloeng. Bo sebelise ho tataisa likarabo tsa hau. Ho ithuta haholoanyane, bitsa crow_recall ka potso e khethehileng le register (style/bug/arch/context/life_pref/life_avoid/life_phil/life_context)."
+      },
+      "crow_evolved_rules": {
+        "description": "Permanent evolved rules from Crow's system_prompt.md: permanent rules (human-promoted via CROW_ADMIN_TOKEN) plus unreviewed model suggestions.",
+        "body_template": "{prompt}"
+      }
+    }
+  },
+  "tools": {
+    "crow_recall": {
+      "description": "Khutlisa mokhoa oa hau oa ho ngola khoutu, temoho ea liphoso, likhetho tsa meralo, kapa boitsebiso ba hau ba botho ho tsoa memoring ea synaptic ea Crow. Bitsa sena PELE ho karabo e 'ngoe le e 'ngoe ho lumellana le inductive bias ea mosebelisi. Ka ho tloaelehileng (register=all kapa ho tloheloa, domain=all), e botsa li-register tsohle tse 8 'me e kopanya liphetho lefatšeng ka bophara ka ho tšoana ho sebetsang.",
+      "parameters": {
+        "query": "Tlhaloso ea puo e tloaelehileng ea mosebetsi oa hajoale.",
+        "register": "Ke register efe. Sebelisa 'all' (kapa u tlohele) ho botsa register e 'ngoe le e 'ngoe ho domain e khethiloeng. Code: style/bug/arch/context. Life: life_pref/life_avoid/life_phil/life_context.",
+        "domain": "Sefa ea domain e sebelisoang ha register e le 'all' kapa e tlohetsoe. 'code' = style/bug/arch/context, 'life' = life_pref/life_avoid/life_phil/life_context, 'all' = li-register tsohle tse 8 (ho tloaelehileng).",
+        "top_k": "Palo ea likeletso (1-5).",
+        "format": "Sebopeho sa tlhahiso. 'hint' e khutlisa likeletso tsa JSON (ho tloaelehileng); 'bias_block' e khutlisa karolo ea mongolo [User Bias] bakeng sa ho kenya system prompt.",
+        "project": "Letšoao la morero le sebelisoang ho phahamisa likeletso tsa morero o le mong le ho sefa kapa ho otla tse tsoang mererong e meng.",
+        "strict_project": "Ha e le 'nete' (true), e sefa ka thata likeletso tsa merero e meng ho tsoa liphethong."
+      }
+    },
+    "crow_ingest": {
+      "description": "Kenya boiphihlelo ba ho ngola khoutu memoring ea synaptic ea nako e telele ea Crow. Bitsa KA MOR'A liphetho tsa build kapa liteko, kapa maikutlo a hlakileng a mosebelisi. Fana ka polarity e hlakileng kapa exit_code ea build bakeng sa ho fetoloa ha polarity ka boiketsetso. Litaba li hloekisoa pele; tlhahiso ea lerata feela e hanoa ntle le ho ama memori.",
+      "parameters": {
+        "key": "Tlhaloso e akaretsang ea boemo.",
+        "value": "Mokhoa oa khoutu kapa qeto e sebelisitsoeng.",
+        "register": "Register eo ho bolokoang ho eona (style/bug/arch/context/life_pref/life_avoid/life_phil/life_context).",
+        "polarity": "Matla a matlafatso [-2.0, 2.0]. Ha e hlokehe haeba exit_code e fanoe; polarity e hlakileng e hlola ha ka bobeli li fanoe.",
+        "exit_code": "Khoutu ea ho tsoa ha build (0 = katleho). E fetoleloa ka boiketsetso ho polarity (+1.5/+0.5 ha ho atleha, -0.5/-1.0 ha ho hloleha) ntle le haeba polarity e hlakileng e fanoe.",
+        "user_edited": "Hore na mosebelisi o hlophisitse tlhahiso ea AI. E lokisa polarity e tsoang ho exit_code.",
+        "project": "Letšoao la morero le bolokiloeng le memori bakeng sa ho khutlisa hamorao ho tsebang morero."
+      }
+    },
+    "crow_admin": {
+      "description": "Mesebetsi ea tsamaiso ea Crow ka sesebelisoa se le seng. Mesebetsi: diagnostics (lipalo tsa memori), drift (tlhahlobo ea drift), prompt (ho bala/ho eketsa/lipalo tsa system_prompt.md), backup (ho theha/ho potoloha/lenane/ho khutlisa), evolve (ho fana ka maikutlo a liphetoho tsa prompt), project_info (lenane/ho theha merero).",
+      "parameters": {
+        "action": "Ke mosebetsi ofe oa tsamaiso: diagnostics, drift, prompt, backup, evolve, kapa project_info.",
+        "args": "Ntho ea likhang tse khethehileng tsa ketso e fetisetsoang mosebetsing o khethiloeng."
+      }
+    }
+  },
+  "errors": {
+    "unknown_tool": "Sesebelisoa se sa tsejoeng: {name}",
+    "unknown_prompt": "Prompt e sa tsejoeng: {name}",
+    "unknown_action": "Ketso {context} e sa tsejoeng: {action}",
+    "project_name_required": "project_name e hlokahala bakeng sa ketso ea create"
+  },
+  "recall_messages": {
+    "faint_bias": "Crow e hopola bias e fokolang ea {register}. Ho bolokiloe memori e 'maloa feela.",
+    "unknown_register": "Register e sa tsejoeng: {register}"
+  },
+  "ingest_messages": {
+    "status_ingested": "e kentsoeng",
+    "unknown_register": "Register e sa tsejoeng: {register}"
+  },
+  "evolve_messages": {
+    "no_patterns": "Ha ho mekhoa ea bohlokoa ka lipalo e fumanoeng hajoale."
+  },
+  "drift_messages": {
+    "healthy": "Tšepo ea memori e phetse hantle.",
+    "confused": "Memori ea Crow e bonahala e ferekane. Mesebetsi ea morao tjena e ka 'na ea ba e ncha haholo kapa memori e tletse. Nahana ka spectral reset kapa ho boloka ka archiving."
+  },
+  "cli": {
+    "stdio_start": "Crow Memory MCP server e sebetsa ho stdio",
+    "sse_start": "Crow Memory MCP SSE server e mamela ho http://{host}:{port}/sse",
+    "http_start": "Crow Memory MCP Streamable HTTP server e mamela ho http://{host}:{port}/",
+    "dual_start_sse": "Crow Memory MCP SSE server e mamela ho http://{host}:{sse_port}/sse",
+    "dual_start_http": "Crow Memory MCP Streamable HTTP server e mamela ho http://{host}:{http_port}/"
+  },
+  "installer": {
+    "banner_title": "Crow Memory Installer bakeng sa Zoo Code",
+    "step_1_install_deps": "Ho kenya litlhoko tsa Python",
+    "step_2_init_crow": "Ho qala crow.bin",
+    "step_3_vscode_tasks": "Ho theha .vscode/tasks.json (ho qala SSE ka boiketsetso ha foldara e buloa)",
+    "step_4_custom_mode": "Ho theha mokhoa oa boiketsetso oa Zoo Code",
+    "step_5_start_server": "Ho qala Crow SSE server + ho qala ka boiketsetso",
+    "step_done": "Ho felile.",
+    "complete_title": "Ho kenya Crow Memory ho phethahetse!",
+    "sse_running": "SSE server e sebetsa ho http://127.0.0.1:9020/sse",
+    "next_steps_label": "Mehato e latelang:",
+    "next_step_1": "1. Qala Zoo Code hape",
+    "next_step_2": "2. Fetola mokhoa ho \"Orchestrator + Crow\"",
+    "next_step_3": "3. Crow e sebetsa ka boiketsetso — ha ho hlokahale ho hlophisa ka letsoho",
+    "next_step_4": "4. Crow server e qala ka boiketsetso le Windows ka Task Scheduler"
+  },
+  "system_prompt": {
+    "header": "# Crow Memory — Melao ea System Prompt",
+    "subtitle": "> Melao ena e ile ea ntlafatsoa ke Crow 'me ea amoheloa ke mosebelisi.\n> E emela mekhoa ea bohlokoa ka lipalo ea ho ngola khoutu.\n> Se e hlophise ka letsoho — sebelisa lisebelisoa tsa evolve tsa Crow MCP.",
+    "managed_by": "<!-- Faele ena e laoloa ke crow_mcp_server.py -->",
+    "default_rules": [
+      "RULE: Pele ho karabo e 'ngoe le e 'ngoe, bitsa crow_recall(domain=\"all\") ho botsa li-register tsohle tse 8 (style, bug, arch, context, life_pref, life_avoid, life_phil, life_context) bakeng sa mokhoa oa mosebelisi oa ho ngola khoutu, temoho ea liphoso, likhetho tsa meralo, tatso ea botho, filosofi, le boitsebiso ba hajoale. Bontša likeletso tse khutlisitsoeng karabong ea hau.",
+      "RULE: Ka mor'a karabo e 'ngoe le e 'ngoe, kenya seo mosebelisi a se senotseng — likhetho, filosofi, litokiso, boitsebiso — ka crow_ingest. Ikhethele register le polarity tse loketseng ntle le ho emela hore mosebelisi a re \"hopola sena.\" Ka mor'a mosebetsi oa khoutu, hlahloba ka boiketsetso liphetho tsa build ka crow_ingest_from_build.",
+      "RULE: Se tlole melao ea recall+ingest le bakeng sa mesebetsi eo e seng ea khoutu joalo ka ho hlophisa litokomane, mesebetsi ea git, kapa liphetoho tsa tlhophiso. E phetha kamehla."
+    ]
+  }
+}

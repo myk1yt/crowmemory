@@ -15,7 +15,7 @@
         "body_template": "=== Crow Memory \u2014 Auto-Injected Context ===\n\n[Permanent Evolved Rules]\n{rules}\n\n[Recent Memory Hints]\n{bias}\n\nThe above context represents your learned preferences and style. Use it to guide your responses. To learn more, call crow_recall with a specific query and register (style/bug/arch/context/life_pref/life_avoid/life_phil/life_context)."
       },
       "crow_evolved_rules": {
-        "description": "Permanent evolved rules from Crow's system_prompt.md. These are statistically significant patterns approved via HITL.",
+        "description": "Permanent evolved rules from Crow's system_prompt.md: permanent rules (human-promoted via CROW_ADMIN_TOKEN) plus unreviewed model suggestions.",
         "body_template": "{prompt}"
       }
     }

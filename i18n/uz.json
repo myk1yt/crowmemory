@@ -1,0 +1,119 @@
+{
+  "_meta": {
+    "locale": "uz",
+    "language_name": "Uzbek",
+    "version": "1.0.0",
+    "last_updated": "2026-11-24"
+  },
+
+  "server": {
+    "instructions": "Crow Memory — AI kod agentlari uchun tashqi sinaps xotirasi. Sizning kodlash uslubingiz, xatolarga oid sezgingiz va arxitektura afzalliklaringizni crow.bin faylida siqilgan vazn matritsalari sifatida saqlaydi.",
+
+    "prompts": {
+      "crow_memory_bias": {
+        "description": "Avtomatik kiritiladigan Crow Memory bias bloki. Sizning kodlash uslubingiz, afzalliklaringiz va takomillashgan qoidalaringizni o'z ichiga oladi. Xost uni sessiya boshlanishida yuklashi kerak.",
+        "body_template": "=== Crow Memory — Avtomatik kiritilgan kontekst ===\n\n[Doimiy takomillashgan qoidalar]\n{rules}\n\n[Yaqin xotira ishoralari]\n{bias}\n\nYuqoridagi kontekst sizning o'rganilgan afzalliklaringiz va uslubingizni ifodalaydi. Javoblaringizni boshqarish uchun undan foydalaning. Batafsil ma'lumot olish uchun crow_recall ni aniq so'rov va register (style/bug/arch/context/life_pref/life_avoid/life_phil/life_context) bilan chaqiring."
+      },
+      "crow_evolved_rules": {
+        "description": "Permanent evolved rules from Crow's system_prompt.md: permanent rules (human-promoted via CROW_ADMIN_TOKEN) plus unreviewed model suggestions.",
+        "body_template": "{prompt}"
+      }
+    }
+  },
+
+  "tools": {
+    "crow_recall": {
+      "description": "Crow sinaps xotirasidan foydalanuvchiga xos kodlash uslubini, xatolarga oid sezgini, arxitektura afzalligini yoki shaxsiy kontekstni esga tushiring. Foydalanuvchining induktiv biasiga moslashish uchun buni HAR BIR javobdan OLDIN chaqiring. Standart holatda (register=all yoki ko'rsatilmagan, domain=all) barcha 8 register so'raladi va natijalar samarali o'xshashlik bo'yicha global birlashtiriladi.",
+      "parameters": {
+        "query": "Joriy vazifaning tabiiy tildagi tavsifi.",
+        "register": "Qaysi register. Tanlangan domendagi barcha registerlarni so'rash uchun 'all' dan foydalaning (yoki uni ko'rsatmasangiz ham bo'ladi). Code: style/bug/arch/context. Life: life_pref/life_avoid/life_phil/life_context.",
+        "domain": "register 'all' bo'lganda yoki ko'rsatilmaganda ishlatiladigan domen filtri. 'code' = style/bug/arch/context, 'life' = life_pref/life_avoid/life_phil/life_context, 'all' = barcha 8 register (standart).",
+        "top_k": "Ishoralar soni (1-5).",
+        "format": "Chiqish formati. 'hint' JSON ishoralarni qaytaradi (standart); 'bias_block' tizim promptiga kiritish uchun [User Bias] matn blokini qaytaradi.",
+        "project": "Bir xil loyiha ishoralarini kuchaytirish hamda boshqa loyiha ishoralarini filtrlash yoki jazolashtirish uchun ishlatiladigan loyiha tegi.",
+        "strict_project": "true bo'lganda boshqa loyihaga oid ishoralarni natijalardan butunlay chiqarib tashlaydi."
+      }
+    },
+    "crow_ingest": {
+      "description": "Kodlash tajribasini Crow ning uzoq muddatli sinaps xotirasiga kiritish. Buni build yoki test natijalaridan, yoki foydalanuvchining aniq fikr-mulohazasidan KEYIN chaqiring. Polarityni avtomatik aniqlash uchun aniq polarity yoki build exit_code ni taqdim eting. Kontent avval tozalanadi; sof shovqinli kiritish xotiraga tegmasdan rad etiladi.",
+      "parameters": {
+        "key": "Vaziyatning mavhum tavsifi.",
+        "value": "Qo'llanilgan kod namunasi yoki qaror.",
+        "register": "Saqlanadigan register (style/bug/arch/context/life_pref/life_avoid/life_phil/life_context).",
+        "polarity": "Kuchaytirish darajasi [-2.0, 2.0]. exit_code berilgan bo'lsa ixtiyoriy; ikkalasi ham berilganda aniq polarity ustun hisoblanadi.",
+        "exit_code": "Build chiqish kodi (0 = muvaffaqiyat). Aniq polarity berilmasa, avtomatik ravishda polarityga aylantiriladi (muvaffaqiyatda +1.5/+0.5, xatolikda -0.5/-1.0).",
+        "user_edited": "Foydalanuvchi AI chiqishini tahrirlaganmi. exit_code dan olingan polarityni moslashtiradi.",
+        "project": "Keyinchalik loyihani hisobga olgan holda esga tushirish uchun xotira yozuvi bilan saqlanadigan loyiha tegi."
+      }
+    },
+    "crow_admin": {
+      "description": "Crow ma'muriy amallari bitta vositada. Amallar: diagnostics (xotira statistikasi), drift (drift tekshiruvi), prompt (system_prompt.md ni o'qish/qo'shish/statistika), backup (yaratish/rotatsiya/ro'yxat/tiklash), evolve (prompt mutatsiyalarini taklif qilish), project_info (loyiha nusxalarini ro'yxatlash/yaratish).",
+      "parameters": {
+        "action": "Qaysi ma'muriy amal: diagnostics, drift, prompt, backup, evolve yoki project_info.",
+        "args": "Tanlangan amalga uzatiladigan, amalga xos argumentlar obyekti."
+      }
+    }
+  },
+
+  "errors": {
+    "unknown_tool": "Noma'lum vosita: {name}",
+    "unknown_prompt": "Noma'lum prompt: {name}",
+    "unknown_action": "Noma'lum {context} amali: {action}",
+    "project_name_required": "create amali uchun project_name talab qilinadi"
+  },
+
+  "recall_messages": {
+    "faint_bias": "Crow {register} biasini kuchsiz eslaydi. Hozircha juda oz xotiralar saqlangan.",
+    "unknown_register": "Noma'lum register: {register}"
+  },
+
+  "ingest_messages": {
+    "status_ingested": "kiritildi",
+    "unknown_register": "Noma'lum register: {register}"
+  },
+
+  "evolve_messages": {
+    "no_patterns": "Hozircha statistik ahamiyatga ega naqshlar aniqlanmadi."
+  },
+
+  "drift_messages": {
+    "healthy": "Xotira ishonchi sog'lom.",
+    "confused": "Crow xotirasi chalkash ko'rinadi. Yaqin vazifalar juda yangi bo'lishi yoki xotira to'yingan bo'lishi mumkin. Spektral qayta tiklash yoki arxivlashni ko'rib chiqing."
+  },
+
+  "cli": {
+    "stdio_start": "Crow Memory MCP serveri stdio ustida ishlamoqda",
+    "sse_start": "Crow Memory MCP SSE serveri http://{host}:{port}/sse manzilida tinglamoqda",
+    "http_start": "Crow Memory MCP Streamable HTTP serveri http://{host}:{port}/ manzilida tinglamoqda",
+    "dual_start_sse": "Crow Memory MCP SSE serveri http://{host}:{sse_port}/sse manzilida tinglamoqda",
+    "dual_start_http": "Crow Memory MCP Streamable HTTP serveri http://{host}:{http_port}/ manzilida tinglamoqda"
+  },
+
+  "installer": {
+    "banner_title": "Zoo Code uchun Crow Memory o'rnatuvchisi",
+    "step_1_install_deps": "Python bog'liqliklari o'rnatilmoqda",
+    "step_2_init_crow": "crow.bin ishga tushirilmoqda",
+    "step_3_vscode_tasks": ".vscode/tasks.json yaratilmoqda (papka ochilganda SSE avtomatik ishga tushadi)",
+    "step_4_custom_mode": "Zoo Code avtomatik faollashuv rejimi yaratilmoqda",
+    "step_5_start_server": "Crow SSE serveri ishga tushirilmoqda + avtomatik ishga tushish",
+    "step_done": "Tayyor.",
+    "complete_title": "Crow Memory o'rnatildi!",
+    "sse_running": "SSE serveri http://127.0.0.1:9020/sse manzilida ishlamoqda",
+    "next_steps_label": "Keyingi qadamlar:",
+    "next_step_1": "1. Zoo Code ni qayta ishga tushiring",
+    "next_step_2": "2. Rejimni \"Orchestrator + Crow\" ga o'zgartiring",
+    "next_step_3": "3. Crow avtomatik faollashadi — qo'lda sozlash kerak emas",
+    "next_step_4": "4. Crow serveri Task Scheduler orqali Windows bilan birga avtomatik ishga tushadi"
+  },
+
+  "system_prompt": {
+    "header": "# Crow Memory — Tizim prompt qoidalari",
+    "subtitle": "> Bu qoidalar Crow tomonidan takomillashtirilgan va foydalanuvchi tomonidan tasdiqlangan.\n> Ular statistik ahamiyatga ega kodlash biaslarini ifodalaydi.\n> Qo'lda tahrirlamang — Crow MCP evolve vositalaridan foydalaning.",
+    "managed_by": "<!-- Bu fayl crow_mcp_server.py tomonidan boshqariladi -->",
+    "default_rules": [
+      "RULE: Har bir javobdan oldin foydalanuvchining kodlash uslubi, xatolarga oid sezgisi, arxitektura afzalliklari, shaxsiy didi, falsafasi va joriy kontekstini bilish uchun barcha 8 register (style, bug, arch, context, life_pref, life_avoid, life_phil, life_context) bo'yicha so'rov yuborish maqsadida crow_recall(domain=\"all\") ni chaqiring. Qaytgan ishoralarni javobingizda aks ettiring.",
+      "RULE: Har bir javobdan so'ng foydalanuvchi ochib bergan narsalarni — afzalliklar, falsafa, tuzatishlar, kontekst — crow_ingest orqali kiriting. Foydalanuvchi \"buni eslab qol\" deyishini kutmasdan, tegishli register va polarityni o'zingiz baholang. Kod ishidan so'ng build natijalarini crow_ingest_from_build orqali avtomatik baholang.",
+      "RULE: Hujjat tahrirlash, git amallari yoki konfiguratsiya o'zgarishlari kabi kod bilan bog'liq bo'lmagan vazifalarda ham recall+ingest qoidalarini tashlab ketmang. Ularni doim bajaring."
+    ]
+  }
+}

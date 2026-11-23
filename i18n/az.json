@@ -1,0 +1,108 @@
+{
+  "_meta": {
+    "locale": "az",
+    "language_name": "Azerbaijani",
+    "version": "1.0.0",
+    "last_updated": "2026-11-24"
+  },
+  "server": {
+    "instructions": "Crow Memory — Süni intellekt kod agentləri üçün xarici sinaptik yaddaş. Kodlaşdırma üslubunuzu, səhv intuisiyanızı və arxitektura üstünlüklərinizi crow.bin faylında sıxılmış çəki matrisləri kimi saxlayır.",
+    "prompts": {
+      "crow_memory_bias": {
+        "description": "Avtomatik yeridilən Crow Memory qərəz bloku. Kodlaşdırma üslubunuzu, üstünlüklərinizi və inkişaf etmiş qaydaları ehtiva edir. Host onu sessiya başlanğıcında yükləməlidir.",
+        "body_template": "=== Crow Memory — Avtomatik yeridilən kontekst ===\n\n[Daimi inkişaf etmiş qaydalar]\n{rules}\n\n[Son yaddaş işarələri]\n{bias}\n\nYuxarıdakı kontekst öyrənilmiş üstünlüklərinizi və üslubunuzu əks etdirir. Cavablarınızı yönləndirmək üçün ondan istifadə edin. Daha çox öyrənmək üçün crow_recall funksiyasını müəyyən sorğu və register (style/bug/arch/context/life_pref/life_avoid/life_phil/life_context) ilə çağırın."
+      },
+      "crow_evolved_rules": {
+        "description": "Permanent evolved rules from Crow's system_prompt.md: permanent rules (human-promoted via CROW_ADMIN_TOKEN) plus unreviewed model suggestions.",
+        "body_template": "{prompt}"
+      }
+    }
+  },
+  "tools": {
+    "crow_recall": {
+      "description": "İstifadəçiyə xas kodlaşdırma üslubunu, səhv intuisiyanı, arxitektura üstünlüyünü və ya şəxsi konteksti Crow sinaptik yaddaşından xatırlayın. İstifadəçinin induktiv qərəzinə uyğunlaşmaq üçün hər cavabdan ƏVVƏL bunu çağırın. Susmaya görə (register=all və ya buraxılmış, domain=all) bütün 8 registri sorğulayır və nəticələri effektiv oxşarlığa görə qlobal şəkildə birləşdirir.",
+      "parameters": {
+        "query": "Cari tapşırığın təbii dildə təsviri.",
+        "register": "Hansı registr. Seçilmiş domendə hər registri sorğulamaq üçün 'all' istifadə edin (və ya buraxın). Code: style/bug/arch/context. Life: life_pref/life_avoid/life_phil/life_context.",
+        "domain": "register 'all' olduqda və ya buraxıldıqda istifadə olunan domen filtri. 'code' = style/bug/arch/context, 'life' = life_pref/life_avoid/life_phil/life_context, 'all' = bütün 8 registr (susmaya görə).",
+        "top_k": "İşarələrin sayı (1-5).",
+        "format": "Çıxış formatı. 'hint' JSON işarələri qaytarır (susmaya görə); 'bias_block' sistem promptuna yeritmək üçün [User Bias] mətn blokunu qaytarır.",
+        "project": "Eyni layihənin işarələrini gücləndirmək, layihələrarası işarələri isə filtrləmək və ya cəzalandırmaq üçün istifadə olunan layihə teqi.",
+        "strict_project": "true olduqda layihələrarası işarələri nəticələrdən kəskin şəkildə çıxarır."
+      }
+    },
+    "crow_ingest": {
+      "description": "Kodlaşdırma təcrübəsini Crow-un uzunmüddətli sinaptik yaddaşına yeridin. Build və ya test nəticələrindən və ya istifadəçinin açıq rəyindən SONRA çağırın. Ya açıq qütb, ya da avtomatik qütb xəritələməsi üçün build exit_code təqdim edin. Məzmun əvvəlcə təmizlənir; təmiz səs-küy yaddaşa toxunmadan rədd edilir.",
+      "parameters": {
+        "key": "Vəziyyətin mücərrəd təsviri.",
+        "value": "Tətbiq olunan kod nümunəsi və ya qərar.",
+        "register": "Saxlanılacaq registr (style/bug/arch/context/life_pref/life_avoid/life_phil/life_context).",
+        "polarity": "Möhkəmləndirmə gücü [-2.0, 2.0]. exit_code verildikdə isteğe bağlıdır; hər ikisi verildikdə açıq qütb üstün gəlir.",
+        "exit_code": "Build çıxış kodu (0 = uğur). Açıq qütb verilmədikdə avtomatik olaraq qütbə çevrilir (uğurda +1.5/+0.5, uğursuzluqda -0.5/-1.0).",
+        "user_edited": "İstifadəçinin süni intellekt çıxışını redaktə edib-etmədiyi. exit_code-dan alınan qütbü tənzimləyir.",
+        "project": "Sonrakı layihəyə bələd xatırlama üçün yaddaş qeydi ilə birlikdə saxlanılan layihə teqi."
+      }
+    },
+    "crow_admin": {
+      "description": "Crow-un inzibati əməliyyatları bir alətdə. Fəaliyyətlər: diagnostics (yaddaş statistikası), drift (sürüşmə yoxlaması), prompt (system_prompt.md oxumaq, əlavə etmək, statistika), backup (yaratmaq, fırlatmaq, siyahıya almaq, bərpa etmək), evolve (prompt mutasiyaları təklif etmək), project_info (layihə nüsxələrini siyahıya almaq və yaratmaq).",
+      "parameters": {
+        "action": "Hansı inzibati əməliyyat: diagnostics, drift, prompt, backup, evolve və ya project_info.",
+        "args": "Seçilmiş əməliyyata ötürülən fəaliyyətə xas arqument obyekti."
+      }
+    }
+  },
+  "errors": {
+    "unknown_tool": "Naməlum alət: {name}",
+    "unknown_prompt": "Naməlum prompt: {name}",
+    "unknown_action": "Naməlum {context} fəaliyyəti: {action}",
+    "project_name_required": "create fəaliyyəti üçün project_name tələb olunur"
+  },
+  "recall_messages": {
+    "faint_bias": "Crow zəif {register} qərəzini xatırlayır. Hələ az yaddaş saxlanılıb.",
+    "unknown_register": "Naməlum registr: {register}"
+  },
+  "ingest_messages": {
+    "status_ingested": "yeridildi",
+    "unknown_register": "Naməlum registr: {register}"
+  },
+  "evolve_messages": {
+    "no_patterns": "Hələ statistik əhəmiyyətli nümunə aşkarlanmayıb."
+  },
+  "drift_messages": {
+    "healthy": "Yaddaş etibarı sağlamdır.",
+    "confused": "Crow yaddaşı çaşqın görünür. Son tapşırıqlar çox yeni ola bilər və ya yaddaş dolub. Spektral sıfırlama və ya arxivləşdirməyi nəzərdən keçirin."
+  },
+  "cli": {
+    "stdio_start": "Crow Memory MCP serveri stdio üzərində işləyir",
+    "sse_start": "Crow Memory MCP SSE serveri http://{host}:{port}/sse ünvanında dinləyir",
+    "http_start": "Crow Memory MCP Streamable HTTP serveri http://{host}:{port}/ ünvanında dinləyir",
+    "dual_start_sse": "Crow Memory MCP SSE serveri http://{host}:{sse_port}/sse ünvanında dinləyir",
+    "dual_start_http": "Crow Memory MCP Streamable HTTP serveri http://{host}:{http_port}/ ünvanında dinləyir"
+  },
+  "installer": {
+    "banner_title": "Zoo Code üçün Crow Memory quraşdırıcısı",
+    "step_1_install_deps": "Python asılılıqları quraşdırılır",
+    "step_2_init_crow": "crow.bin işə salınır",
+    "step_3_vscode_tasks": ".vscode/tasks.json yaradılır (qovluq açıldıqda SSE avtomatik başlasın)",
+    "step_4_custom_mode": "Zoo Code avtomatik aktivləşmə rejimi yaradılır",
+    "step_5_start_server": "Crow SSE serveri başladılır + avtomatik başlatma",
+    "step_done": "Hazırdır.",
+    "complete_title": "Crow Memory quraşdırması tamamlandı!",
+    "sse_running": "SSE serveri http://127.0.0.1:9020/sse ünvanında işləyir",
+    "next_steps_label": "Növbəti addımlar:",
+    "next_step_1": "1. Zoo Code-u yenidən başladın",
+    "next_step_2": "2. Rejimi \"Orchestrator + Crow\" seçin",
+    "next_step_3": "3. Crow avtomatik aktivləşir — əl ilə quraşdırma tələb olunmur",
+    "next_step_4": "4. Crow serveri Task Scheduler vasitəsilə Windows ilə avtomatik başlayır"
+  },
+  "system_prompt": {
+    "header": "# Crow Memory — Sistem promptu qaydaları",
+    "subtitle": "> Bu qaydalar Crow tərəfindən inkişaf etdirilib və istifadəçi tərəfindən təsdiqlənib.\n> Onlar statistik əhəmiyyətli kodlaşdırma qərəzlərini əks etdirir.\n> Əl ilə redaktə etməyin — Crow MCP evolve alətlərindən istifadə edin.",
+    "managed_by": "<!-- Bu fayl crow_mcp_server.py tərəfindən idarə olunur -->",
+    "default_rules": [
+      "RULE: Hər cavabdan əvvəl crow_recall(domain=\"all\") çağıraraq bütün 8 registri (style, bug, arch, context, life_pref, life_avoid, life_phil, life_context) istifadəçinin kodlaşdırma üslubu, səhv intuisiyası, arxitektura üstünlükləri, şəxsi zövqü, fəlsəfəsi və cari konteksti üçün sorğulayın. Qaytarılan işarələri cavabınızda əks etdirin.",
+      "RULE: Hər cavabdan sonra istifadəçinin açıqladıqlarını — üstünlüklər, fəlsəfə, düzəlişlər, kontekst — crow_ingest vasitəsilə yeridin. İstifadəçinin \"bunu yadda saxla\" deməsini gözləmədən uyğun registri və qütbü özünüz müəyyənləşdirin. Kod işindən sonra build nəticələrini crow_ingest_from_build vasitəsilə avtomatik qiymətləndirin.",
+      "RULE: Sənəd redaktəsi, git əməliyyatları və ya konfiqurasiya dəyişiklikləri kimi kodlaşdırma ilə əlaqəsi olmayan tapşırıqlarda belə xatırlama və yeritmə qaydalarını keçməyin. Onları həmişə icra edin."
+    ]
+  }
+}

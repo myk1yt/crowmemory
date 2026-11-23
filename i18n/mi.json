@@ -1,0 +1,119 @@
+{
+  "_meta": {
+    "locale": "mi",
+    "language_name": "Maori",
+    "version": "1.0.0",
+    "last_updated": "2026-11-24"
+  },
+
+  "server": {
+    "instructions": "Crow Memory — he pūmahara synaptic ā-waho mō ngā kaihāpai waehere AI. Ka tiakina tō āhua tuhi waehere, ōu whakaaro mō ngā hapa, me ōu hiahia hoahoanga hei matrices taumaha kōmitimiti i roto i te kōnae crow.bin.",
+
+    "prompts": {
+      "crow_memory_bias": {
+        "description": "He wāhanga bias Crow Memory ka whakaurua aunoatia. Kei roto tō āhua tuhi waehere, ōu hiahia, me ngā ture kua whanaketia. Me uta te kaihautū i tēnei i te tīmatanga o te wātū.",
+        "body_template": "=== Crow Memory — horopaki kua whakaurua aunoatia ===\n\n[Ngā ture pūmau kua whanaketia]\n{rules}\n\n[Ngā tohu pūmahara hou]\n{bias}\n\nKei te whakaatu te horopaki o runga ake nei i ōu hiahia me tō āhua kua akona. Whakamahia hei ārahi i āu whakautu. Ki te hiahia koe ki te ako ake, karangahia a crow_recall me tētahi query motuhake me tētahi register (style/bug/arch/context/life_pref/life_avoid/life_phil/life_context)."
+      },
+      "crow_evolved_rules": {
+        "description": "Permanent evolved rules from Crow's system_prompt.md: permanent rules (human-promoted via CROW_ADMIN_TOKEN) plus unreviewed model suggestions.",
+        "body_template": "{prompt}"
+      }
+    }
+  },
+
+  "tools": {
+    "crow_recall": {
+      "description": "Ka tiki i tō āhua tuhi waehere, ōu whakaaro mō ngā hapa, ōu hiahia hoahoanga, tō horopaki whaiaro rānei mai i te pūmahara synaptic a Crow. Karangahia tēnei i mua i ia whakautu kia hāngai ai ki te inductive bias o te kaiwhakamahi. Mā te taunoa (register=all, kāore rānei i tohua, domain=all), ka uiui i ngā register e 8 katoa, ā, ka hanumi i ngā hua puta noa i runga i te ōritenga whai hua.",
+      "parameters": {
+        "query": "He whakaahuatanga mā te reo Māori mō te mahi o nāianei.",
+        "register": "Ko tēhea register. Whakamahia te 'all' (ka waiho rānei) hei uiui i ngā register katoa o te domain kua tīpakohia. Code: style/bug/arch/context. Life: life_pref/life_avoid/life_phil/life_context.",
+        "domain": "He tātari domain ka whakamahia ina 'all' te register, kāore rānei i tohua. 'code' = style/bug/arch/context, 'life' = life_pref/life_avoid/life_phil/life_context, 'all' = ngā register e 8 katoa (taunoa).",
+        "top_k": "Te maha o ngā tohu (1-5).",
+        "format": "Te hōputu putanga. Ka whakahokia e 'hint' he tohu JSON (taunoa); ka whakahokia e 'bias_block' te wāhanga tuhinga [User Bias] hei whakauru ki te system prompt.",
+        "project": "He tohu kaupapa ka whakamahia hei whakapiki i ngā tohu o te kaupapa kotahi, ā, hei tātari, hei whakawhiu rānei i ngā tohu o ētahi atu kaupapa.",
+        "strict_project": "Ina true, ka tino tangohia ngā tohu o ētahi atu kaupapa i ngā hua."
+      }
+    },
+    "crow_ingest": {
+      "description": "Ka whakauru i tētahi wheako tuhi waehere ki te pūmahara synaptic wā-roa a Crow. Karangahia i muri i ngā hua build, test rānei, i ngā urupare mārama rānei a te kaiwhakamahi. Homai he polarity mārama, he exit_code build rānei mō te maherenga aunoa o te polarity. Ka whakapaipaitia te ihirangi i te tuatahi; ka whakakahoretia te urunga haruru noa me te kore e pā ki te pūmahara.",
+      "parameters": {
+        "key": "He whakaahuatanga waitara mō te āhuatanga.",
+        "value": "Te tauira waehere, te whakataunga rānei i whakamahia.",
+        "register": "Te register hei tiaki (style/bug/arch/context/life_pref/life_avoid/life_phil/life_context).",
+        "polarity": "Te kaha whakaū [-2.0, 2.0]. Ehara i te here mēnā ka hoatu te exit_code; ki te hoatu ngā mea e rua, ka toa te polarity mārama.",
+        "exit_code": "Te exit code o te build (0 = angitu). Ka maherengia aunoatia ki te polarity (+1.5/+0.5 mēnā ka angitu, -0.5/-1.0 mēnā ka rahua) ki te kore e hoatu he polarity mārama.",
+        "user_edited": "I whakatikahia rānei e te kaiwhakamahi te putanga a te AI. Ka whakahāngaitia te polarity i ahu mai i te exit_code.",
+        "project": "He tohu kaupapa ka tiakina me te urunga pūmahara mō te recall mōhiotanga-kaupapa ā muri ake."
+      }
+    },
+    "crow_admin": {
+      "description": "Ngā mahi whakahaere a Crow i roto i te taputapu kotahi. Action: diagnostics (tatauranga pūmahara), drift (aroaro drift), prompt (pānui, tāpiri, tatauranga o system_prompt.md), backup (hanga, hurihuri, rārangi, whakaora), evolve (tāpae whakarerekētanga prompt), project_info (rārangi, hanga rānei i ngā instance kaupapa).",
+      "parameters": {
+        "action": "Ko tēhea mahi whakahaere: diagnostics, drift, prompt, backup, evolve, project_info rānei.",
+        "args": "He ahanoa arguments motuhake mō te action, ka tukuna atu ki te mahi kua tīpakohia."
+      }
+    }
+  },
+
+  "errors": {
+    "unknown_tool": "Taputapu kāore i mōhiotia: {name}",
+    "unknown_prompt": "Prompt kāore i mōhiotia: {name}",
+    "unknown_action": "Action {context} kāore i mōhiotia: {action}",
+    "project_name_required": "Me whai project_name mō te action create"
+  },
+
+  "recall_messages": {
+    "faint_bias": "Ka mahara noa a Crow ki tētahi bias {register} āhua ngoikore. He ruarua noa ngā pūmahara kua tiakina.",
+    "unknown_register": "Register kāore i mōhiotia: {register}"
+  },
+
+  "ingest_messages": {
+    "status_ingested": "kua whakaurua",
+    "unknown_register": "Register kāore i mōhiotia: {register}"
+  },
+
+  "evolve_messages": {
+    "no_patterns": "Kāore anō kia kitea he tauira whai pānga ā-tatauranga."
+  },
+
+  "drift_messages": {
+    "healthy": "Kei te pai te māia o te pūmahara.",
+    "confused": "Te āhua nei kei te raruraru te pūmahara a Crow. Tērā pea he hou rawa ngā mahi o nāianei, kua kī rānei te pūmahara. Whakaarohia te spectral reset, te archiving rānei."
+  },
+
+  "cli": {
+    "stdio_start": "Kei te rere te Crow Memory MCP server i runga i te stdio",
+    "sse_start": "Kei te whakarongo te Crow Memory MCP SSE server i http://{host}:{port}/sse",
+    "http_start": "Kei te whakarongo te Crow Memory MCP Streamable HTTP server i http://{host}:{port}/",
+    "dual_start_sse": "Kei te whakarongo te Crow Memory MCP SSE server i http://{host}:{sse_port}/sse",
+    "dual_start_http": "Kei te whakarongo te Crow Memory MCP Streamable HTTP server i http://{host}:{http_port}/"
+  },
+
+  "installer": {
+    "banner_title": "Kaiwhakauru Crow Memory mō Zoo Code",
+    "step_1_install_deps": "Kei te whakauru i ngā whakawhirinakitanga Python",
+    "step_2_init_crow": "Kei te tīmata i te crow.bin",
+    "step_3_vscode_tasks": "Kei te hanga i te .vscode/tasks.json (ka tīmata aunoa i te SSE ina huakina te kōpaki)",
+    "step_4_custom_mode": "Kei te hanga i te aratau whakahohe-aunoa mō Zoo Code",
+    "step_5_start_server": "Kei te tīmata i te Crow SSE server, me te tīmata aunoa",
+    "step_done": "Kua oti.",
+    "complete_title": "Kua oti te whakaurunga o Crow Memory!",
+    "sse_running": "Kei te rere te SSE server i http://127.0.0.1:9020/sse",
+    "next_steps_label": "Ngā mahi e whai ake nei:",
+    "next_step_1": "1. Tāruaruatia a Zoo Code",
+    "next_step_2": "2. Hurihia te aratau ki \"Orchestrator + Crow\"",
+    "next_step_3": "3. Ka whakahohe aunoatia a Crow, kāore he tautuhinga ā-ringa e hiahiatia",
+    "next_step_4": "4. Ka tīmata aunoatia te Crow server me Windows mā te Task Scheduler"
+  },
+
+  "system_prompt": {
+    "header": "# Crow Memory — Ngā ture system prompt",
+    "subtitle": "> Nā Crow ēnei ture i whakawhanake, ā, i whakaae te kaiwhakamahi.\n> Ka whakaatu rātou i ngā bias tuhi waehere whai pānga ā-tatauranga.\n> Kaua e whakatika ā-ringa, whakamahia ngā taputapu evolve o Crow MCP.",
+    "managed_by": "<!-- Ka whakahaeretia tēnei kōnae e crow_mcp_server.py -->",
+    "default_rules": [
+      "RULE: I mua i ia whakautu, karangahia a crow_recall(domain=\"all\") hei uiui i ngā register e 8 katoa (style, bug, arch, context, life_pref, life_avoid, life_phil, life_context) mō te āhua tuhi waehere o te kaiwhakamahi, ōna whakaaro mō ngā hapa, ōna hiahia hoahoanga, tōna reka whaiaro, tōna whakaaro nui me tōna horopaki o nāianei. Whakaaturia ngā tohu i hokia mai ki tāu whakautu.",
+      "RULE: I muri i ia whakautu, whakaurua ngā mea i whākina e te kaiwhakamahi, arā ngā hiahia, ngā whakaaro, ngā whakatikatika me te horopaki, mā crow_ingest. Māu anō e whakatau te register me te polarity e tika ana, kaua e tatari kia kī mai te kaiwhakamahi \"maumahara ki tēnei\". I muri i te mahi waehere, arotakengia aunoatia ngā hua build mā crow_ingest_from_build.",
+      "RULE: Kaua e peke i ngā ture recall+ingest ahakoa mō ngā mahi ehara i te tuhi waehere, pērā i te whakatika tuhinga, ngā mahi git, te whakarerekē tautuhinga rānei. Whakahaeretia i ngā wā katoa."
+    ]
+  }
+}

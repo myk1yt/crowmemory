@@ -1,0 +1,119 @@
+{
+  "_meta": {
+    "locale": "ga",
+    "language_name": "Irish",
+    "version": "1.0.0",
+    "last_updated": "2026-11-24"
+  },
+
+  "server": {
+    "instructions": "Crow Memory — cuimhne shionaptach sheachtrach do ghníomhairí códála AI. Stórálann sí do stíl chódála, d'ionnsaíocht fabhtanna agus do roghanna ailtireachta mar mhaitrísí meáchain chomhbhrúite i crow.bin.",
+
+    "prompts": {
+      "crow_memory_bias": {
+        "description": "Bloc claonta Crow Memory a instealltar go huathoibríoch. Tá do stíl chódála, do roghanna agus do rialacha éabhlóidithe ann. Ba cheart don óstach é a lódáil ag tús an tseisiúin.",
+        "body_template": "=== Crow Memory — Comhthéacs a instealltar go huathoibríoch ===\n\n[Rialacha buana éabhlóidithe]\n{rules}\n\n[Leideanna cuimhne le déanaí]\n{bias}\n\nLéiríonn an comhthéacs thuas do roghanna agus do stíl foghlamtha. Bain úsáid as chun do fhreagraí a threorú. Chun tuilleadh a fhoghlaim, glaoigh ar crow_recall le ceist shonrach agus clár (style/bug/arch/context/life_pref/life_avoid/life_phil/life_context)."
+      },
+      "crow_evolved_rules": {
+        "description": "Permanent evolved rules from Crow's system_prompt.md: permanent rules (human-promoted via CROW_ADMIN_TOKEN) plus unreviewed model suggestions.",
+        "body_template": "{prompt}"
+      }
+    }
+  },
+
+  "tools": {
+    "crow_recall": {
+      "description": "Aisghlaonn sé stíl chódála, ionnsaíocht fabhtanna, rogha ailtireachta nó comhthéacs pearsanta atá sainiúil don úsáideoir ó chuimhne shionaptach Crow. Glaoigh air SULA dtugtar gach freagra chun ailíniú le claonadh ionduchtach an úsáideora. De réir réamhshocraithe (register=all nó gan é a sholáthar, domain=all), fiosraíonn sé na 8 gclár go léir agus cumascann sé na torthaí go domhanda de réir cosúlachta éifeachtaí.",
+      "parameters": {
+        "query": "Cur síos i dteanga nádúrtha ar an tasc reatha.",
+        "register": "Cén clár. Úsáid 'all' (nó fág ar lár é) chun gach clár sa réimse roghnaithe a fhiosrú. Code: style/bug/arch/context. Life: life_pref/life_avoid/life_phil/life_context.",
+        "domain": "Scagaire réimse a úsáidtear nuair atá register = 'all' nó nuair a fhágtar ar lár é. 'code' = style/bug/arch/context, 'life' = life_pref/life_avoid/life_phil/life_context, 'all' = na 8 gclár go léir (réamhshocrú).",
+        "top_k": "Líon na leideanna (1-5).",
+        "format": "Formáid an aschuir. Tugann 'hint' leideanna JSON (réamhshocrú); tugann 'bias_block' an bloc téacs [User Bias] le haghaidh instealladh i bpríomhthreoir an chórais.",
+        "project": "Clib tionscadail a úsáidtear chun leideanna an tionscadail chéanna a neartú agus leideanna ó thionscadail eile a scagadh nó a phionósú.",
+        "strict_project": "Nuair atá sé fíor, scagann sé leideanna ó thionscadail eile go docht as na torthaí."
+      }
+    },
+    "crow_ingest": {
+      "description": "Ionsúnn sé eispéireas códála i gcuimhne shionaptach fhadtéarmach Crow. Glaoigh air TAR ÉIS torthaí tógála nó tástála, nó aiseolas soiléir ón úsáideoir. Soláthair polaracht shoiléir nó exit_code tógála chun polaracht a mhapáil go huathoibríoch. Glantar an t-ábhar ar dtús; diúltaítear d'ionchur nach bhfuil ann ach torann, gan teagmháil leis an gcuimhne.",
+      "parameters": {
+        "key": "Cur síos teibí ar an staid.",
+        "value": "Patrún cóid nó cinneadh a cuireadh i bhfeidhm.",
+        "register": "An clár ina stóráiltear iad (style/bug/arch/context/life_pref/life_avoid/life_phil/life_context).",
+        "polarity": "Neart athneartaithe [-2.0, 2.0]. Roghnach má thugtar exit_code; buann polaracht shoiléir nuair a thugtar an dá rud.",
+        "exit_code": "Cód scoir tógála (0 = rath). Déantar é a mhapáil go huathoibríoch go polaracht (+1.5/+0.5 ar rath, -0.5/-1.0 ar theip) mura dtugtar polaracht shoiléir.",
+        "user_edited": "An bhfuil eagar curtha ag an úsáideoir ar aschur an AI. Coigeartaíonn sé an pholaracht a dhíorthaítear ó exit_code.",
+        "project": "Clib tionscadail a stóráiltear leis an iontráil chuimhne chun aisghlaoch feasach ar an tionscadal níos déanaí."
+      }
+    },
+    "crow_admin": {
+      "description": "Oibríochtaí riaracháin Crow in aon uirlis amháin. Gníomhartha: diagnostics (staitisticí cuimhne), drift (seiceáil sraoilleála), prompt (léamh/iarscríobh/staitisticí system_prompt.md), backup (cruthú/rothlú/liostú/aisghabháil), evolve (sócháin phríomhthreorach a mholadh), project_info (cásanna tionscadail a liostú nó a chruthú).",
+      "parameters": {
+        "action": "Cén oibríocht riaracháin: diagnostics, drift, prompt, backup, evolve nó project_info.",
+        "args": "Rud argóintí atá sainiúil don ghníomh a chuirtear ar aghaidh chuig an oibríocht roghnaithe."
+      }
+    }
+  },
+
+  "errors": {
+    "unknown_tool": "Uirlis anaithnid: {name}",
+    "unknown_prompt": "Príomhthreoir anaithnid: {name}",
+    "unknown_action": "Gníomh anaithnid {context}: {action}",
+    "project_name_required": "Tá project_name ag teastáil don ghníomh create"
+  },
+
+  "recall_messages": {
+    "faint_bias": "Aisghlaonn Crow claonadh lag {register}. Is beag cuimhne atá stóráilte fós.",
+    "unknown_register": "Clár anaithnid: {register}"
+  },
+
+  "ingest_messages": {
+    "status_ingested": "ionsáite",
+    "unknown_register": "Clár anaithnid: {register}"
+  },
+
+  "evolve_messages": {
+    "no_patterns": "Níor braitheadh aon phatrún atá suntasach go staitistiúil fós."
+  },
+
+  "drift_messages": {
+    "healthy": "Tá muinín na cuimhne sláintiúil.",
+    "confused": "Dealraíonn sé go bhfuil cuimhne Crow trína chéile. B'fhéidir go bhfuil na tascanna reatha ró-nua nó tá an chuimhne sáithithe. Smaoinigh ar athshocrú speictreach nó ar chartlannú."
+  },
+
+  "cli": {
+    "stdio_start": "Tá freastalaí MCP Crow Memory ag rith ar stdio",
+    "sse_start": "Tá freastalaí SSE MCP Crow Memory ag éisteacht ar http://{host}:{port}/sse",
+    "http_start": "Tá freastalaí Streamable HTTP MCP Crow Memory ag éisteacht ar http://{host}:{port}/",
+    "dual_start_sse": "Tá freastalaí SSE MCP Crow Memory ag éisteacht ar http://{host}:{sse_port}/sse",
+    "dual_start_http": "Tá freastalaí Streamable HTTP MCP Crow Memory ag éisteacht ar http://{host}:{http_port}/"
+  },
+
+  "installer": {
+    "banner_title": "Suiteálaí Crow Memory do Zoo Code",
+    "step_1_install_deps": "Spleáchais Python á suiteáil",
+    "step_2_init_crow": "crow.bin á thúsú",
+    "step_3_vscode_tasks": ".vscode/tasks.json á chruthú (SSE a thosú go huathoibríoch nuair a osclaítear an fillteán)",
+    "step_4_custom_mode": "Mód féin-ghníomhachtaithe Zoo Code á chruthú",
+    "step_5_start_server": "Freastalaí Crow SSE á thosú + féin-thosú",
+    "step_done": "Déanta.",
+    "complete_title": "Tá suiteáil Crow Memory críochnaithe!",
+    "sse_running": "Tá freastalaí SSE ag rith ar http://127.0.0.1:9020/sse",
+    "next_steps_label": "Na chéad chéimeanna eile:",
+    "next_step_1": "1. Atosaigh Zoo Code",
+    "next_step_2": "2. Athraigh an mód go \"Orchestrator + Crow\"",
+    "next_step_3": "3. Gníomhachtaítear Crow go huathoibríoch — níl aon socrú láimhe ag teastáil",
+    "next_step_4": "4. Tosaíonn freastalaí Crow go huathoibríoch le Windows trí Task Scheduler"
+  },
+
+  "system_prompt": {
+    "header": "# Crow Memory — Rialacha Príomhthreorach an Chórais",
+    "subtitle": "> D'éabhlóidigh Crow na rialacha seo agus d'fhaomh an t-úsáideoir iad.\n> Léiríonn siad claontachtaí códála atá suntasacha go staitistiúil.\n> Ná cuir eagar orthu de láimh — úsáid uirlisí evolve Crow MCP.",
+    "managed_by": "<!-- Tá an comhad seo á bhainistiú ag crow_mcp_server.py -->",
+    "default_rules": [
+      "RULE: Sula dtugtar gach freagra, glaoigh ar crow_recall(domain=\"all\") chun na 8 gclár go léir (style, bug, arch, context, life_pref, life_avoid, life_phil, life_context) a fhiosrú maidir le stíl chódála, ionnsaíocht fabhtanna, roghanna ailtireachta, blas pearsanta, fealsúnacht agus comhthéacs reatha an úsáideora. Léirigh na leideanna a thugtar ar ais i do fhreagra.",
+      "RULE: Tar éis gach freagra, ionsúigh an méid a nocht an t-úsáideoir — roghanna, fealsúnacht, ceartuithe, comhthéacs — trí crow_ingest. Breithnigh an clár agus an pholaracht chuí duit féin gan fanacht go ndéarfaidh an t-úsáideoir \"cuimhnigh air seo.\" Tar éis obair chóid, déan meastóireacht uathoibríoch ar thorthaí tógála trí crow_ingest_from_build.",
+      "RULE: Ná seachain na rialacha recall+ingest fiú do thascanna nach bhfuil bainteach le códáil, amhail eagar a chur ar dhoiciméid, oibríochtaí git, nó athruithe cumraíochta. Cuir i bhfeidhm iad i gcónaí."
+    ]
+  }
+}

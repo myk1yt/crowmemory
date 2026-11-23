@@ -1,0 +1,119 @@
+{
+  "_meta": {
+    "locale": "ig",
+    "language_name": "Igbo",
+    "version": "1.0.0",
+    "last_updated": "2026-11-24"
+  },
+
+  "server": {
+    "instructions": "Crow Memory — Ebe nchekwa synaptic mpụga maka ndị ọrụ AI na-ede koodu. Ọ na-echekwa ụdị koodu gị, nghọta gị banyere nsogbu, na mmasị nhazi gị dị ka matrikị arọ a kpakọrọ na crow.bin.",
+
+    "prompts": {
+      "crow_memory_bias": {
+        "description": "Ngalaba nhụsị Crow Memory nke a na-etinye na-akpaghị aka. Ọ nwere ụdị koodu gị, mmasị gị na iwu ndị mepụtara. Onye ọbịa kwesịrị iburu ya na mmalite nnọkọ.",
+        "body_template": "=== Crow Memory — Ọnọdụ a na-etinye na-akpaghị aka ===\n\n[Iwu na-adịgide adịgide mepụtara]\n{rules}\n\n[Aro ncheta ọhụrụ]\n{bias}\n\nỌnọdụ dị n'elu na-anọchite anya mmasị na ụdị ị mụtara. Jiri ya duzie azịza gị. Iji mata ihe ọzọ, kpọọ crow_recall na ajụjụ kpọmkwem na register (style/bug/arch/context/life_pref/life_avoid/life_phil/life_context)."
+      },
+      "crow_evolved_rules": {
+        "description": "Permanent evolved rules from Crow's system_prompt.md: permanent rules (human-promoted via CROW_ADMIN_TOKEN) plus unreviewed model suggestions.",
+        "body_template": "{prompt}"
+      }
+    }
+  },
+
+  "tools": {
+    "crow_recall": {
+      "description": "Weghachite ụdị koodu, nghọta banyere nsogbu, mmasị nhazi, ma ọ bụ ọnọdụ onwe onye nke onye ọrụ site na nchekwa synaptic Crow. Kpọọ nke a tupu azịza ọ bụla iji kwekọọ na nhụsị inductive nke onye ọrụ. Na ndabere (register=all ma ọ bụ hapụ ya, domain=all), ọ na-ajụ register 8 niile ma jikọta nsonaazụ ya n'ozuzu dịka myirịta dị irè si dị.",
+      "parameters": {
+        "query": "Nkọwa n'asụsụ nkịtị banyere ọrụ dị ugbu a.",
+        "register": "Kedu register. Jiri 'all' (ma ọ bụ hapụ ya) iji jụọ register niile dị na ngalaba ahọpụtara. Code: style/bug/arch/context. Life: life_pref/life_avoid/life_phil/life_context.",
+        "domain": "Nzacha ngalaba a na-eji mgbe register bụ 'all' ma ọ bụ hapụrụ ya. 'code' = style/bug/arch/context, 'life' = life_pref/life_avoid/life_phil/life_context, 'all' = register 8 niile (ndabere).",
+        "top_k": "Ọnụ ọgụgụ aro (1-5).",
+        "format": "Ụdị mmepụta. 'hint' na-eweghachi aro JSON (ndabere); 'bias_block' na-eweghachi ngalaba ederede [User Bias] maka itinye na prompt sistemụ.",
+        "project": "Mkpado ọrụ a na-eji kwalite aro nke otu ọrụ ahụ na ịzacha ma ọ bụ ịtụ aro nke ọrụ ndị ọzọ ntaramahụhụ.",
+        "strict_project": "Mgbe ọ bụ true, ọ na-ewepụ kpamkpam aro nke ọrụ ndị ọzọ na nsonaazụ."
+      }
+    },
+    "crow_ingest": {
+      "description": "Tinye ahụmịhe koodu n'ime nchekwa synaptic ogologo oge nke Crow. Kpọọ nke a mgbe nsonaazụ build/test ma ọ bụ nzaghachi doro anya nke onye ọrụ gasịrị. Nye polarity doro anya ma ọ bụ exit_code nke build maka nhazi polarity akpaghị aka. A na-ebu ụzọ sachapụ ọdịnaya; a na-ajụ ntinye nke bụ naanị mkpọtụ n'emetughị nchekwa ahụ.",
+      "parameters": {
+        "key": "Nkọwa nkịtị banyere ọnọdụ ahụ.",
+        "value": "Ụkpụrụ koodu ma ọ bụ mkpebi etinyere.",
+        "register": "Register ị ga-echekwa na ya (style/bug/arch/context/life_pref/life_avoid/life_phil/life_context).",
+        "polarity": "Ike nkwado [-2.0, 2.0]. Ọ dịghị mkpa ma ọ bụrụ na enyere exit_code; polarity doro anya na-emeri mgbe enyere ha abụọ.",
+        "exit_code": "Koodu ọpụpụ build (0 = ihe ịga nke ọma). Ọ na-ahazi akpaghị aka gaa polarity (+1.5/+0.5 na ihe ịga nke ọma, -0.5/-1.0 na ọdịda) belụsọ ma enyere polarity doro anya.",
+        "user_edited": "Ma onye ọrụ deziri mmepụta AI. Ọ na-edozi polarity sitere na exit_code.",
+        "project": "Mkpado ọrụ echekwara na ndekọ ncheta maka ịcheta ọrụ mechara mara."
+      }
+    },
+    "crow_admin": {
+      "description": "Ọrụ nchịkwa Crow n'otu ngwá ọrụ. Omume: diagnostics (ọnụ ọgụgụ ncheta), drift (nyocha drift), prompt (gụ, tinye, ma ọ bụ nweta ọnụ ọgụgụ system_prompt.md), backup (mepụta, tụgharịa, ndepụta, ma ọ bụ weghachite), evolve (tụpụta mgbanwe prompt), project_info (ndepụta ma ọ bụ mepụta ihe atụ ọrụ).",
+      "parameters": {
+        "action": "Kedu ọrụ nchịkwa: diagnostics, drift, prompt, backup, evolve, ma ọ bụ project_info.",
+        "args": "Ihe arụmụka akọwapụtara omume a na-enyefe ọrụ ahọpụtara."
+      }
+    }
+  },
+
+  "errors": {
+    "unknown_tool": "Ngwá ọrụ a na-amaghị: {name}",
+    "unknown_prompt": "Prompt a na-amaghị: {name}",
+    "unknown_action": "Omume {context} a na-amaghị: {action}",
+    "project_name_required": "A chọrọ project_name maka omume create"
+  },
+
+  "recall_messages": {
+    "faint_bias": "Crow na-echeta nhụsị {register} dị ntakịrị. Obere ncheta ka echekwara.",
+    "unknown_register": "Register a na-amaghị: {register}"
+  },
+
+  "ingest_messages": {
+    "status_ingested": "etinyela",
+    "unknown_register": "Register a na-amaghị: {register}"
+  },
+
+  "evolve_messages": {
+    "no_patterns": "Ọnwebeghị ụkpụrụ bara uru n'ụzọ ọnụ ọgụgụ achọpụtara."
+  },
+
+  "drift_messages": {
+    "healthy": "Ntụkwasị obi ncheta dị mma.",
+    "confused": "Ncheta Crow yiri ka ọ gbagwojuru anya. Ọrụ ndị na-adịbeghị anya nwere ike ịbụ ihe ọhụrụ nke ukwuu ma ọ bụ ncheta jupụtara. Tụlee nrụzigharị spectral ma ọ bụ idobe ya n'ebe nchekwa."
+  },
+
+  "cli": {
+    "stdio_start": "Crow Memory MCP sava na-agba na stdio",
+    "sse_start": "Crow Memory MCP SSE sava na-ege ntị na http://{host}:{port}/sse",
+    "http_start": "Crow Memory MCP Streamable HTTP sava na-ege ntị na http://{host}:{port}/",
+    "dual_start_sse": "Crow Memory MCP SSE sava na-ege ntị na http://{host}:{sse_port}/sse",
+    "dual_start_http": "Crow Memory MCP Streamable HTTP sava na-ege ntị na http://{host}:{http_port}/"
+  },
+
+  "installer": {
+    "banner_title": "Onye ntinye Crow Memory maka Zoo Code",
+    "step_1_install_deps": "Na-etinye ndị dabere Python",
+    "step_2_init_crow": "Na-ebido crow.bin",
+    "step_3_vscode_tasks": "Na-emepụta .vscode/tasks.json (mmalite SSE akpaghị aka mgbe emepere nchekwa)",
+    "step_4_custom_mode": "Na-emepụta ụdị mgbake akpaghị aka Zoo Code",
+    "step_5_start_server": "Na-ebido Crow SSE sava + mmalite akpaghị aka",
+    "step_done": "Emechara.",
+    "complete_title": "Ntinye Crow Memory zuru oke!",
+    "sse_running": "SSE sava na-agba na http://127.0.0.1:9020/sse",
+    "next_steps_label": "Nzọụkwụ ndị ọzọ:",
+    "next_step_1": "1. Bido Zoo Code ọzọ",
+    "next_step_2": "2. Gbanwee ụdị gaa na \"Orchestrator + Crow\"",
+    "next_step_3": "3. Crow na-arụ ọrụ akpaghị aka — ọ dịghị mkpa ịhazi ya n'aka",
+    "next_step_4": "4. Crow sava na-ebido akpaghị aka ya na Windows site na Task Scheduler"
+  },
+
+  "system_prompt": {
+    "header": "# Crow Memory — Iwu Prompt Sistemụ",
+    "subtitle": "> Ndị a bụ iwu Crow mepụtara ma onye ọrụ kwadoro.\n> Ha na-anọchite anya nhụsị koodu bara uru n'ụzọ ọnụ ọgụgụ.\n> Edela ya n'aka — jiri ngwá ọrụ evolve Crow MCP.",
+    "managed_by": "<!-- Faịlụ a bụ crow_mcp_server.py na-elekọta -->",
+    "default_rules": [
+      "RULE: Tupu azịza ọ bụla, kpọọ crow_recall(domain=\"all\") iji jụọ register 8 niile (style, bug, arch, context, life_pref, life_avoid, life_phil, life_context) banyere ụdị koodu, nghọta banyere nsogbu, mmasị nhazi, mmasị onwe onye, nkà ihe ọmụma, na ọnọdụ dị ugbu a nke onye ọrụ. Gosi aro ndị e weghachiri n'azịza gị.",
+      "RULE: Mgbe azịza ọ bụla gasịrị, tinye ihe onye ọrụ kpughere — mmasị, nkà ihe ọmụma, mgbazi, ọnọdụ — site na crow_ingest. Kpebie register na polarity kwesịrị ekwesị n'onwe gị n'atụghị anya ka onye ọrụ kwuo \"cheta nke a\". Mgbe ọrụ koodu gasịrị, tụlee nsonaazụ build akpaghị aka site na crow_ingest_from_build.",
+      "RULE: Akwụsịla iwu recall+ingest ọbụlagodi maka ọrụ na-abụghị koodu dịka idezi akwụkwọ, ọrụ git, ma ọ bụ mgbanwe nhazi. Na-arụ ha mgbe niile."
+    ]
+  }
+}

@@ -3,153 +3,117 @@
     "locale": "vi",
     "language_name": "Tiếng Việt",
     "version": "1.0.0",
-    "last_updated": "2026-05-29"
+    "last_updated": "2026-11-24"
   },
+
   "server": {
     "instructions": "Crow Memory — Bộ nhớ khớp thần kinh bên ngoài cho tác nhân mã hóa AI. Lưu trữ phong cách mã hóa, trực giác lỗi và sở thích kiến trúc dưới dạng ma trận trọng số nén trong crow.bin.",
+
     "prompts": {
       "crow_memory_bias": {
-        "description": "Khối thiên vị Crow Memory được tự động tiêm. Chứa phong cách mã hóa, sở thích và các quy tắc tiến hóa của bạn.",
-        "body_template": "=== Crow Memory — Automaticky vložený kontext ===\n\n[Trvalá evoluovaná pravidla]\n{rules}\n\n[Nedávné paměťové tipy]\n{bias}\n\nVýše uvedený kontext představuje vaše naučené preference a styl. Použijte jej k vedení svých odpovědí."
+        "description": "Khối thiên vị Crow Memory được tự động tiêm. Chứa phong cách mã hóa, sở thích và các quy tắc tiến hóa của bạn. Máy chủ nên tải nội dung này khi bắt đầu phiên.",
+        "body_template": "=== Crow Memory — Ngữ cảnh được tự động tiêm ===\n\n[Quy tắc tiến hóa vĩnh viễn]\n{rules}\n\n[Gợi ý bộ nhớ gần đây]\n{bias}\n\nNgữ cảnh trên đại diện cho sở thích và phong cách mà bạn đã học. Hãy dùng nó để định hướng phản hồi của bạn. Để tìm hiểu thêm, hãy gọi crow_recall với một truy vấn cụ thể và register (style/bug/arch/context/life_pref/life_avoid/life_phil/life_context)."
       },
       "crow_evolved_rules": {
-        "description": "Trvalá evoluovaná pravidla z system_prompt.md Crow. Statisticky významné vzory schválené přes HITL.",
+        "description": "Permanent evolved rules from Crow's system_prompt.md: permanent rules (human-promoted via CROW_ADMIN_TOKEN) plus unreviewed model suggestions.",
         "body_template": "{prompt}"
       }
     }
   },
+
   "tools": {
     "crow_recall": {
-      "description": "Vyvolá uživatelský styl kódování, intuici chyb, architektonické preference nebo osobní kontext ze synaptické paměti Crow. Volejte PŘED každou odpovědí. Výchozí dotazuje všech 8 registrů.",
+      "description": "Gợi lại phong cách mã hóa, trực giác lỗi, sở thích kiến trúc hoặc ngữ cảnh cá nhân của người dùng từ bộ nhớ khớp thần kinh Crow. Gọi công cụ này TRƯỚC mỗi phản hồi để phù hợp với thiên kiến quy nạp của người dùng. Theo mặc định (register=all hoặc bỏ trống, domain=all), truy vấn cả 8 register và hợp nhất kết quả trên toàn cục theo độ tương đồng hiệu dụng.",
       "parameters": {
-        "query": "Popis aktuálního úkolu přirozeným jazykem.",
-        "register": "Vyberte registr. 'all' dotazuje všechny (stejné jako domain=all). Code: style/bug/arch/context. Život: life_pref/life_avoid/life_phil/life_context.",
-        "top_k": "Počet tipů (1-3).",
-        "domain": "Zkratka filtru domény. 'code' = style/bug/arch/context, 'life' = life_pref/life_avoid/life_phil/life_context, 'all' = všech 8 registrů (výchozí)."
+        "query": "Mô tả bằng ngôn ngữ tự nhiên về tác vụ hiện tại.",
+        "register": "Register nào. Dùng 'all' (hoặc bỏ trống) để truy vấn mọi register trong miền đã chọn. Code: style/bug/arch/context. Life: life_pref/life_avoid/life_phil/life_context.",
+        "domain": "Bộ lọc miền được dùng khi register là 'all' hoặc bỏ trống. 'code' = style/bug/arch/context, 'life' = life_pref/life_avoid/life_phil/life_context, 'all' = cả 8 register (mặc định).",
+        "top_k": "Số lượng gợi ý (1-5).",
+        "format": "Định dạng đầu ra. 'hint' trả về gợi ý dạng JSON (mặc định); 'bias_block' trả về khối văn bản [User Bias] để tiêm vào system prompt.",
+        "project": "Thẻ dự án dùng để tăng độ ưu tiên cho gợi ý cùng dự án và lọc/trừ điểm các gợi ý khác dự án.",
+        "strict_project": "Khi true, loại bỏ hoàn toàn các gợi ý khác dự án khỏi kết quả."
       }
     },
     "crow_ingest": {
-      "description": "Vstřebá zkušenost s kódováním do dlouhodobé synaptické paměti Crow. Volejte PO výsledcích sestavení/testů nebo explicitní zpětné vazbě.",
+      "description": "Nạp một trải nghiệm mã hóa vào bộ nhớ khớp thần kinh dài hạn của Crow. Gọi SAU khi có kết quả build/test hoặc phản hồi rõ ràng của người dùng. Cung cấp polarity rõ ràng hoặc exit_code của build để ánh xạ polarity tự động. Nội dung được làm sạch trước; đầu vào thuần nhiễu sẽ bị từ chối mà không chạm vào bộ nhớ.",
       "parameters": {
-        "key": "Abstraktní popis situace.",
-        "value": "Použitý vzor kódu nebo rozhodnutí.",
-        "polarity": "Síla zesílení [-2.0, 2.0].",
-        "register": "Cílový registr (style/bug/arch/context/life_pref/life_avoid/life_phil/life_context)."
+        "key": "Mô tả trừu tượng về tình huống.",
+        "value": "Mẫu mã hoặc quyết định đã áp dụng.",
+        "register": "Register để lưu trữ (style/bug/arch/context/life_pref/life_avoid/life_phil/life_context).",
+        "polarity": "Cường độ tăng cường [-2.0, 2.0]. Không bắt buộc nếu đã có exit_code; polarity rõ ràng được ưu tiên khi cả hai đều được cung cấp.",
+        "exit_code": "Mã thoát của build (0 = thành công). Được ánh xạ tự động sang polarity (+1.5/+0.5 khi thành công, -0.5/-1.0 khi thất bại) trừ khi đã có polarity rõ ràng.",
+        "user_edited": "Ngườ dùng có chỉnh sửa đầu ra của AI hay không. Điều chỉnh polarity suy ra từ exit_code.",
+        "project": "Thẻ dự án được lưu cùng mục bộ nhớ để sau này gợi lại theo dự án."
       }
     },
-    "crow_evolve_propose": {
-      "description": "Analyzuje nedávné vzory paměti a navrhuje trvalou mutaci systémového promptu. Vrací pouze návrh; k přijetí je nutné lidské schválení.",
+    "crow_admin": {
+      "description": "Các thao tác quản trị Crow trong một công cụ. Hành động: diagnostics (thống kê bộ nhớ), drift (kiểm tra trôi dạt), prompt (đọc/thêm/thống kê system_prompt.md), backup (tạo/xoay vòng/liệt kê/khôi phục), evolve (đề xuất đột biến prompt), project_info (liệt kê/tạo phiên bản theo dự án).",
       "parameters": {
-        "min_confidence": "Minimální práh spolehlivosti (výchozí: 0,85).",
-        "min_occurrences": "Minimální počet výskytů (výchozí: 3)."
-      }
-    },
-    "crow_diagnostics": {
-      "description": "Vrací diagnostiku stavu paměti Crow (normy registrů, řídkost, počet aktualizací, velikost banky hodnot, statistiky promptu).",
-      "parameters": {}
-    },
-    "crow_check_drift": {
-      "description": "Kontroluje, zda nedávná vyvolání vykazují známky paměťového driftu.",
-      "parameters": {
-        "threshold": "Práh spolehlivosti pro detekci nízké spolehlivosti (výchozí: 0,5).",
-        "min_low_confidence_count": "Min. počet záznamů s nízkou spolehlivostí pro spuštění driftu (výchozí: 5)."
-      }
-    },
-    "crow_ingest_from_build": {
-      "description": "Automaticky určí polaritu z kódu ukončení sestavení a stavu úprav uživatele, poté vstřebá zkušenost. Použijte po npm run build.",
-      "parameters": {
-        "key": "Abstraktní popis.",
-        "value": "Použitý vzor kódu.",
-        "exit_code": "Kód ukončení sestavení (0 = úspěch).",
-        "user_edited": "Zda uživatel upravil výstup AI.",
-        "register": "Cílový registr (style/bug/arch/context, výchozí: arch).",
-        "explicit_polarity": "Přepíše automatické určení polarity."
-      }
-    },
-    "crow_get_user_bias": {
-      "description": "Generuje blok [User Bias] pro vložení do systémového promptu. Dotazuje všechny registry a formátuje tipy pro přidání na začátek promptu.",
-      "parameters": {
-        "query": "Popis aktuálního úkolu.",
-        "registers": "Registry k dotazování (výchozí: all)."
-      }
-    },
-    "crow_manage_prompt": {
-      "description": "Čtení, přidávání nebo získávání statistik o souboru system_prompt.md. 'read' pro zobrazení, 'append' pro přijetí pravidla, 'stats' pro metriky.",
-      "parameters": {
-        "action": "Akce: read, append nebo stats.",
-        "rule": "Text pravidla (vyžadováno pro append).",
-        "auto_backup": "Automatické vytvoření zálohy před přidáním (výchozí: true)."
-      }
-    },
-    "crow_manage_backup": {
-      "description": "Spravuje zálohy paměti Crow. Vytváření, rotace, výpis nebo obnova z driftu.",
-      "parameters": {
-        "action": "Akce: create, rotate, list nebo recover.",
-        "tag": "Značka zálohy: daily, weekly nebo manual (výchozí: daily).",
-        "max_daily": "Max. denních záloh k uchování (výchozí: 7).",
-        "max_weekly": "Max. týdenních záloh k uchování (výchozí: 4)."
-      }
-    },
-    "crow_project_info": {
-      "description": "Zobrazí nebo vytvoří projektově izolované instance paměti Crow.",
-      "parameters": {
-        "action": "Akce: list nebo create.",
-        "project_name": "Název projektu (vyžadováno pro create)."
+        "action": "Thao tác quản trị nào: diagnostics, drift, prompt, backup, evolve hoặc project_info.",
+        "args": "Đối tượng đối số riêng của thao tác, được truyền cho thao tác đã chọn."
       }
     }
   },
+
   "errors": {
-    "unknown_tool": "Neznámý nástroj: {name}",
-    "unknown_prompt": "Neznámý prompt: {name}",
-    "unknown_action": "Neznámá akce {context}: {action}",
-    "project_name_required": "project_name je vyžadováno pro akci create"
+    "unknown_tool": "Công cụ không xác định: {name}",
+    "unknown_prompt": "Prompt không xác định: {name}",
+    "unknown_action": "Hành động {context} không xác định: {action}",
+    "project_name_required": "project_name là bắt buộc cho hành động create"
   },
+
   "recall_messages": {
-    "faint_bias": "Crow si matně vybavuje zkreslení {register}. Zatím uloženo málo vzpomínek.",
-    "unknown_register": "Neznámý registr: {register}"
+    "faint_bias": "Crow gợi lại một thiên kiến {register} mờ nhạt. Mới lưu trữ rất ít ký ức.",
+    "unknown_register": "Register không xác định: {register}"
   },
+
   "ingest_messages": {
-    "status_ingested": "vstřebáno",
-    "unknown_register": "Neznámý registr: {register}"
+    "status_ingested": "đã nạp",
+    "unknown_register": "Register không xác định: {register}"
   },
+
   "evolve_messages": {
-    "no_patterns": "Zatím nebyly detekovány žádné statisticky významné vzory."
+    "no_patterns": "Chưa phát hiện mẫu nào có ý nghĩa thống kê."
   },
+
   "drift_messages": {
-    "healthy": "Spolehlivost paměti je zdravá.",
-    "confused": "Paměť Crow vypadá zmateně. Nedávné úkoly mohou být příliš nové nebo paměť nasycená. Zvažte spektrální reset nebo archivaci."
+    "healthy": "Độ tin cậy của bộ nhớ đang ổn định.",
+    "confused": "Bộ nhớ Crow có vẻ bối rối. Các tác vụ gần đây có thể quá mới hoặc bộ nhớ đã bão hòa. Hãy cân nhắc đặt lại phổ hoặc lưu trữ."
   },
+
   "cli": {
-    "stdio_start": "Server MCP Crow Memory běží na stdio",
-    "sse_start": "Server MCP SSE Crow Memory naslouchá na http://{host}:{port}/sse",
-    "http_start": "Server MCP Streamable HTTP Crow Memory naslouchá na http://{host}:{port}/",
-    "dual_start_sse": "Server MCP SSE Crow Memory naslouchá na http://{host}:{sse_port}/sse",
-    "dual_start_http": "Server MCP Streamable HTTP Crow Memory naslouchá na http://{host}:{http_port}/"
+    "stdio_start": "Máy chủ Crow Memory MCP đang chạy trên stdio",
+    "sse_start": "Máy chủ Crow Memory MCP SSE đang lắng nghe trên http://{host}:{port}/sse",
+    "http_start": "Máy chủ Crow Memory MCP Streamable HTTP đang lắng nghe trên http://{host}:{port}/",
+    "dual_start_sse": "Máy chủ Crow Memory MCP SSE đang lắng nghe trên http://{host}:{sse_port}/sse",
+    "dual_start_http": "Máy chủ Crow Memory MCP Streamable HTTP đang lắng nghe trên http://{host}:{http_port}/"
   },
+
   "installer": {
-    "banner_title": "Crow Memory Tiếng Việt telepítő",
-    "step_1_install_deps": "Instalace Python závislostí",
-    "step_2_init_crow": "Inicializace crow.bin",
-    "step_4_custom_mode": "Vytváření režimu automatické aktivace Zoo Code",
-    "step_5_start_server": "Spouštění Crow SSE serveru + automatický start",
-    "step_done": "Hotovo.",
-    "complete_title": "Instalace Crow Memory dokončena!",
-    "sse_running": "SSE server běží na http://127.0.0.1:9020/sse",
-    "next_steps_label": "Další kroky:",
-    "next_step_1": "1. Restartujte Zoo Code",
-    "next_step_2": "2. Přepněte režim na \"Orchestrator + Crow\"",
-    "next_step_3": "3. Crow se aktivuje automaticky — není nutné ruční nastavení",
-    "next_step_4": "4. SSE server startuje s Windows (registrován ve spuštění)",
-    "step_3_vscode_tasks": "Vytváření .vscode/tasks.json (automatický start SSE při otevření složky)"
+    "banner_title": "Trình cài đặt Crow Memory cho Zoo Code",
+    "step_1_install_deps": "Đang cài đặt các phụ thuộc Python",
+    "step_2_init_crow": "Đang khởi tạo crow.bin",
+    "step_3_vscode_tasks": "Đang tạo .vscode/tasks.json (tự động khởi động SSE khi mở thư mục)",
+    "step_4_custom_mode": "Đang tạo chế độ tự động kích hoạt Zoo Code",
+    "step_5_start_server": "Đang khởi động máy chủ Crow SSE + tự động khởi động",
+    "step_done": "Hoàn tất.",
+    "complete_title": "Đã cài đặt Crow Memory hoàn tất!",
+    "sse_running": "Máy chủ SSE đang chạy trên http://127.0.0.1:9020/sse",
+    "next_steps_label": "Các bước tiếp theo:",
+    "next_step_1": "1. Khởi động lại Zoo Code",
+    "next_step_2": "2. Chuyển chế độ sang \"Orchestrator + Crow\"",
+    "next_step_3": "3. Crow tự động kích hoạt — không cần thiết lập thủ công",
+    "next_step_4": "4. Máy chủ Crow tự động khởi động cùng Windows qua Task Scheduler"
   },
+
   "system_prompt": {
-    "header": "# Crow Memory — Pravidla systémového promptu",
-    "subtitle": "> Tato pravidla byla evoluována Crow a schválena uživatelem.\n> Představují statisticky významná zkreslení kódování.\n> Neupravujte ručně — používejte nástroje evoluce Crow MCP.",
-    "managed_by": "<!-- Tento soubor je spravován crow_mcp_server.py -->",
+    "header": "# Crow Memory — Quy tắc system prompt",
+    "subtitle": "> Các quy tắc này được Crow tiến hóa và được người dùng phê duyệt.\n> Chúng đại diện cho các thiên kiến mã hóa có ý nghĩa thống kê.\n> Không chỉnh sửa thủ công — hãy dùng các công cụ tiến hóa Crow MCP.",
+    "managed_by": "<!-- Tệp này được quản lý bởi crow_mcp_server.py -->",
     "default_rules": [
-      "RULE: Před každou odpovědí zavolejte crow_recall(domain=\"all\") pro dotaz na všech 8 registrů (style, bug, arch, context, life_pref, life_avoid, life_phil, life_context) ohledně stylu kódování, intuice chyb, architektonických preferencí, osobního vkusu, filozofie a aktuálního kontextu uživatele. Odražte vrácené tipy ve své odpovědi.",
-      "RULE: Po každé odpovědi vstřebejte, co uživatel odhalil — preference, filozofii, opravy, kontext — přes crow_ingest. Sami určete vhodný registr a polaritu, aniž byste čekali, až uživatel řekne \"zapamatuj si to\". Po práci s kódem automaticky vyhodnoťte výsledky sestavení přes crow_ingest_from_build.",
-      "RULE: Nepřeskakujte pravidla recall+ingest ani u úkolů nesouvisejících s kódováním, jako je úprava dokumentů, git operace nebo změny konfigurace. Vždy je provádějte."
+      "RULE: Trước mỗi phản hồi, hãy gọi crow_recall(domain=\"all\") để truy vấn cả 8 register (style, bug, arch, context, life_pref, life_avoid, life_phil, life_context) về phong cách mã hóa, trực giác lỗi, sở thích kiến trúc, gu cá nhân, triết lý và ngữ cảnh hiện tại của người dùng. Phản ánh các gợi ý trả về trong phản hồi của bạn.",
+      "RULE: Sau mỗi phản hồi, hãy nạp những gì người dùng tiết lộ — sở thích, triết lý, các chỉnh sửa, ngữ cảnh — qua crow_ingest. Tự xác định register và polarity phù hợp mà không chờ người dùng nói \"hãy nhớ điều này\". Sau khi làm việc với mã, tự động đánh giá kết quả build qua crow_ingest_from_build.",
+      "RULE: Không bỏ qua các quy tắc recall+ingest ngay cả với tác vụ không phải mã hóa như chỉnh sửa tài liệu, thao tác git hoặc thay đổi cấu hình. Luôn thực thi chúng."
     ]
   }
 }

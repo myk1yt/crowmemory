@@ -1,0 +1,119 @@
+{
+  "_meta": {
+    "locale": "fa",
+    "language_name": "Persian",
+    "version": "1.0.0",
+    "last_updated": "2026-11-24"
+  },
+
+  "server": {
+    "instructions": "Crow Memory — حافظه سیناپسی خارجی برای عامل‌های کدنویسی هوش مصنوعی. سبک کدنویسی، شهود درباره باگ و ترجیحات معماری شما را به صورت ماتریس‌های وزن فشرده در crow.bin ذخیره می‌کند.",
+
+    "prompts": {
+      "crow_memory_bias": {
+        "description": "بلوک سوگیری Crow Memory که به‌طور خودکار تزریق می‌شود. شامل سبک کدنویسی، ترجیحات و قواعد تکامل‌یافته شماست. میزبان باید آن را در آغاز نشست بارگذاری کند.",
+        "body_template": "=== Crow Memory — زمینه تزریق‌شده به‌طور خودکار ===\n\n[قواعد دائمی تکامل‌یافته]\n{rules}\n\n[نشانه‌های اخیر حافظه]\n{bias}\n\nزمینه بالا نشان‌دهنده ترجیحات و سبک آموخته‌شده شماست. از آن برای هدایت پاسخ‌های خود استفاده کنید. برای اطلاعات بیشتر، crow_recall را با یک پرس‌وجوی مشخص و یک register فراخوانی کنید (style/bug/arch/context/life_pref/life_avoid/life_phil/life_context)."
+      },
+      "crow_evolved_rules": {
+        "description": "Permanent evolved rules from Crow's system_prompt.md: permanent rules (human-promoted via CROW_ADMIN_TOKEN) plus unreviewed model suggestions.",
+        "body_template": "{prompt}"
+      }
+    }
+  },
+
+  "tools": {
+    "crow_recall": {
+      "description": "سبک کدنویسی، شهود درباره باگ، ترجیح معماری یا زمینه شخصی مخصوص کاربر را از حافظه سیناپسی Crow بازیابی می‌کند. این را پیش از هر پاسخ فراخوانی کنید تا با سوگیری استقرایی کاربر هم‌سو شوید. به‌طور پیش‌فرض (register=all یا حذف‌شده، domain=all) همه ۸ register جست‌وجو می‌شوند و نتایج به‌صورت سراسری بر اساس شباهت مؤثر ادغام می‌شوند.",
+      "parameters": {
+        "query": "توصیف زبان طبیعی از وظیفه فعلی.",
+        "register": "کدام register. از 'all' استفاده کنید (یا آن را حذف کنید) تا همه register های دامنه انتخاب‌شده جست‌وجو شوند. Code: style/bug/arch/context. Life: life_pref/life_avoid/life_phil/life_context.",
+        "domain": "فیلتر دامنه که زمانی استفاده می‌شود که register برابر 'all' یا حذف‌شده باشد. 'code' = style/bug/arch/context، 'life' = life_pref/life_avoid/life_phil/life_context، 'all' = همه ۸ register (پیش‌فرض).",
+        "top_k": "تعداد نشانه‌ها (۱-۵).",
+        "format": "قالب خروجی. 'hint' نشانه‌های JSON را برمی‌گرداند (پیش‌فرض)؛ 'bias_block' بلوک متنی [User Bias] را برای تزریق در system prompt برمی‌گرداند.",
+        "project": "برچسب پروژه که برای تقویت نشانه‌های همان پروژه و فیلتر یا جریمه نشانه‌های پروژه‌های دیگر استفاده می‌شود.",
+        "strict_project": "وقتی true باشد، نشانه‌های پروژه‌های دیگر را به‌سختی از نتایج حذف می‌کند."
+      }
+    },
+    "crow_ingest": {
+      "description": "یک تجربه کدنویسی را در حافظه سیناپسی بلندمدت Crow ذخیره می‌کند. این را پس از نتایج ساخت یا آزمون، یا بازخورد صریح کاربر فراخوانی کنید. یا polarity صریح یا exit_code ساخت را ارائه دهید تا polarity به‌طور خودکار نگاشت شود. محتوا ابتدا پاک‌سازی می‌شود؛ ورودی نویز خالص بدون دست‌زدن به حافظه رد می‌شود.",
+      "parameters": {
+        "key": "توصیف انتزاعی از موقعیت.",
+        "value": "الگوی کد یا تصمیمی که اعمال شد.",
+        "register": "register برای ذخیره (style/bug/arch/context/life_pref/life_avoid/life_phil/life_context).",
+        "polarity": "قدرت تقویت [-2.0, 2.0]. در صورت ارائه exit_code اختیاری است؛ وقتی هر دو ارائه شوند polarity صریح اولویت دارد.",
+        "exit_code": "کد خروج ساخت (0 = موفقیت). مگر اینکه polarity صریح داده شود، به‌طور خودکار به polarity نگاشت می‌شود (+1.5/+0.5 در موفقیت، -0.5/-1.0 در شکست).",
+        "user_edited": "اینکه آیا کاربر خروجی هوش مصنوعی را ویرایش کرده است. polarity مشتق‌شده از exit_code را تنظیم می‌کند.",
+        "project": "برچسب پروژه که همراه با ورودی حافظه ذخیره می‌شود تا بعداً بازیابی پروژه‌محور ممکن باشد."
+      }
+    },
+    "crow_admin": {
+      "description": "عملیات مدیریتی Crow در یک ابزار. کنش‌ها: diagnostics (آمار حافظه)، drift (بررسی انحراف)، prompt (خواندن/افزودن/آمار system_prompt.md)، backup (ایجاد/چرخش/فهرست/بازیابی)، evolve (پیشنهاد جهش‌های prompt)، project_info (فهرست/ایجاد نمونه‌های پروژه).",
+      "parameters": {
+        "action": "کدام عملیات مدیریتی: diagnostics، drift، prompt، backup، evolve یا project_info.",
+        "args": "شیء آرگومان‌های مخصوص کنش که به عملیات انتخاب‌شده منتقل می‌شود."
+      }
+    }
+  },
+
+  "errors": {
+    "unknown_tool": "ابزار ناشناخته: {name}",
+    "unknown_prompt": "prompt ناشناخته: {name}",
+    "unknown_action": "کنش {context} ناشناخته: {action}",
+    "project_name_required": "project_name برای کنش create الزامی است"
+  },
+
+  "recall_messages": {
+    "faint_bias": "Crow سوگیری کمرنگ {register} را به یاد می‌آورد. هنوز حافظه‌های کمی ذخیره شده است.",
+    "unknown_register": "register ناشناخته: {register}"
+  },
+
+  "ingest_messages": {
+    "status_ingested": "ذخیره شد",
+    "unknown_register": "register ناشناخته: {register}"
+  },
+
+  "evolve_messages": {
+    "no_patterns": "هنوز هیچ الگوی معنادار آماری تشخیص داده نشده است."
+  },
+
+  "drift_messages": {
+    "healthy": "اعتماد حافظه سالم است.",
+    "confused": "به نظر می‌رسد حافظه Crow سردرگم است. وظایف اخیر ممکن است بیش از حد بدیع باشند یا حافظه اشباع شده باشد. بازنشانی طیفی یا بایگانی را در نظر بگیرید."
+  },
+
+  "cli": {
+    "stdio_start": "سرور MCP Crow Memory روی stdio در حال اجراست",
+    "sse_start": "سرور MCP SSE Crow Memory روی http://{host}:{port}/sse در حال گوش دادن است",
+    "http_start": "سرور MCP Streamable HTTP Crow Memory روی http://{host}:{port}/ در حال گوش دادن است",
+    "dual_start_sse": "سرور MCP SSE Crow Memory روی http://{host}:{sse_port}/sse در حال گوش دادن است",
+    "dual_start_http": "سرور MCP Streamable HTTP Crow Memory روی http://{host}:{http_port}/ در حال گوش دادن است"
+  },
+
+  "installer": {
+    "banner_title": "نصب‌کننده Crow Memory برای Zoo Code",
+    "step_1_install_deps": "نصب وابستگی‌های Python",
+    "step_2_init_crow": "مقداردهی اولیه crow.bin",
+    "step_3_vscode_tasks": "ایجاد .vscode/tasks.json (شروع خودکار SSE هنگام باز کردن پوشه)",
+    "step_4_custom_mode": "ایجاد حالت فعال‌سازی خودکار Zoo Code",
+    "step_5_start_server": "راه‌اندازی سرور Crow SSE + شروع خودکار",
+    "step_done": "انجام شد.",
+    "complete_title": "نصب Crow Memory کامل شد!",
+    "sse_running": "سرور SSE روی http://127.0.0.1:9020/sse در حال اجراست",
+    "next_steps_label": "مراحل بعدی:",
+    "next_step_1": "۱. Zoo Code را دوباره راه‌اندازی کنید",
+    "next_step_2": "۲. حالت را به «Orchestrator + Crow» تغییر دهید",
+    "next_step_3": "۳. Crow به‌طور خودکار فعال می‌شود — نیازی به تنظیم دستی نیست",
+    "next_step_4": "۴. سرور Crow به کمک Task Scheduler همراه با Windows به‌طور خودکار راه‌اندازی می‌شود"
+  },
+
+  "system_prompt": {
+    "header": "# Crow Memory — قواعد system prompt",
+    "subtitle": "> این قواعد توسط Crow تکامل یافته و کاربر تأیید کرده است.\n> این‌ها سوگیری‌های کدنویسی با معناداری آماری را نشان می‌دهند.\n> به‌صورت دستی ویرایش نکنید — از ابزارهای evolve در Crow MCP استفاده کنید.",
+    "managed_by": "<!-- این فایل توسط crow_mcp_server.py مدیریت می‌شود -->",
+    "default_rules": [
+      "RULE: پیش از هر پاسخ، crow_recall(domain=\"all\") را فراخوانی کنید تا همه ۸ register (style, bug, arch, context, life_pref, life_avoid, life_phil, life_context) را برای سبک کدنویسی، شهود درباره باگ، ترجیحات معماری، سلیقه شخصی، فلسفه و زمینه فعلی کاربر جست‌وجو کنید. نشانه‌های بازگشتی را در پاسخ خود منعکس کنید.",
+      "RULE: پس از هر پاسخ، آنچه کاربر آشکار کرده است — ترجیحات، فلسفه، اصلاحات، زمینه — را از طریق crow_ingest ذخیره کنید. خودتان register و polarity مناسب را تشخیص دهید، بدون اینکه منتظر بمانید که کاربر بگوید «این را به یاد داشته باش». پس از کار روی کد، نتایج ساخت را به‌طور خودکار با crow_ingest_from_build ارزیابی کنید.",
+      "RULE: قواعد recall+ingest را حتی برای وظایف غیرکدنویسی مانند ویرایش سند، عملیات git یا تغییرات پیکربندی نادیده نگیرید. همیشه آن‌ها را اجرا کنید."
+    ]
+  }
+}

@@ -1,0 +1,108 @@
+{
+  "_meta": {
+    "locale": "ca",
+    "language_name": "Catalan",
+    "version": "1.0.0",
+    "last_updated": "2026-11-24"
+  },
+  "server": {
+    "instructions": "Crow Memory — Memòria sinàptica externa per a agents de programació amb IA. Emmagatzema el vostre estil de programació, la intuïció sobre errors i les preferències arquitectòniques com a matrius de pesos comprimides a crow.bin.",
+    "prompts": {
+      "crow_memory_bias": {
+        "description": "Bloc de biaix de Crow Memory injectat automàticament. Conté el vostre estil de programació, les preferències i les regles evolucionades. L'amfitrió l'ha de carregar a l'inici de la sessió.",
+        "body_template": "=== Crow Memory — Context injectat automàticament ===\n\n[Regles evolucionades permanents]\n{rules}\n\n[Pistes recents de memòria]\n{bias}\n\nEl context anterior representa les vostres preferències i el vostre estil apresos. Feu-lo servir per guiar les respostes. Per saber-ne més, crideu crow_recall amb una consulta específica i register (style/bug/arch/context/life_pref/life_avoid/life_phil/life_context)."
+      },
+      "crow_evolved_rules": {
+        "description": "Permanent evolved rules from Crow's system_prompt.md: permanent rules (human-promoted via CROW_ADMIN_TOKEN) plus unreviewed model suggestions.",
+        "body_template": "{prompt}"
+      }
+    }
+  },
+  "tools": {
+    "crow_recall": {
+      "description": "Recupera l'estil de programació específic de l'usuari, la intuïció sobre errors, la preferència arquitectònica o el context personal de la memòria sinàptica de Crow. Crídeu-ho ABANS de cada resposta per alinear-vos amb el biaix inductiu de l'usuari. Per defecte (register=all o omès, domain=all) consulta tots els 8 registres i fusiona els resultats globalment per similitud efectiva.",
+      "parameters": {
+        "query": "Descripció en llenguatge natural de la tasca actual.",
+        "register": "Quin registre. Feu servir 'all' (o ometeu-lo) per consultar tots els registres del domini seleccionat. Code: style/bug/arch/context. Life: life_pref/life_avoid/life_phil/life_context.",
+        "domain": "Filtre de domini utilitzat quan register és 'all' o s'omet. 'code' = style/bug/arch/context, 'life' = life_pref/life_avoid/life_phil/life_context, 'all' = tots els 8 registres (per defecte).",
+        "top_k": "Nombre de pistes (1-5).",
+        "format": "Format de sortida. 'hint' retorna pistes JSON (per defecte); 'bias_block' retorna el bloc de text [User Bias] per injectar-lo al prompt del sistema.",
+        "project": "Etiqueta de projecte utilitzada per reforçar les pistes del mateix projecte i filtrar o penalitzar les d'altres projectes.",
+        "strict_project": "Quan és true, filtra de manera estricta les pistes d'altres projectes dels resultats."
+      }
+    },
+    "crow_ingest": {
+      "description": "Injecta una experiència de programació a la memòria sinàptica a llarg termini de Crow. Crídeu-ho DESPRÉS dels resultats de compilació o prova, o del feedback explícit de l'usuari. Proporcioneu una polaritat explícita o un exit_code de compilació per al mapatge automàtic de polaritat. El contingut es desinfecta primer; l'entrada de soroll pur es rebutja sense tocar la memòria.",
+      "parameters": {
+        "key": "Descripció abstracta de la situació.",
+        "value": "Patró de codi o decisió aplicada.",
+        "register": "Registre on emmagatzemar (style/bug/arch/context/life_pref/life_avoid/life_phil/life_context).",
+        "polarity": "Força de reforç [-2.0, 2.0]. Opcional si es proporciona exit_code; la polaritat explícita guanya quan es proporcionen tots dos.",
+        "exit_code": "Codi de sortida de compilació (0 = èxit). Es mapatja automàticament a polaritat (+1.5/+0.5 en èxit, -0.5/-1.0 en error) tret que es proporcioni una polaritat explícita.",
+        "user_edited": "Si l'usuari ha editat la sortida de la IA. Ajusta la polaritat derivada de exit_code.",
+        "project": "Etiqueta de projecte emmagatzemada amb l'entrada de memòria per a una recuperació posterior conscient del projecte."
+      }
+    },
+    "crow_admin": {
+      "description": "Operacions administratives de Crow en una sola eina. Accions: diagnostics (estadístiques de memòria), drift (comprovació de deriva), prompt (llegir, afegir i estadístiques de system_prompt.md), backup (crear, rotar, llistar, recuperar), evolve (proposar mutacions del prompt), project_info (llistar i crear instàncies de projectes).",
+      "parameters": {
+        "action": "Quina operació administrativa: diagnostics, drift, prompt, backup, evolve o project_info.",
+        "args": "Objecte d'arguments específic de l'acció que es passa a l'operació seleccionada."
+      }
+    }
+  },
+  "errors": {
+    "unknown_tool": "Eina desconeguda: {name}",
+    "unknown_prompt": "Prompt desconegut: {name}",
+    "unknown_action": "Acció {context} desconeguda: {action}",
+    "project_name_required": "project_name és obligatori per a l'acció create"
+  },
+  "recall_messages": {
+    "faint_bias": "Crow recorda un biaix {register} tènue. Encara hi ha poques memòries emmagatzemades.",
+    "unknown_register": "Registre desconegut: {register}"
+  },
+  "ingest_messages": {
+    "status_ingested": "ingerit",
+    "unknown_register": "Registre desconegut: {register}"
+  },
+  "evolve_messages": {
+    "no_patterns": "Encara no s'han detectat patrons estadísticament significatius."
+  },
+  "drift_messages": {
+    "healthy": "La confiança de la memòria és saludable.",
+    "confused": "La memòria de Crow sembla confusa. Les tasques recents poden ser massa noves o la memòria està saturada. Considereu un reinici espectral o arxivar."
+  },
+  "cli": {
+    "stdio_start": "El servidor Crow Memory MCP s'executa a stdio",
+    "sse_start": "El servidor Crow Memory MCP SSE escolta a http://{host}:{port}/sse",
+    "http_start": "El servidor Crow Memory MCP Streamable HTTP escolta a http://{host}:{port}/",
+    "dual_start_sse": "El servidor Crow Memory MCP SSE escolta a http://{host}:{sse_port}/sse",
+    "dual_start_http": "El servidor Crow Memory MCP Streamable HTTP escolta a http://{host}:{http_port}/"
+  },
+  "installer": {
+    "banner_title": "Instal·lador de Crow Memory per a Zoo Code",
+    "step_1_install_deps": "S'estan instal·lant les dependències de Python",
+    "step_2_init_crow": "S'està inicialitzant crow.bin",
+    "step_3_vscode_tasks": "S'està creant .vscode/tasks.json (inici automàtic de SSE en obrir la carpeta)",
+    "step_4_custom_mode": "S'està creant el mode d'activació automàtica de Zoo Code",
+    "step_5_start_server": "S'està iniciant el servidor Crow SSE + inici automàtic",
+    "step_done": "Fet.",
+    "complete_title": "La instal·lació de Crow Memory s'ha completat!",
+    "sse_running": "El servidor SSE s'executa a http://127.0.0.1:9020/sse",
+    "next_steps_label": "Passos següents:",
+    "next_step_1": "1. Reinicieu Zoo Code",
+    "next_step_2": "2. Canvieu el mode a \"Orchestrator + Crow\"",
+    "next_step_3": "3. Crow s'activa automàticament — no cal configuració manual",
+    "next_step_4": "4. El servidor Crow s'inicia automàticament amb Windows mitjançant el Programador de tasques"
+  },
+  "system_prompt": {
+    "header": "# Crow Memory — Regles del prompt del sistema",
+    "subtitle": "> Aquestes regles les ha evolucionat Crow i les ha aprovat l'usuari.\n> Representen biaixos de programació estadísticament significatius.\n> No les editeu manualment — feu servir les eines evolve de Crow MCP.",
+    "managed_by": "<!-- Aquest fitxer el gestiona crow_mcp_server.py -->",
+    "default_rules": [
+      "RULE: Abans de cada resposta, crideu crow_recall(domain=\"all\") per consultar tots els 8 registres (style, bug, arch, context, life_pref, life_avoid, life_phil, life_context) sobre l'estil de programació de l'usuari, la intuïció sobre errors, les preferències arquitectòniques, el gust personal, la filosofia i el context actual. Reflectiu les pistes retornades a la resposta.",
+      "RULE: Després de cada resposta, injecteu el que l'usuari ha revelat — preferències, filosofia, correccions, context — mitjançant crow_ingest. Jutjau vosaltres mateixos el registre i la polaritat adequats sense esperar que l'usuari digui \"recorda-ho\". Després de la feina de codi, avalueu automàticament els resultats de compilació mitjançant crow_ingest_from_build.",
+      "RULE: No ometeu les regles de recall i ingest ni tan sols per a tasques que no són de programació, com ara edició de documents, operacions git o canvis de configuració. Executeu-les sempre."
+    ]
+  }
+}

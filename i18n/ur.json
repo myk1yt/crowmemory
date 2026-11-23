@@ -1,0 +1,119 @@
+{
+  "_meta": {
+    "locale": "ur",
+    "language_name": "Urdu",
+    "version": "1.0.0",
+    "last_updated": "2026-11-24"
+  },
+
+  "server": {
+    "instructions": "Crow Memory — AI کوڈنگ ایجنٹس کے لیے بیرونی synaptic میموری۔ آپ کا کوڈنگ انداز، بگ کی بصیرت، اور آرکیٹیکچرل ترجیحات کو crow.bin میں کمپریسڈ وزن میٹرکس کے طور پر محفوظ کرتی ہے۔",
+
+    "prompts": {
+      "crow_memory_bias": {
+        "description": "خودکار طور پر شامل کردہ Crow Memory bias بلاک۔ اس میں آپ کا کوڈنگ انداز، ترجیحات، اور ارتقا یافتہ اصول شامل ہیں۔ میزبان کو اسے سیشن کے آغاز پر لوڈ کرنا چاہیے۔",
+        "body_template": "=== Crow Memory — خودکار شامل شدہ سیاق و سباق ===\n\n[مستقل ارتقا یافتہ اصول]\n{rules}\n\n[حالیہ میموری اشارے]\n{bias}\n\nمذکورہ سیاق و سباق آپ کی سیکھی ہوئی ترجیحات اور انداز کی نمائندگی کرتا ہے۔ اسے اپنے جوابات کی رہنمائی کے لیے استعمال کریں۔ مزید جاننے کے لیے crow_recall کو کسی مخصوص سوال اور register (style/bug/arch/context/life_pref/life_avoid/life_phil/life_context) کے ساتھ کال کریں۔"
+      },
+      "crow_evolved_rules": {
+        "description": "Permanent evolved rules from Crow's system_prompt.md: permanent rules (human-promoted via CROW_ADMIN_TOKEN) plus unreviewed model suggestions.",
+        "body_template": "{prompt}"
+      }
+    }
+  },
+
+  "tools": {
+    "crow_recall": {
+      "description": "Crow synaptic میموری سے صارف کے مخصوص کوڈنگ انداز، بگ کی بصیرت، آرکیٹیکچرل ترجیح، یا ذاتی سیاق و سباق یاد کریں۔ صارف کے inductive bias کے ساتھ ہم آہنگ ہونے کے لیے اسے ہر جواب سے پہلے کال کریں۔ بطور ڈیفالٹ (register=all یا نظرانداز کیا گیا، domain=all)، یہ تمام 8 registers سے استفسار کرتی ہے اور نتائج کو مؤثر مماثلت کی بنیاد پر عالمی طور پر ضم کرتی ہے۔",
+      "parameters": {
+        "query": "موجودہ کام کی قدرتی زبان میں وضاحت۔",
+        "register": "کون سا register۔ منتخب domain میں ہر register سے استفسار کے لیے 'all' استعمال کریں (یا نظرانداز کریں)۔ Code: style/bug/arch/context. Life: life_pref/life_avoid/life_phil/life_context.",
+        "domain": "domain فلٹر جو اس وقت استعمال ہوتا ہے جب register 'all' ہو یا نظرانداز کیا گیا ہو۔ 'code' = style/bug/arch/context، 'life' = life_pref/life_avoid/life_phil/life_context، 'all' = تمام 8 registers (ڈیفالٹ)۔",
+        "top_k": "اشاروں کی تعداد (1-5)۔",
+        "format": "آؤٹ پٹ فارمیٹ۔ 'hint' JSON اشارے واپس کرتا ہے (ڈیفالٹ)؛ 'bias_block' سسٹم پرامپٹ میں شمولیت کے لیے [User Bias] متنی بلاک واپس کرتا ہے۔",
+        "project": "پروجیکٹ ٹیگ جو ایک ہی پروجیکٹ کے اشاروں کو فروغ دینے اور دوسرے پروجیکٹ کے اشاروں کو فلٹر یا کم کرنے کے لیے استعمال ہوتا ہے۔",
+        "strict_project": "جب true ہو تو دوسرے پروجیکٹ کے اشاروں کو نتائج سے مکمل طور پر فلٹر کر دیتا ہے۔"
+      }
+    },
+    "crow_ingest": {
+      "description": "کسی کوڈنگ تجربے کو Crow کی طویل مدتی synaptic میموری میں شامل کریں۔ اسے build یا ٹیسٹ نتائج، یا صارف کی واضح رائے کے بعد کال کریں۔ واضح polarity یا build exit_code میں سے کوئی ایک فراہم کریں تاکہ polarity خودکار طور پر میپ ہو جائے۔ مواد پہلے صاف کیا جاتا ہے؛ خالص شور والا ان پٹ میموری کو چھوئے بغیر مسترد کر دیا جاتا ہے۔",
+      "parameters": {
+        "key": "صورتحال کی تجریدی وضاحت۔",
+        "value": "لاگو کیا گیا کوڈ پیٹرن یا فیصلہ۔",
+        "register": "محفوظ کرنے کا register (style/bug/arch/context/life_pref/life_avoid/life_phil/life_context)۔",
+        "polarity": "تقویت کی شدت [-2.0, 2.0]۔ اگر exit_code دیا جائے تو اختیاری؛ جب دونوں دیے جائیں تو واضح polarity غالب رہتی ہے۔",
+        "exit_code": "build کا ایگزٹ کوڈ (0 = کامیابی)۔ اگر واضح polarity نہ دی جائے تو خودکار طور پر polarity میں میپ ہو جاتا ہے (کامیابی +1.5/+0.5، ناکامی -0.5/-1.0)۔",
+        "user_edited": "آیا صارف نے AI کے آؤٹ پٹ میں ترمیم کی۔ exit_code سے حاصل ہونے والی polarity کو ایڈجسٹ کرتا ہے۔",
+        "project": "پروجیکٹ ٹیگ جو میموری اندراج کے ساتھ بعد میں پروجیکٹ سے واقف یاددہانی کے لیے محفوظ ہوتا ہے۔"
+      }
+    },
+    "crow_admin": {
+      "description": "Crow کی انتظامی کارروائیاں ایک ہی ٹول میں۔ اعمال: diagnostics (میموری اعداد و شمار)، drift (drift جانچ)، prompt (system_prompt.md پڑھنا، شامل کرنا اور اعداد و شمار)، backup (بنانا، گھمانا، فہرست اور بحال کرنا)، evolve (پرامپٹ تبدیلیاں تجویز کرنا)، project_info (پروجیکٹ مثالیں فہرست بنانا اور بنانا)۔",
+      "parameters": {
+        "action": "کون سی انتظامی کارروائی: diagnostics، drift، prompt، backup، evolve، یا project_info۔",
+        "args": "عمل کے مخصوص دلائل کا آبجیکٹ جو منتخب کارروائی کو دیا جاتا ہے۔"
+      }
+    }
+  },
+
+  "errors": {
+    "unknown_tool": "نامعلوم ٹول: {name}",
+    "unknown_prompt": "نامعلوم پرامپٹ: {name}",
+    "unknown_action": "نامعلوم {context} عمل: {action}",
+    "project_name_required": "create عمل کے لیے project_name درکار ہے"
+  },
+
+  "recall_messages": {
+    "faint_bias": "Crow کو {register} کا مدھم bias یاد آتا ہے۔ ابھی بہت کم یادیں محفوظ ہیں۔",
+    "unknown_register": "نامعلوم register: {register}"
+  },
+
+  "ingest_messages": {
+    "status_ingested": "شامل کر دیا گیا",
+    "unknown_register": "نامعلوم register: {register}"
+  },
+
+  "evolve_messages": {
+    "no_patterns": "ابھی تک کوئی آماری طور پر اہم نمونہ نہیں پایا گیا۔"
+  },
+
+  "drift_messages": {
+    "healthy": "میموری کا اعتماد صحت مند ہے۔",
+    "confused": "Crow میموری الجھی ہوئی لگتی ہے۔ حالیہ کام بہت نئے ہو سکتے ہیں یا میموری بھر گئی ہے۔ spectral reset یا آرکائیو کرنے پر غور کریں۔"
+  },
+
+  "cli": {
+    "stdio_start": "Crow Memory MCP سرور stdio پر چل رہا ہے",
+    "sse_start": "Crow Memory MCP SSE سرور http://{host}:{port}/sse پر سن رہا ہے",
+    "http_start": "Crow Memory MCP Streamable HTTP سرور http://{host}:{port}/ پر سن رہا ہے",
+    "dual_start_sse": "Crow Memory MCP SSE سرور http://{host}:{sse_port}/sse پر سن رہا ہے",
+    "dual_start_http": "Crow Memory MCP Streamable HTTP سرور http://{host}:{http_port}/ پر سن رہا ہے"
+  },
+
+  "installer": {
+    "banner_title": "Zoo Code کے لیے Crow Memory انسٹالر",
+    "step_1_install_deps": "Python ڈیپنڈنسیاں انسٹال کی جا رہی ہیں",
+    "step_2_init_crow": "crow.bin کی ابتدا کی جا رہی ہے",
+    "step_3_vscode_tasks": ".vscode/tasks.json بنایا جا رہا ہے (فولڈر کھلنے پر SSE خودکار آغاز)",
+    "step_4_custom_mode": "Zoo Code کا خودکار فعال ہونے والا موڈ بنایا جا رہا ہے",
+    "step_5_start_server": "Crow SSE سرور شروع کیا جا رہا ہے + خودکار آغاز",
+    "step_done": "مکمل ہوا۔",
+    "complete_title": "Crow Memory کی تنصیب مکمل ہو گئی!",
+    "sse_running": "SSE سرور http://127.0.0.1:9020/sse پر چل رہا ہے",
+    "next_steps_label": "اگلے مراحل:",
+    "next_step_1": "1. Zoo Code کو دوبارہ شروع کریں",
+    "next_step_2": "2. موڈ کو \"Orchestrator + Crow\" پر تبدیل کریں",
+    "next_step_3": "3. Crow خودکار طور پر فعال ہو جاتا ہے — کسی دستی سیٹ اپ کی ضرورت نہیں",
+    "next_step_4": "4. Task Scheduler کے ذریعے Windows کے ساتھ Crow سرور خودکار شروع ہوتا ہے"
+  },
+
+  "system_prompt": {
+    "header": "# Crow Memory — سسٹم پرامپٹ کے اصول",
+    "subtitle": "> یہ اصول Crow نے ارتقا دیے اور صارف نے منظوری دی۔\n> یہ آماری طور پر اہم کوڈنگ biases کی نمائندگی کرتے ہیں۔\n> دستی طور پر ترمیم نہ کریں — Crow MCP evolve ٹولز استعمال کریں۔",
+    "managed_by": "<!-- یہ فائل crow_mcp_server.py کے ذریعے منظم کی جاتی ہے -->",
+    "default_rules": [
+      "RULE: ہر جواب سے پہلے crow_recall(domain=\"all\") کال کریں تاکہ صارف کے کوڈنگ انداز، بگ کی بصیرت، آرکیٹیکچرل ترجیحات، ذاتی ذوق، فلسفے اور موجودہ سیاق و سباق کے لیے تمام 8 registers (style, bug, arch, context, life_pref, life_avoid, life_phil, life_context) سے استفسار کیا جا سکے۔ واپس آنے والے اشاروں کو اپنے جواب میں ظاہر کریں۔",
+      "RULE: ہر جواب کے بعد، صارف نے جو کچھ ظاہر کیا — ترجیحات، فلسفہ، اصلاحات، سیاق و سباق — crow_ingest کے ذریعے شامل کریں۔ صارف کے \"یہ یاد رکھو\" کہنے کا انتظار کیے بغیر مناسب register اور polarity خود طے کریں۔ کوڈ کے کام کے بعد، crow_ingest_from_build کے ذریعے build نتائج کا خودکار جائزہ لیں۔",
+      "RULE: دستاویزات کی تدوین، git کارروائیوں یا کنفیگریشن تبدیلیوں جیسے غیر کوڈنگ کاموں میں بھی recall+ingest اصولوں کو نہ چھوڑیں۔ انہیں ہمیشہ نافذ کریں۔"
+    ]
+  }
+}

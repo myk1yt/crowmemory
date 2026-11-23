@@ -1,0 +1,119 @@
+{
+  "_meta": {
+    "locale": "km",
+    "language_name": "Khmer",
+    "version": "1.0.0",
+    "last_updated": "2026-11-24"
+  },
+
+  "server": {
+    "instructions": "Crow Memory \u2014 អង្គចងចាំស៊ីណាប់ទិកខាងក្រៅសម្រាប់ភ្នាក់ងារសរសេរកូដ AI។ រក្សាទុករចនាប័ទ្មសរសេរកូដ វិចារណញ្ញាណអំពីកំហុស និងចំណូលចិត្តស្ថាបត្យកម្មរបស់អ្នកជាម៉ាទ្រីសទម្ងន់បង្ហាប់នៅក្នុង crow.bin។",
+
+    "prompts": {
+      "crow_memory_bias": {
+        "description": "ប្លុកភាពលំអៀង Crow Memory ដែលបញ្ចូលដោយស្វ័យប្រវត្តិ។ មានរចនាប័ទ្មសរសេរកូដ ចំណូលចិត្ត និងច្បាប់ដែលបានវិវត្តរបស់អ្នក។ ម៉ាស៊ីនគួរផ្ទុកវានៅពេលចាប់ផ្តើមសេសសិន។",
+        "body_template": "=== Crow Memory \u2014 បរិបទដែលបញ្ចូលដោយស្វ័យប្រវត្តិ ===\n\n[ច្បាប់វិវត្តអចិន្ត្រៃយ៍]\n{rules}\n\n[តម្រុយអង្គចងចាំថ្មីៗ]\n{bias}\n\nបរិបទខាងលើតំណាងឱ្យចំណូលចិត្ត និងរចនាប័ទ្មដែលបានរៀនរបស់អ្នក។ ប្រើវាដើម្បីណែនាំការឆ្លើយតបរបស់អ្នក។ ដើម្បីដឹងបន្ថែម សូមហៅ crow_recall ជាមួយសំណួរជាក់លាក់ និង register (style/bug/arch/context/life_pref/life_avoid/life_phil/life_context)។"
+      },
+      "crow_evolved_rules": {
+        "description": "Permanent evolved rules from Crow's system_prompt.md: permanent rules (human-promoted via CROW_ADMIN_TOKEN) plus unreviewed model suggestions.",
+        "body_template": "{prompt}"
+      }
+    }
+  },
+
+  "tools": {
+    "crow_recall": {
+      "description": "រំលឹករចនាប័ទ្មសរសេរកូដ វិចារណញ្ញាណអំពីកំហុស ចំណូលចិត្តស្ថាបត្យកម្ម ឬបរិបទផ្ទាល់ខ្លួនរបស់អ្នកប្រើពីអង្គចងចាំស៊ីណាប់ទិក Crow។ ហៅវាមុនរាល់ការឆ្លើយតប ដើម្បីតម្រូវតាមភាពលំអៀងបែបអាំងឌុចស្យុងរបស់អ្នកប្រើ។ តាមលំនាំដើម (register=all ឬមិនបញ្ជាក់, domain=all) វាសាកសួរទាំង 8 register និងបញ្ចូលលទ្ធផលជាសកលតាមភាពស្រដៀងគ្នាប្រសិទ្ធភាព។",
+      "parameters": {
+        "query": "ការពិពណ៌នាជាភាសាធម្មជាតិអំពីកិច្ចការបច្ចុប្បន្ន។",
+        "register": "register ណា។ ប្រើ 'all' (ឬមិនបញ្ជាក់) ដើម្បីសាកសួរ register ទាំងអស់ក្នុងដែនដែលបានជ្រើស។ Code: style/bug/arch/context. Life: life_pref/life_avoid/life_phil/life_context.",
+        "domain": "តម្រងដែនដែលប្រើនៅពេល register ជា 'all' ឬមិនបញ្ជាក់។ 'code' = style/bug/arch/context, 'life' = life_pref/life_avoid/life_phil/life_context, 'all' = register ទាំង 8 (លំនាំដើម)។",
+        "top_k": "ចំនួនតម្រុយ (1-5)។",
+        "format": "ទម្រង់លទ្ធផល។ 'hint' ត្រឡប់តម្រុយ JSON (លំនាំដើម); 'bias_block' ត្រឡប់ប្លុកអត្ថបទ [User Bias] សម្រាប់បញ្ចូលក្នុងប្រូមផ្ទប្រព័ន្ធ។",
+        "project": "ស្លាកគម្រោងដែលប្រើដើម្បីជំរុញតម្រុយគម្រោងដូចគ្នា និងត្រង/ដាក់ទោសតម្រុយពីគម្រោងផ្សេង។",
+        "strict_project": "បើ true ត្រងតម្រុយពីគម្រោងផ្សេងចេញពីលទ្ធផលយ៉ាងតឹងរ៉ឹង។"
+      }
+    },
+    "crow_ingest": {
+      "description": "បញ្ចូលបទពិសោធន៍សរសេរកូដទៅក្នុងអង្គចងចាំស៊ីណាប់ទិករយៈពេលវែងរបស់ Crow។ ហៅបន្ទាប់ពីលទ្ធផល build/test ឬមតិកែលម្អច្បាស់លាស់របស់អ្នកប្រើ។ ផ្តល់ polarity ច្បាស់លាស់ ឬ exit_code នៃ build សម្រាប់ការផ្គូផ្គង polarity ដោយស្វ័យប្រវត្តិ។ មាតិកាត្រូវសម្អាតជាមុនសិន; ការបញ្ចូលសំឡេងរំខានសុទ្ធត្រូវបដិសេធដោយមិនប៉ះពាល់អង្គចងចាំ។",
+      "parameters": {
+        "key": "ការពិពណ៌នាអរូបីអំពីស្ថានការណ៍។",
+        "value": "លំនាំកូដ ឬការសម្រេចចិត្តដែលបានអនុវត្ត។",
+        "register": "register សម្រាប់រក្សាទុក (style/bug/arch/context/life_pref/life_avoid/life_phil/life_context)។",
+        "polarity": "កម្រិតការពង្រឹង [-2.0, 2.0]។ ជាជម្រើសបើផ្តល់ exit_code; polarity ច្បាស់លាស់ឈ្នះនៅពេលផ្តល់ទាំងពីរ។",
+        "exit_code": "លេខកូដចេញនៃ build (0 = ជោគជ័យ)។ ផ្គូផ្គងដោយស្វ័យប្រវត្តិទៅ polarity (+1.5/+0.5 នៅពេលជោគជ័យ, -0.5/-1.0 នៅពេលបរាជ័យ) លុះត្រាតែផ្តល់ polarity ច្បាស់លាស់។",
+        "user_edited": "តើអ្នកប្រើបានកែសម្រួលលទ្ធផលរបស់ AI ឬអត់។ កែតម្រូវ polarity ដែលទាញចេញពី exit_code។",
+        "project": "ស្លាកគម្រោងដែលរក្សាទុកជាមួយធាតុអង្គចងចាំសម្រាប់ការរំលឹកដែលដឹងគម្រោងនៅពេលក្រោយ។"
+      }
+    },
+    "crow_admin": {
+      "description": "ប្រតិបត្តិការគ្រប់គ្រង Crow ក្នុងឧបករណ៍តែមួយ។ សកម្មភាព: diagnostics (ស្ថិតិអង្គចងចាំ), drift (ពិនិត្យ drift), prompt (អាន/បន្ថែម/ស្ថិតិ system_prompt.md), backup (បង្កើត/បង្វិល/រាយ/សង្គ្រោះ), evolve (ស្នើការផ្លាស់ប្តូរប្រូមផ្ទ), project_info (រាយ/បង្កើតវត្ថុគម្រោង)។",
+      "parameters": {
+        "action": "ប្រតិបត្តិការគ្រប់គ្រងណា: diagnostics, drift, prompt, backup, evolve, ឬ project_info។",
+        "args": "វត្ថុអាគុយម៉ង់ជាក់លាក់តាមសកម្មភាព ដែលបញ្ជូនទៅប្រតិបត្តិការដែលបានជ្រើស។"
+      }
+    }
+  },
+
+  "errors": {
+    "unknown_tool": "ឧបករណ៍មិនស្គាល់: {name}",
+    "unknown_prompt": "ប្រូមផ្ទមិនស្គាល់: {name}",
+    "unknown_action": "សកម្មភាព {context} មិនស្គាល់: {action}",
+    "project_name_required": "project_name ត្រូវការសម្រាប់សកម្មភាព create"
+  },
+
+  "recall_messages": {
+    "faint_bias": "Crow រំលឹកភាពលំអៀង {register} ស្រាល។ មានអង្គចងចាំតិចតួចបានរក្សាទុក។",
+    "unknown_register": "register មិនស្គាល់: {register}"
+  },
+
+  "ingest_messages": {
+    "status_ingested": "បានរក្សាទុក",
+    "unknown_register": "register មិនស្គាល់: {register}"
+  },
+
+  "evolve_messages": {
+    "no_patterns": "មិនទាន់រកឃើញលំនាំសំខាន់តាមស្ថិតិទេ។"
+  },
+
+  "drift_messages": {
+    "healthy": "ភាពជឿជាក់នៃអង្គចងចាំមានសុខភាពល្អ។",
+    "confused": "អង្គចងចាំ Crow ហាក់ដូចជាច្របូកច្របល់។ កិច្ចការថ្មីៗអាចថ្មីពេក ឬអង្គចងចាំពេញហើយ។ សូមពិចារណាការកំណត់ស្ពែកធ្រ័មឡើងវិញ ឬការរក្សាទុកជាសារមន្ទីរ។"
+  },
+
+  "cli": {
+    "stdio_start": "ម៉ាស៊ីនមេ Crow Memory MCP កំពុងដំណើរការលើ stdio",
+    "sse_start": "ម៉ាស៊ីនមេ Crow Memory MCP SSE កំពុងស្តាប់នៅ http://{host}:{port}/sse",
+    "http_start": "ម៉ាស៊ីនមេ Crow Memory MCP Streamable HTTP កំពុងស្តាប់នៅ http://{host}:{port}/",
+    "dual_start_sse": "ម៉ាស៊ីនមេ Crow Memory MCP SSE កំពុងស្តាប់នៅ http://{host}:{sse_port}/sse",
+    "dual_start_http": "ម៉ាស៊ីនមេ Crow Memory MCP Streamable HTTP កំពុងស្តាប់នៅ http://{host}:{http_port}/"
+  },
+
+  "installer": {
+    "banner_title": "កម្មវិធីដំឡើង Crow Memory សម្រាប់ Zoo Code",
+    "step_1_install_deps": "កំពុងដំឡើងឌីផេនដង់ស៊ី Python",
+    "step_2_init_crow": "កំពុងចាប់ផ្តើម crow.bin",
+    "step_3_vscode_tasks": "កំពុងបង្កើត .vscode/tasks.json (ចាប់ផ្តើម SSE ដោយស្វ័យប្រវត្តិនៅពេលបើកថត)",
+    "step_4_custom_mode": "កំពុងបង្កើតរបៀបសកម្មដោយស្វ័យប្រវត្តិ Zoo Code",
+    "step_5_start_server": "កំពុងចាប់ផ្តើមម៉ាស៊ីនមេ Crow SSE និងការចាប់ផ្តើមស្វ័យប្រវត្តិ",
+    "step_done": "រួចរាល់។",
+    "complete_title": "ការដំឡើង Crow Memory បានបញ្ចប់!",
+    "sse_running": "ម៉ាស៊ីនមេ SSE កំពុងដំណើរការនៅ http://127.0.0.1:9020/sse",
+    "next_steps_label": "ជំហានបន្ទាប់:",
+    "next_step_1": "1. ចាប់ផ្តើម Zoo Code ឡើងវិញ",
+    "next_step_2": "2. ប្តូររបៀបទៅ \"Orchestrator + Crow\"",
+    "next_step_3": "3. Crow សកម្មដោយស្វ័យប្រវត្តិ \u2014 មិនត្រូវការរៀបចំដោយដៃទេ",
+    "next_step_4": "4. ម៉ាស៊ីនមេ Crow ចាប់ផ្តើមដោយស្វ័យប្រវត្តិជាមួយ Windows តាមរយៈ Task Scheduler"
+  },
+
+  "system_prompt": {
+    "header": "# Crow Memory \u2014 ច្បាប់ប្រូមផ្ទប្រព័ន្ធ",
+    "subtitle": "> ច្បាប់ទាំងនេះត្រូវបានវិវត្តដោយ Crow និងអនុម័តដោយអ្នកប្រើ។\n> ពួកវាតំណាងឱ្យភាពលំអៀងសរសេរកូដដែលសំខាន់តាមស្ថិតិ។\n> កុំកែដោយដៃ \u2014 ប្រើឧបករណ៍ Crow MCP evolve។",
+    "managed_by": "<!-- ឯកសារនេះត្រូវបានគ្រប់គ្រងដោយ crow_mcp_server.py -->",
+    "default_rules": [
+      "RULE: មុនរាល់ការឆ្លើយតប សូមហៅ crow_recall(domain=\"all\") ដើម្បីសាកសួរ register ទាំង 8 (style, bug, arch, context, life_pref, life_avoid, life_phil, life_context) អំពីរចនាប័ទ្មសរសេរកូដ វិចារណញ្ញាណអំពីកំហុស ចំណូលចិត្តស្ថាបត្យកម្ម រសនិយមផ្ទាល់ខ្លួន ទស្សនវិជ្ជា និងបរិបទបច្ចុប្បន្នរបស់អ្នកប្រើ។ ឆ្លុះបញ្ចាំងតម្រុយដែលត្រឡប់មកក្នុងការឆ្លើយតបរបស់អ្នក។",
+      "RULE: បន្ទាប់ពីរាល់ការឆ្លើយតប សូមបញ្ចូលអ្វីដែលអ្នកប្រើបានបង្ហាញ \u2014 ចំណូលចិត្ត ទស្សនវិជ្ជា ការកែតម្រូវ បរិបទ \u2014 តាមរយៈ crow_ingest។ វិនិច្ឆ័យ register និង polarity សមស្របដោយខ្លួនឯង ដោយមិនរង់ចាំឱ្យអ្នកប្រើនិយាយថា \"ចងចាំរឿងនេះ\"។ បន្ទាប់ពីការងារកូដ សូមវាយតម្លៃលទ្ធផល build ដោយស្វ័យប្រវត្តិតាមរយៈ crow_ingest_from_build។",
+      "RULE: កុំរំលងច្បាប់ recall+ingest ទោះបីសម្រាប់កិច្ចការមិនសរសេរកូដ ដូចជាការកែសម្រួលឯកសារ ប្រតិបត្តិការ git ឬការផ្លាស់ប្តូរការកំណត់រចនាសម្ព័ន្ធ។ តែងតែអនុវត្តពួកវា។"
+    ]
+  }
+}

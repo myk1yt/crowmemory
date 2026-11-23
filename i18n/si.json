@@ -1,0 +1,108 @@
+{
+  "_meta": {
+    "locale": "si",
+    "language_name": "Sinhala",
+    "version": "1.0.0",
+    "last_updated": "2026-11-24"
+  },
+  "server": {
+    "instructions": "Crow Memory — AI කේතන නියෝජිතයින් සඳහා බාහිර සිනැප්ටික් මතකය. ඔබේ කේතන ශෛලිය, දෝෂ පිළිබඳ සහජ අවබෝධය සහ ගෘහ නිර්මාණ මනාපයන් crow.bin තුළ සම්පීඩිත බර න්‍යාස ලෙස ගබඩා කරයි.",
+    "prompts": {
+      "crow_memory_bias": {
+        "description": "ස්වයංක්‍රීයව ඇතුළත් කරන Crow Memory බයස් කොටස. ඔබේ කේතන ශෛලිය, මනාපයන් සහ පරිණාමිත නීති අඩංගු වේ. සත්කාරකය මෙය සැසිය ආරම්භයේදී පූරණය කළ යුතුය.",
+        "body_template": "=== Crow Memory — ස්වයංක්‍රීයව ඇතුළත් කරන ලද සන්දර්භය ===\n\n[ස්ථිර පරිණාමිත නීති]\n{rules}\n\n[මෑත මතක ඉඟි]\n{bias}\n\nඉහත සන්දර්භය ඔබ ඉගෙන ගත් මනාපයන් සහ ශෛලිය නියෝජනය කරයි. ඔබේ පිළිතුරු මෙහෙයවීමට එය භාවිත කරන්න. වැඩිදුර දැනගැනීමට, නිශ්චිත විමසුමක් සහ register (style/bug/arch/context/life_pref/life_avoid/life_phil/life_context) සමඟ crow_recall අමතන්න."
+      },
+      "crow_evolved_rules": {
+        "description": "Permanent evolved rules from Crow's system_prompt.md: permanent rules (human-promoted via CROW_ADMIN_TOKEN) plus unreviewed model suggestions.",
+        "body_template": "{prompt}"
+      }
+    }
+  },
+  "tools": {
+    "crow_recall": {
+      "description": "Crow සිනැප්ටික් මතකයෙන් පරිශීලක-විශේෂිත කේතන ශෛලිය, දෝෂ පිළිබඳ සහජ අවබෝධය, ගෘහ නිර්මාණ මනාපය හෝ පුද්ගලික සන්දර්භය නැවත ලබා ගන්න. පරිශීලකයාගේ ප්‍රේරක නැඹුරුව සමඟ ගැලපීමට සෑම පිළිතුරකටම පෙර මෙය අමතන්න. පෙරනිමියෙන් (register=all හෝ හැර දැමූ විට, domain=all), සියලුම register 8 විමසා ප්‍රතිඵල ඵලදායී සමානතාව අනුව ගෝලීයව ඒකාබද්ධ කරයි.",
+      "parameters": {
+        "query": "වත්මන් කාර්යයේ ස්වාභාවික භාෂා විස්තරය.",
+        "register": "කුමන register ද. තෝරාගත් domain හි සෑම register ක් විමසීමට 'all' භාවිත කරන්න (හෝ හැර දමන්න). Code: style/bug/arch/context. Life: life_pref/life_avoid/life_phil/life_context.",
+        "domain": "register 'all' වූ විට හෝ හැර දැමූ විට භාවිත කරන domain පෙරහන. 'code' = style/bug/arch/context, 'life' = life_pref/life_avoid/life_phil/life_context, 'all' = සියලුම register 8 (පෙරනිමි).",
+        "top_k": "ඉඟි ගණන (1-5).",
+        "format": "ප්‍රතිදාන ආකෘතිය. 'hint' JSON ඉඟි ලබා දෙයි (පෙරනිමි); 'bias_block' පද්ධති ප්‍රොම්ප්ට් එකට ඇතුළත් කිරීම සඳහා [User Bias] පෙළ කොටස ලබා දෙයි.",
+        "project": "එකම ව්‍යාපෘතියේ ඉඟි ඉහළ නැංවීමට සහ වෙනත් ව්‍යාපෘතිවල ඉඟි පෙරහනය කිරීමට හෝ දඬුවම් කිරීමට භාවිත කරන ව්‍යාපෘති ටැගය.",
+        "strict_project": "true වූ විට, වෙනත් ව්‍යාපෘතිවල ඉඟි ප්‍රතිඵලවලින් දැඩි ලෙස පෙරහනය කරයි."
+      }
+    },
+    "crow_ingest": {
+      "description": "Crow හි දිගුකාලීන සිනැප්ටික් මතකයට කේතන අත්දැකීමක් ඇතුළත් කරන්න. build හෝ පරීක්ෂණ ප්‍රතිඵල හෝ පරිශීලකයාගේ පැහැදිලි ප්‍රතිපෝෂණයෙන් පසු මෙය අමතන්න. පැහැදිලි polarity එකක් හෝ ස්වයංක්‍රීය polarity සිතියම්ගත කිරීම සඳහා build exit_code එකක් ලබා දෙන්න. අන්තර්ගතය මුලින්ම පිරිසිදු කරනු ලැබේ; ශබ්දය පමණක් වන ආදානය මතකයට ස්පර්ශ නොකර ප්‍රතික්ෂේප කරනු ලැබේ.",
+      "parameters": {
+        "key": "තත්ත්වයේ වියුක්ත විස්තරය.",
+        "value": "යොදාගත් කේත රටාව හෝ තීරණය.",
+        "register": "ගබඩා කළ යුතු register (style/bug/arch/context/life_pref/life_avoid/life_phil/life_context).",
+        "polarity": "ශක්තිකරණ ශක්තිය [-2.0, 2.0]. exit_code ලබා දී ඇත්නම් අත්‍යවශ්‍ය නොවේ; දෙකම ලබා දුන් විට පැහැදිලි polarity ජය ගනී.",
+        "exit_code": "Build පිටවීමේ කේතය (0 = සාර්ථක). පැහැදිලි polarity එකක් ලබා නොදුන්නේ නම් ස්වයංක්‍රීයව polarity වෙත සිතියම්ගත වේ (සාර්ථක විට +1.5/+0.5, අසාර්ථක විට -0.5/-1.0).",
+        "user_edited": "පරිශීලකයා AI හි ප්‍රතිදානය සංස්කරණය කළේ ද යන්න. exit_code වෙතින් ලබාගත් polarity සකසයි.",
+        "project": "පසුව ව්‍යාපෘති-අවබෝධී recall සඳහා මතක සටහන සමඟ ගබඩා කරන ව්‍යාපෘති ටැගය."
+      }
+    },
+    "crow_admin": {
+      "description": "එක් මෙවලමක් තුළ Crow පරිපාලන මෙහෙයුම්. ක්‍රියා: diagnostics (මතක සංඛ්‍යාලේඛන), drift (drift පරීක්ෂාව), prompt (system_prompt.md කියවීම/එකතු කිරීම/සංඛ්‍යාලේඛන), backup (සෑදීම/භ්‍රමණය/ලැයිස්තුගත කිරීම/ප්‍රතිසාධනය), evolve (ප්‍රොම්ප්ට් විකෘති යෝජනා කිරීම), project_info (ව්‍යාපෘති අවස්ථා ලැයිස්තුගත කිරීම/සෑදීම).",
+      "parameters": {
+        "action": "කුමන පරිපාලන මෙහෙයුම ද: diagnostics, drift, prompt, backup, evolve, හෝ project_info.",
+        "args": "තෝරාගත් මෙහෙයුම වෙත යවන, ක්‍රියාවට-විශේෂිත තර්ක වස්තුව."
+      }
+    }
+  },
+  "errors": {
+    "unknown_tool": "නොදන්නා මෙවලම: {name}",
+    "unknown_prompt": "නොදන්නා ප්‍රොම්ප්ට්: {name}",
+    "unknown_action": "නොදන්නා {context} ක්‍රියාව: {action}",
+    "project_name_required": "create ක්‍රියාව සඳහා project_name අවශ්‍යයි"
+  },
+  "recall_messages": {
+    "faint_bias": "Crow අල්ප {register} බයස් එකක් සිහිපත් කරයි. තවම මතක අල්පයක් ගබඩා වී ඇත.",
+    "unknown_register": "නොදන්නා register: {register}"
+  },
+  "ingest_messages": {
+    "status_ingested": "ඇතුළත් කරන ලදී",
+    "unknown_register": "නොදන්නා register: {register}"
+  },
+  "evolve_messages": {
+    "no_patterns": "සංඛ්‍යානමය වශයෙන් වැදගත් රටා තවම හඳුනාගෙන නැත."
+  },
+  "drift_messages": {
+    "healthy": "මතක විශ්වාසනීයත්වය යහපත් මට්ටමක පවතී.",
+    "confused": "Crow මතකය ව්‍යාකූල බව පෙනේ. මෑත කාර්යයන් ඉතා නවීන විය හැකියි හෝ මතකය සංතෘප්ත වී ඇත. spectral reset කිරීම හෝ සංරක්ෂණය කිරීම සලකා බලන්න."
+  },
+  "cli": {
+    "stdio_start": "Crow Memory MCP සේවාදායකය stdio මත ක්‍රියාත්මක වේ",
+    "sse_start": "Crow Memory MCP SSE සේවාදායකය http://{host}:{port}/sse මත සවන් දෙමින් සිටී",
+    "http_start": "Crow Memory MCP Streamable HTTP සේවාදායකය http://{host}:{port}/ මත සවන් දෙමින් සිටී",
+    "dual_start_sse": "Crow Memory MCP SSE සේවාදායකය http://{host}:{sse_port}/sse මත සවන් දෙමින් සිටී",
+    "dual_start_http": "Crow Memory MCP Streamable HTTP සේවාදායකය http://{host}:{http_port}/ මත සවන් දෙමින් සිටී"
+  },
+  "installer": {
+    "banner_title": "Zoo Code සඳහා Crow Memory ස්ථාපකය",
+    "step_1_install_deps": "Python යැපීම් ස්ථාපනය කරමින්",
+    "step_2_init_crow": "crow.bin ආරම්භ කරමින්",
+    "step_3_vscode_tasks": ".vscode/tasks.json සාදමින් (ෆෝල්ඩරය විවෘත කළ විට SSE ස්වයංක්‍රීයව ආරම්භ කිරීම)",
+    "step_4_custom_mode": "Zoo Code ස්වයංක්‍රීය සක්‍රීය කිරීමේ මාදිලිය සාදමින්",
+    "step_5_start_server": "Crow SSE සේවාදායකය ආරම්භ කරමින් + ස්වයංක්‍රීය ආරම්භය",
+    "step_done": "අවසන්.",
+    "complete_title": "Crow Memory ස්ථාපනය සම්පූර්ණයි!",
+    "sse_running": "SSE සේවාදායකය http://127.0.0.1:9020/sse මත ක්‍රියාත්මක වේ",
+    "next_steps_label": "ඊළඟ පියවර:",
+    "next_step_1": "1. Zoo Code නැවත ආරම්භ කරන්න",
+    "next_step_2": "2. මාදිලිය \"Orchestrator + Crow\" වෙත මාරු කරන්න",
+    "next_step_3": "3. Crow ස්වයංක්‍රීයව සක්‍රීය වේ — අතින් සැකසීම අවශ්‍ය නැත",
+    "next_step_4": "4. Crow සේවාදායකය Task Scheduler හරහා Windows සමඟ ස්වයංක්‍රීයව ආරම්භ වේ"
+  },
+  "system_prompt": {
+    "header": "# Crow Memory — පද්ධති ප්‍රොම්ප්ට් නීති",
+    "subtitle": "> මෙම නීති Crow මගින් පරිණාමය කර පරිශීලකයා විසින් අනුමත කරන ලදී.\n> ඒවා සංඛ්‍යානමය වශයෙන් වැදගත් කේතන නැඹුරුවන් නියෝජනය කරයි.\n> අතින් සංස්කරණය නොකරන්න — Crow MCP evolve මෙවලම් භාවිත කරන්න.",
+    "managed_by": "<!-- මෙම ගොනුව crow_mcp_server.py මගින් කළමනාකරණය වේ -->",
+    "default_rules": [
+      "RULE: සෑම පිළිතුරකටම පෙර, පරිශීලකයාගේ කේතන ශෛලිය, දෝෂ පිළිබඳ සහජ අවබෝධය, ගෘහ නිර්මාණ මනාපයන්, පුද්ගලික රුචිය, දර්ශනය සහ වත්මන් සන්දර්භය සඳහා සියලුම register 8 (style, bug, arch, context, life_pref, life_avoid, life_phil, life_context) විමසීමට crow_recall(domain=\"all\") අමතන්න. ලැබුණු ඉඟි ඔබේ පිළිතුරේ පිළිබිඹු කරන්න.",
+      "RULE: සෑම පිළිතුරකටම පසු, පරිශීලකයා හෙළිදරව් කළ දේ — මනාපයන්, දර්ශනය, නිවැරදි කිරීම්, සන්දර්භය — crow_ingest හරහා ඇතුළත් කරන්න. \"මෙය මතක තබා ගන්න\" යැයි පරිශීලකයා කියන තෙක් බලා නොසිට ඔබම සුදුසු register සහ polarity තීරණය කරන්න. කේත කටයුතුවලින් පසු, crow_ingest_from_build හරහා build ප්‍රතිඵල ස්වයංක්‍රීයව ඇගයන්න.",
+      "RULE: ලේඛන සංස්කරණය, git මෙහෙයුම් හෝ වින්‍යාස වෙනස්කම් වැනි කේතන-නොවන කාර්යයන් සඳහා වුවද recall+ingest නීති මඟ නොහරින්න. සැමවිටම ඒවා ක්‍රියාත්මක කරන්න."
+    ]
+  }
+}

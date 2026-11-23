@@ -1,0 +1,119 @@
+{
+  "_meta": {
+    "locale": "lo",
+    "language_name": "Lao",
+    "version": "1.0.0",
+    "last_updated": "2026-11-24"
+  },
+
+  "server": {
+    "instructions": "Crow Memory — ຄວາມຈຳແບບ synaptic ພາຍນອກສຳລັບຕົວແທນ AI ທີ່ຂຽນໂຄ້ດ. ເກັບຮັກສາຮູບແບບການຂຽນໂຄ້ດ, ຄວາມຮູ້ສຶກຕໍ່ບັນຫາ bug ແລະ ຄວາມມັກດ້ານ architecture ຂອງທ່ານ ເປັນ matrices ນ້ຳໜັກທີ່ບີບອັດໄວ້ໃນໄຟລ໌ crow.bin.",
+
+    "prompts": {
+      "crow_memory_bias": {
+        "description": "ບລັອກ bias ຂອງ Crow Memory ທີ່ຖືກໃສ່ເຂົ້າໂດຍອັດຕະໂນມັດ. ປະກອບມີຮູບແບບການຂຽນໂຄ້ດ, ຄວາມມັກ ແລະ ກົດລະບຽບທີ່ພັດທະນາແລ້ວຂອງທ່ານ. host ຄວນໂຫຼດສິ່ງນີ້ຕອນເລີ່ມ session.",
+        "body_template": "=== Crow Memory — ບໍລິບົດທີ່ຖືກໃສ່ເຂົ້າໂດຍອັດຕະໂນມັດ ===\n\n[ກົດລະບຽບຖາວອນທີ່ພັດທະນາແລ້ວ]\n{rules}\n\n[ຄຳແນະນຳຈາກຄວາມຈຳຫຼ້າສຸດ]\n{bias}\n\nບໍລິບົດຂ້າງເທິງນີ້ສະແດງເຖິງຄວາມມັກ ແລະ ຮູບແບບການຂຽນທີ່ທ່ານໄດ້ຮຽນຮູ້. ໃຊ້ມັນເພື່ອນຳທາງຄຳຕອບຂອງທ່ານ. ຖ້າຢາກຮູ້ເພີ່ມເຕີມ, ໃຫ້ເອີ້ນ crow_recall ດ້ວຍ query ສະເພາະ ແລະ register (style/bug/arch/context/life_pref/life_avoid/life_phil/life_context)."
+      },
+      "crow_evolved_rules": {
+        "description": "Permanent evolved rules from Crow's system_prompt.md: permanent rules (human-promoted via CROW_ADMIN_TOKEN) plus unreviewed model suggestions.",
+        "body_template": "{prompt}"
+      }
+    }
+  },
+
+  "tools": {
+    "crow_recall": {
+      "description": "ດຶງເອົາຮູບແບບການຂຽນໂຄ້ດ, ຄວາມຮູ້ສຶກຕໍ່ບັນຫາ bug, ຄວາມມັກດ້ານ architecture ຫຼື ບໍລິບົດສ່ວນຕົວຂອງຜູ້ໃຊ້ ອອກຈາກຄວາມຈຳແບບ synaptic ຂອງ Crow. ເອີ້ນສິ່ງນີ້ກ່ອນທຸກຄຳຕອບ ເພື່ອໃຫ້ສອດຄ່ອງກັບ inductive bias ຂອງຜູ້ໃຊ້. ໂດຍຄ່າເລີ່ມຕົ້ນ (register=all ຫຼື ບໍ່ລະບຸ, domain=all) ຈະສອບຖາມທັງ 8 register ແລ້ວລວມຜົນທົ່ວໄປຕາມຄວາມຄ້າຍຄືທີ່ມີປະສິດທິພາບ.",
+      "parameters": {
+        "query": "ຄຳອະທິບາຍດ້ວຍພາສາທຳມະຊາດກ່ຽວກັບວຽກປັດຈຸບັນ.",
+        "register": "register ທີ່ຈະໃຊ້. ໃຊ້ 'all' (ຫຼື ບໍ່ລະບຸ) ເພື່ອສອບຖາມທຸກ register ໃນ domain ທີ່ເລືອກ. Code: style/bug/arch/context. Life: life_pref/life_avoid/life_phil/life_context.",
+        "domain": "ຕົວກອງ domain ທີ່ໃຊ້ເມື່ອ register ເປັນ 'all' ຫຼື ບໍ່ລະບຸ. 'code' = style/bug/arch/context, 'life' = life_pref/life_avoid/life_phil/life_context, 'all' = ທັງ 8 register (ຄ່າເລີ່ມຕົ້ນ).",
+        "top_k": "ຈຳນວນຄຳແນະນຳ (1-5).",
+        "format": "ຮູບແບບຜົນອອກ. 'hint' ສົ່ງຄຳແນະນຳເປັນ JSON (ຄ່າເລີ່ມຕົ້ນ); 'bias_block' ສົ່ງບລັອກຂໍ້ຄວາມ [User Bias] ສຳລັບໃສ່ເຂົ້າໃນ system prompt.",
+        "project": "project tag ທີ່ໃຊ້ເພື່ອເພີ່ມນ້ຳໜັກຄຳແນະນຳໃນໂຄງການດຽວກັນ ແລະ ກັ່ນຕອງ ຫຼື ຫັກຄະແນນຄຳແນະນຳຈາກໂຄງການອື່ນ.",
+        "strict_project": "ເມື່ອເປັນ true, ຈະຕັດຄຳແນະນຳຈາກໂຄງການອື່ນອອກຈາກຜົນອອກຢ່າງເດັດຂາດ."
+      }
+    },
+    "crow_ingest": {
+      "description": "ບັນທຶກປະສົບການດ້ານການຂຽນໂຄ້ດເຂົ້າໃນຄວາມຈຳແບບ synaptic ໄລຍະຍາວຂອງ Crow. ເອີ້ນຫຼັງຈາກໄດ້ຜົນ build/test ຫຼື ຫຼັງຈາກຜູ້ໃຊ້ໃຫ້ຄຳຕິຊົມຢ່າງຊັດເຈນ. ໃຫ້ polarity ທີ່ຊັດເຈນ ຫຼື exit_code ຂອງ build ຢ່າງໃດຢ່າງໜຶ່ງ ເພື່ອໃຫ້ລະບົບແປງເປັນ polarity ໂດຍອັດຕະໂນມັດ. ເນື້ອຫາຈະຖືກຊຳລະກ່ອນ; ຂໍ້ມູນທີ່ເປັນສິ່ງລົບກວນລ້ວນໆຈະຖືກປະຕິເສດ ໂດຍບໍ່ແຕະຕ້ອງຄວາມຈຳ.",
+      "parameters": {
+        "key": "ຄຳອະທິບາຍແບບນາມະທຳກ່ຽວກັບສະຖານະການ.",
+        "value": "ຮູບແບບໂຄ້ດ ຫຼື ການຕັດສິນໃຈທີ່ໄດ້ນຳໃຊ້.",
+        "register": "register ທີ່ຈະເກັບ (style/bug/arch/context/life_pref/life_avoid/life_phil/life_context).",
+        "polarity": "ຄວາມແຮງຂອງການເສີມ [-2.0, 2.0]. ບໍ່ບັງຄັບຖ້າມີ exit_code; ຖ້າໃຫ້ທັງສອງຢ່າງ, polarity ທີ່ຊັດເຈນຈະເປັນຕົວຕັດສິນ.",
+        "exit_code": "exit code ຂອງ build (0 = ສຳເລັດ). ຈະຖືກແປງເປັນ polarity ໂດຍອັດຕະໂນມັດ (+1.5/+0.5 ເມື່ອສຳເລັດ, -0.5/-1.0 ເມື່ອລົ້ມເຫຼວ) ເວັ້ນເສຍແຕ່ມີ polarity ທີ່ຊັດເຈນ.",
+        "user_edited": "ຜູ້ໃຊ້ໄດ້ແກ້ໄຂຜົນອອກຂອງ AI ຫຼືບໍ່. ຈະປັບ polarity ທີ່ມາຈາກ exit_code.",
+        "project": "project tag ທີ່ເກັບພ້ອມກັບລາຍການຄວາມຈຳ ສຳລັບການ recall ທີ່ຮູ້ຈັກໂຄງການໃນພາຍຫຼັງ."
+      }
+    },
+    "crow_admin": {
+      "description": "ການດຳເນີນການດ້ານບໍລິຫານຂອງ Crow ໃນ tool ດຽວ. action: diagnostics (ສະຖິຕິຄວາມຈຳ), drift (ກວດສອບ drift), prompt (ອ່ານ/ເພີ່ມ/ສະຖິຕິ system_prompt.md), backup (ສ້າງ/ໝູນວຽນ/ລາຍຊື່/ກູ້ຄືນ), evolve (ສະເໜີການປ່ຽນແປງ prompt), project_info (ລາຍຊື່/ສ້າງ instance ຂອງໂຄງການ).",
+      "parameters": {
+        "action": "ການດຳເນີນການດ້ານບໍລິຫານທີ່ຈະເຮັດ: diagnostics, drift, prompt, backup, evolve ຫຼື project_info.",
+        "args": "object ຂອງ argument ສະເພາະ action ທີ່ສົ່ງຕໍ່ໄປຍັງການດຳເນີນການທີ່ເລືອກ."
+      }
+    }
+  },
+
+  "errors": {
+    "unknown_tool": "ບໍ່ຮູ້ຈັກ tool: {name}",
+    "unknown_prompt": "ບໍ່ຮູ້ຈັກ prompt: {name}",
+    "unknown_action": "ບໍ່ຮູ້ຈັກ action ຂອງ {context}: {action}",
+    "project_name_required": "ຕ້ອງມີ project_name ສຳລັບ action create"
+  },
+
+  "recall_messages": {
+    "faint_bias": "Crow ຈື່ bias ຂອງ {register} ໄດ້ຢ່າງລົມໆແລ້ວ. ຍັງມີຄວາມຈຳເກັບໄວ້ໜ້ອຍ.",
+    "unknown_register": "ບໍ່ຮູ້ຈັກ register: {register}"
+  },
+
+  "ingest_messages": {
+    "status_ingested": "ບັນທຶກແລ້ວ",
+    "unknown_register": "ບໍ່ຮູ້ຈັກ register: {register}"
+  },
+
+  "evolve_messages": {
+    "no_patterns": "ຍັງບໍ່ພົບຮູບແບບທີ່ມີຄວາມໝາຍທາງສະຖິຕິ."
+  },
+
+  "drift_messages": {
+    "healthy": "ຄວາມເຊື່ອໝັ້ນຂອງຄວາມຈຳຢູ່ໃນສະພາບດີ.",
+    "confused": "ຄວາມຈຳຂອງ Crow ເບິ່ງຄືວ່າສັບສົນ. ວຽກຫຼ້າສຸດອາດໃໝ່ເກີນໄປ ຫຼື ຄວາມຈຳເຕັມທີ່ແລ້ວ. ພິຈາລະນາເຮັດ spectral reset ຫຼື ການ archive."
+  },
+
+  "cli": {
+    "stdio_start": "Crow Memory MCP server ກຳລັງເຮັດວຽກຢູ່ເທິງ stdio",
+    "sse_start": "Crow Memory MCP SSE server ກຳລັງຮັບຟັງຢູ່ທີ່ http://{host}:{port}/sse",
+    "http_start": "Crow Memory MCP Streamable HTTP server ກຳລັງຮັບຟັງຢູ່ທີ່ http://{host}:{port}/",
+    "dual_start_sse": "Crow Memory MCP SSE server ກຳລັງຮັບຟັງຢູ່ທີ່ http://{host}:{sse_port}/sse",
+    "dual_start_http": "Crow Memory MCP Streamable HTTP server ກຳລັງຮັບຟັງຢູ່ທີ່ http://{host}:{http_port}/"
+  },
+
+  "installer": {
+    "banner_title": "ຕົວຕິດຕັ້ງ Crow Memory ສຳລັບ Zoo Code",
+    "step_1_install_deps": "ກຳລັງຕິດຕັ້ງ Python dependencies",
+    "step_2_init_crow": "ກຳລັງເລີ່ມຕົ້ນ crow.bin",
+    "step_3_vscode_tasks": "ກຳລັງສ້າງ .vscode/tasks.json (ເລີ່ມ SSE ອັດຕະໂນມັດເມື່ອເປີດ folder)",
+    "step_4_custom_mode": "ກຳລັງສ້າງ mode ເປີດໃຊ້ງານອັດຕະໂນມັດຂອງ Zoo Code",
+    "step_5_start_server": "ກຳລັງເລີ່ມ Crow SSE server ແລະ ເລີ່ມອັດຕະໂນມັດ",
+    "step_done": "ສຳເລັດແລ້ວ.",
+    "complete_title": "ການຕິດຕັ້ງ Crow Memory ສຳເລັດແລ້ວ!",
+    "sse_running": "SSE server ກຳລັງເຮັດວຽກຢູ່ທີ່ http://127.0.0.1:9020/sse",
+    "next_steps_label": "ຂັ້ນຕອນຕໍ່ໄປ:",
+    "next_step_1": "1. ຣີສະຕາດ Zoo Code",
+    "next_step_2": "2. ປ່ຽນ mode ເປັນ \"Orchestrator + Crow\"",
+    "next_step_3": "3. Crow ຈະເປີດໃຊ້ງານອັດຕະໂນມັດ — ບໍ່ຕ້ອງຕັ້ງຄ່າດ້ວຍມື",
+    "next_step_4": "4. Crow server ຈະເລີ່ມພ້ອມກັບ Windows ຜ່ານ Task Scheduler"
+  },
+
+  "system_prompt": {
+    "header": "# Crow Memory — ກົດລະບຽບຂອງ system prompt",
+    "subtitle": "> ກົດລະບຽບເຫຼົ່ານີ້ຖືກພັດທະນາໂດຍ Crow ແລະ ໄດ້ຮັບການອະນຸມັດຈາກຜູ້ໃຊ້.\n> ພວກມັນສະແດງເຖິງ coding bias ທີ່ມີຄວາມໝາຍທາງສະຖິຕິ.\n> ຢ່າແກ້ໄຂດ້ວຍມື — ໃຊ້ເຄື່ອງມື evolve ຂອງ Crow MCP.",
+    "managed_by": "<!-- ໄຟລ໌ນີ້ຖືກຈັດການໂດຍ crow_mcp_server.py -->",
+    "default_rules": [
+      "RULE: ກ່ອນທຸກຄຳຕອບ, ໃຫ້ເອີ້ນ crow_recall(domain=\"all\") ເພື່ອສອບຖາມທັງ 8 register (style, bug, arch, context, life_pref, life_avoid, life_phil, life_context) ກ່ຽວກັບຮູບແບບການຂຽນໂຄ້ດ, ຄວາມຮູ້ສຶກຕໍ່ bug, ຄວາມມັກດ້ານ architecture, ລົດນິຍົມສ່ວນຕົວ, ປັດຊະຍາ ແລະ ບໍລິບົດປັດຈຸບັນຂອງຜູ້ໃຊ້. ຈົ່ງສະແດງຄຳແນະນຳທີ່ໄດ້ຮັບໃນຄຳຕອບຂອງທ່ານ.",
+      "RULE: ຫຼັງທຸກຄຳຕອບ, ໃຫ້ບັນທຶກສິ່ງທີ່ຜູ້ໃຊ້ໄດ້ເປີດເຜີຍ — ຄວາມມັກ, ປັດຊະຍາ, ການແກ້ໄຂ ແລະ ບໍລິບົດ — ຜ່ານ crow_ingest. ຈົ່ງຕັດສິນ register ແລະ polarity ທີ່ເໝາະສົມດ້ວຍຕົນເອງ ໂດຍບໍ່ຕ້ອງລໍຖ້າໃຫ້ຜູ້ໃຊ້ເວົ້າວ່າ \"ຈື່ສິ່ງນີ້\". ຫຼັງຈາກເຮັດວຽກໂຄ້ດ, ໃຫ້ປະເມີນຜົນ build ໂດຍອັດຕະໂນມັດຜ່ານ crow_ingest_from_build.",
+      "RULE: ຢ່າຂ້າມກົດ recall+ingest ແມ່ນແຕ່ວຽກທີ່ບໍ່ແມ່ນການຂຽນໂຄ້ດ ເຊັ່ນ ການແກ້ໄຂເອກະສານ, ການດຳເນີນການ git ຫຼື ການປ່ຽນການຕັ້ງຄ່າ. ຈົ່ງປະຕິບັດສະເໝີ."
+    ]
+  }
+}

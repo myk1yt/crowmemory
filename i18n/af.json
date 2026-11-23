@@ -1,0 +1,108 @@
+{
+  "_meta": {
+    "locale": "af",
+    "language_name": "Afrikaans",
+    "version": "1.0.0",
+    "last_updated": "2026-11-24"
+  },
+  "server": {
+    "instructions": "Crow Memory — Eksterne sinapsgeheue vir KI-kodeeragente. Stoor jou kodeerstyl, foutintuisie en argitektuurvoorkeure as saamgeperste gewigsmatrikse in crow.bin.",
+    "prompts": {
+      "crow_memory_bias": {
+        "description": "Outomaties ingevoegde Crow Memory-vooroordeelblok. Bevat jou kodeerstyl, voorkeure en geëvolueerde reëls. Die gasheer moet dit by sessiestart laai.",
+        "body_template": "=== Crow Memory — Outomaties ingevoegde konteks ===\n\n[Permanente geëvolueerde reëls]\n{rules}\n\n[Onlangse geheue-leidrade]\n{bias}\n\nBogenoemde konteks verteenwoordig jou aangeleerde voorkeure en styl. Gebruik dit om jou response te rig. Om meer te leer, roep crow_recall met 'n spesifieke navraag en register (style/bug/arch/context/life_pref/life_avoid/life_phil/life_context)."
+      },
+      "crow_evolved_rules": {
+        "description": "Permanent evolved rules from Crow's system_prompt.md: permanent rules (human-promoted via CROW_ADMIN_TOKEN) plus unreviewed model suggestions.",
+        "body_template": "{prompt}"
+      }
+    }
+  },
+  "tools": {
+    "crow_recall": {
+      "description": "Herroep gebruiker-spesifieke kodeerstyl, foutintuisie, argitektuurvoorkeur of persoonlike konteks uit die Crow-sinapsgeheue. Roep dit VOOR elke respons om met die gebruiker se induktiewe vooroordeel te belyn. By verstek (register=all of weggelaat, domain=all) word al 8 registers bevraag en resultate globaal volgens effektiewe ooreenkoms saamgevoeg.",
+      "parameters": {
+        "query": "Natuurlike taal beskrywing van die huidige taak.",
+        "register": "Watter register. Gebruik 'all' (of laat weg) om elke register in die gekose domein te bevraag. Code: style/bug/arch/context. Life: life_pref/life_avoid/life_phil/life_context.",
+        "domain": "Domeinfilter wat gebruik word wanneer register 'all' is of weggelaat word. 'code' = style/bug/arch/context, 'life' = life_pref/life_avoid/life_phil/life_context, 'all' = al 8 registers (verstek).",
+        "top_k": "Aantal leidrade (1-5).",
+        "format": "Uitsetformaat. 'hint' gee JSON-leidrade terug (verstek); 'bias_block' gee die [User Bias]-teksblok vir invoeging in die stelselopdrag.",
+        "project": "Projeketiket wat gebruik word om leidrade uit dieselfde projek te versterk en kruisprojek-leidrade te filter of te penaliseer.",
+        "strict_project": "Wanneer true, filter kruisprojek-leidrade hard uit die resultate."
+      }
+    },
+    "crow_ingest": {
+      "description": "Voer 'n kodeerervaring in Crow se langtermyn-sinapsgeheue in. Roep dit NA bou- of toetsresultate of die gebruiker se uitdruklike terugvoer. Verskaf óf 'n uitdruklike polariteit óf 'n bou-exit_code vir outomatiese polariteitstoewysing. Inhoud word eers gesuiwer; suiwer geraas word verwerp sonder om die geheue aan te raak.",
+      "parameters": {
+        "key": "Abstrakte beskrywing van die situasie.",
+        "value": "Kodepatroon of besluit wat toegepas is.",
+        "register": "Register om in te stoor (style/bug/arch/context/life_pref/life_avoid/life_phil/life_context).",
+        "polarity": "Versterkingsterkte [-2.0, 2.0]. Opsioneel as exit_code gegee word; uitdruklike polariteit wen wanneer albei verskaf word.",
+        "exit_code": "Bou-uitkode (0 = sukses). Word outomaties na polariteit omgeskakel (+1.5/+0.5 by sukses, -0.5/-1.0 by mislukking), tensy 'n uitdruklike polariteit gegee word.",
+        "user_edited": "Of die gebruiker die KI se uitset geredigeer het. Pas die polariteit aan wat uit exit_code afgelei is.",
+        "project": "Projeketiket wat saam met die geheue-inskrywing gestoor word vir latere projekbewuste herroeping."
+      }
+    },
+    "crow_admin": {
+      "description": "Crow se administratiewe bewerkings in een instrument. Aksies: diagnostics (geheuestatistiek), drift (drywingstoets), prompt (lees/voeg by/statistiek van system_prompt.md), backup (skep/roteer/lys/herstel), evolve (stel opdragmutasies voor), project_info (lys/skep projekinstansies).",
+      "parameters": {
+        "action": "Watter administratiewe bewerking: diagnostics, drift, prompt, backup, evolve of project_info.",
+        "args": "Aksie-spesifieke argumentobjek wat deurgegee word na die gekose bewerking."
+      }
+    }
+  },
+  "errors": {
+    "unknown_tool": "Onbekende instrument: {name}",
+    "unknown_prompt": "Onbekende opdrag: {name}",
+    "unknown_action": "Onbekende {context}-aksie: {action}",
+    "project_name_required": "project_name is nodig vir die create-aksie"
+  },
+  "recall_messages": {
+    "faint_bias": "Crow onthou 'n flou {register}-vooroordeel. Min herinneringe is nog gestoor.",
+    "unknown_register": "Onbekende register: {register}"
+  },
+  "ingest_messages": {
+    "status_ingested": "ingevoer",
+    "unknown_register": "Onbekende register: {register}"
+  },
+  "evolve_messages": {
+    "no_patterns": "Nog geen statisties beduidende patrone bespeur nie."
+  },
+  "drift_messages": {
+    "healthy": "Geheuevertroue is gesond.",
+    "confused": "Crow se geheue lyk verward. Onlangse take is dalk te nuut of die geheue is versadig. Oorweeg 'n spektrale herstel of argivering."
+  },
+  "cli": {
+    "stdio_start": "Crow Memory MCP-bediener loop op stdio",
+    "sse_start": "Crow Memory MCP SSE-bediener luister op http://{host}:{port}/sse",
+    "http_start": "Crow Memory MCP Streamable HTTP-bediener luister op http://{host}:{port}/",
+    "dual_start_sse": "Crow Memory MCP SSE-bediener luister op http://{host}:{sse_port}/sse",
+    "dual_start_http": "Crow Memory MCP Streamable HTTP-bediener luister op http://{host}:{http_port}/"
+  },
+  "installer": {
+    "banner_title": "Crow Memory-installeerder vir Zoo Code",
+    "step_1_install_deps": "Installeer Python-afhanklikhede",
+    "step_2_init_crow": "Inisialiseer crow.bin",
+    "step_3_vscode_tasks": "Skep .vscode/tasks.json (outo-start SSE wanneer die gids oopgemaak word)",
+    "step_4_custom_mode": "Skep Zoo Code outo-aktiveringsmodus",
+    "step_5_start_server": "Begin Crow SSE-bediener + outo-start",
+    "step_done": "Klaar.",
+    "complete_title": "Crow Memory-installasie voltooi!",
+    "sse_running": "SSE-bediener loop op http://127.0.0.1:9020/sse",
+    "next_steps_label": "Volgende stappe:",
+    "next_step_1": "1. Herbegin Zoo Code",
+    "next_step_2": "2. Skakel oor na die modus \"Orchestrator + Crow\"",
+    "next_step_3": "3. Crow aktiveer outomaties — geen handmatige opstelling nodig nie",
+    "next_step_4": "4. Crow-bediener begin outomaties saam met Windows via Task Scheduler"
+  },
+  "system_prompt": {
+    "header": "# Crow Memory — Stelselopdrag-reëls",
+    "subtitle": "> Hierdie reëls is deur Crow geëvolueer en deur die gebruiker goedgekeur.\n> Hulle verteenwoordig statisties beduidende kodeervooroordele.\n> Moenie dit handmatig wysig nie — gebruik die Crow MCP evolve-instrumente.",
+    "managed_by": "<!-- Hierdie lêer word deur crow_mcp_server.py bestuur -->",
+    "default_rules": [
+      "RULE: Roep voor elke respons crow_recall(domain=\"all\") om al 8 registers (style, bug, arch, context, life_pref, life_avoid, life_phil, life_context) te bevraag vir die gebruiker se kodeerstyl, foutintuisie, argitektuurvoorkeure, persoonlike smaak, filosofie en huidige konteks. Weerspieël die teruggegewe leidrade in jou respons.",
+      "RULE: Voer ná elke respons in wat die gebruiker geopenbaar het — voorkeure, filosofie, korreksies, konteks — via crow_ingest. Beoordeel die toepaslike register en polariteit self sonder om te wag dat die gebruiker sê \"onthou dit\". Evalueer bouresultate ná kodewerk outomaties via crow_ingest_from_build.",
+      "RULE: Moenie die herroep+invoer-reëls oorslaan nie, selfs nie vir nie-koderingstake soos dokumentredigering, git-bewerkings of konfigurasieveranderings nie. Voer hulle altyd uit."
+    ]
+  }
+}

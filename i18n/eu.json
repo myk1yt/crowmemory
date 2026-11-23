@@ -1,0 +1,119 @@
+{
+  "_meta": {
+    "locale": "eu",
+    "language_name": "Basque",
+    "version": "1.0.0",
+    "last_updated": "2026-11-24"
+  },
+
+  "server": {
+    "instructions": "Crow Memory — AI agente kodetzaileentzako kanpoko memoria sinaptikoa. Zure kodetze-estiloa, bug-ei buruzko intuizioa eta arkitektura-lehentasunak pisu-matrize konprimitu gisa gordetzen ditu crow.bin fitxategian.",
+
+    "prompts": {
+      "crow_memory_bias": {
+        "description": "Automatikoki injektatutako Crow Memory bias blokea. Zure kodetze-estiloa, lehentasunak eta eboluzionatutako arauak biltzen ditu. Ostalariak saioaren hasieran kargatu beharko luke.",
+        "body_template": "=== Crow Memory — Automatikoki injektatutako testuingurua ===\n\n[Betiko arau eboluzionatuak]\n{rules}\n\n[Memoriaren azken iradokizunak]\n{bias}\n\nGoiko testuinguruak ikasitako lehentasunak eta estiloa adierazten ditu. Erabili zure erantzunak gidatzeko. Gehiago ikasteko, deitu crow_recall kontsulta zehatz batekin eta erregistro batekin (style/bug/arch/context/life_pref/life_avoid/life_phil/life_context)."
+      },
+      "crow_evolved_rules": {
+        "description": "Permanent evolved rules from Crow's system_prompt.md: permanent rules (human-promoted via CROW_ADMIN_TOKEN) plus unreviewed model suggestions.",
+        "body_template": "{prompt}"
+      }
+    }
+  },
+
+  "tools": {
+    "crow_recall": {
+      "description": "Erabiltzaileari dagozkion kodetze-estiloa, bug-ei buruzko intuizioa, arkitektura-lehentasuna edo testuinguru pertsonala berreskuratzen ditu Crow memoria sinaptikotik. Deitu hau erantzun bakoitzaren AURRETIK, erabiltzailearen bias induktiboarekin bat egiteko. Lehenetsitako ezarpenean (register=all edo zehaztu gabe, domain=all), 8 erregistro guztiak kontsultatzen ditu eta emaitzak globalki bateratzen ditu antzekotasun eraginkorraren arabera.",
+      "parameters": {
+        "query": "Egungo zereginaren deskribapena hizkuntza naturalean.",
+        "register": "Zein erregistro. Erabili 'all' (edo utzi zehaztu gabe) aukeratutako domeinuko erregistro guztiak kontsultatzeko. Code: style/bug/arch/context. Life: life_pref/life_avoid/life_phil/life_context.",
+        "domain": "Domeinu-iragazkia, register 'all' denean edo zehaztu gabe dagoenean erabilia. 'code' = style/bug/arch/context, 'life' = life_pref/life_avoid/life_phil/life_context, 'all' = 8 erregistro guztiak (lehenetsia).",
+        "top_k": "Iradokizunen kopurua (1-5).",
+        "format": "Irteera formatua. 'hint'-ek JSON iradokizunak itzultzen ditu (lehenetsia); 'bias_block'-ek [User Bias] testu-blokea itzultzen du sistema-promptan txertatzeko.",
+        "project": "Proiektu-etiketa, proiektu bereko iradokizunak indartzeko eta beste proiektuetakoak iragazi edo zigortzeko erabilia.",
+        "strict_project": "Egia denean, beste proiektuetako iradokizunak zorrotz kentzen ditu emaitzetatik."
+      }
+    },
+    "crow_ingest": {
+      "description": "Kodetze-esperientzia bat Crow-ren epe luzeko memoria sinaptikoan sartzen du. Deitu eraikuntza edo proben emaitzen ondoren, edo erabiltzailearen feedback esplizituaren ondoren. Eman polaritate esplizitua edo eraikuntzako exit_code bat, polaritatea automatikoki mapatzeko. Edukia lehenengo garbitu egiten da; zarata hutsa den sarrera baztertu egiten da memoriari ukitu gabe.",
+      "parameters": {
+        "key": "Egoeraren deskribapen abstraktua.",
+        "value": "Aplikatutako kode-eredua edo erabakia.",
+        "register": "Gordetzeko erregistroa (style/bug/arch/context/life_pref/life_avoid/life_phil/life_context).",
+        "polarity": "Indartze-indarra [-2.0, 2.0]. Aukerakoa exit_code ematen bada; polaritate esplizituak irabazten du biak ematen badira.",
+        "exit_code": "Eraikuntzaren irteera-kodea (0 = arrakasta). Automatikoki mapatzen da polaritatera (+1.5/+0.5 arrakastan, -0.5/-1.0 hutsegitean), baldin eta polaritate espliziturik ematen ez bada.",
+        "user_edited": "Erabiltzaileak AIaren irteera editatu duen ala ez. exit_code-tik eratorritako polaritatea doitzen du.",
+        "project": "Memoria-sarrerarekin batera gordetzen den proiektu-etiketa, geroago proiektuaren araberako berreskurapenerako."
+      }
+    },
+    "crow_admin": {
+      "description": "Crow-ren administrazio-eragiketak tresna bakarrean. Ekintzak: diagnostics (memoriaren estatistikak), drift (drift egiaztapena), prompt (system_prompt.md irakurri/gehitu/estatistikak), backup (sortu/errotatu/zerrendatu/berreskuratu), evolve (prompt mutazioak proposatu), project_info (proiektu-instantziak zerrendatu/sortu).",
+      "parameters": {
+        "action": "Zein administrazio-eragiketa: diagnostics, drift, prompt, backup, evolve edo project_info.",
+        "args": "Ekintzari dagokion argumentu-objektua, aukeratutako eragiketari pasatzen zaiona."
+      }
+    }
+  },
+
+  "errors": {
+    "unknown_tool": "Tresna ezezaguna: {name}",
+    "unknown_prompt": "Prompt ezezaguna: {name}",
+    "unknown_action": "Ekintza ezezaguna ({context}): {action}",
+    "project_name_required": "project_name beharrezkoa da create ekintzarako"
+  },
+
+  "recall_messages": {
+    "faint_bias": "Crow-k {register} bias ahula gogoratzen du. Oraindik memoria gutxi gordeta.",
+    "unknown_register": "Erregistro ezezaguna: {register}"
+  },
+
+  "ingest_messages": {
+    "status_ingested": "sartuta",
+    "unknown_register": "Erregistro ezezaguna: {register}"
+  },
+
+  "evolve_messages": {
+    "no_patterns": "Oraindik ez da estatistikoki esanguratsua den eredurik hauteman."
+  },
+
+  "drift_messages": {
+    "healthy": "Memoriaren konfiantza osasuntsu dago.",
+    "confused": "Crow memoria nahasia dagoela dirudi. Azken zereginak oso berriak izan daitezke edo memoria saturatuta dago. Kontuan hartu berrezarpen espektrala edo artxibatzea."
+  },
+
+  "cli": {
+    "stdio_start": "Crow Memory MCP zerbitzaria stdio-n exekutatzen ari da",
+    "sse_start": "Crow Memory MCP SSE zerbitzaria http://{host}:{port}/sse helbidean entzuten ari da",
+    "http_start": "Crow Memory MCP Streamable HTTP zerbitzaria http://{host}:{port}/ helbidean entzuten ari da",
+    "dual_start_sse": "Crow Memory MCP SSE zerbitzaria http://{host}:{sse_port}/sse helbidean entzuten ari da",
+    "dual_start_http": "Crow Memory MCP Streamable HTTP zerbitzaria http://{host}:{http_port}/ helbidean entzuten ari da"
+  },
+
+  "installer": {
+    "banner_title": "Crow Memory instalatzailea Zoo Code-rako",
+    "step_1_install_deps": "Python menpekotasunak instalatzen",
+    "step_2_init_crow": "crow.bin hasieratzen",
+    "step_3_vscode_tasks": ".vscode/tasks.json sortzen (SSE automatikoki abiarazi karpeta irekitzean)",
+    "step_4_custom_mode": "Zoo Code auto-aktibazio modua sortzen",
+    "step_5_start_server": "Crow SSE zerbitzaria abiarazten + auto-abiaraztea",
+    "step_done": "Eginda.",
+    "complete_title": "Crow Memory instalazioa amaituta!",
+    "sse_running": "SSE zerbitzaria http://127.0.0.1:9020/sse helbidean exekutatzen ari da",
+    "next_steps_label": "Hurrengo urratsak:",
+    "next_step_1": "1. Berrabiarazi Zoo Code",
+    "next_step_2": "2. Aldatu modua \"Orchestrator + Crow\"-era",
+    "next_step_3": "3. Crow automatikoki aktibatzen da — ez da eskuzko konfiguraziorik behar",
+    "next_step_4": "4. Crow zerbitzaria Windows-ekin automatikoki abiarazten da Task Scheduler bidez"
+  },
+
+  "system_prompt": {
+    "header": "# Crow Memory — Sistema-promptaren arauak",
+    "subtitle": "> Arau hauek Crow-k eboluzionatu zituen eta erabiltzaileak onartu zituen.\n> Estatistikoki esanguratsuak diren kodetze-biasak adierazten dituzte.\n> Ez editatu eskuz — erabili Crow MCP evolve tresnak.",
+    "managed_by": "<!-- Fitxategi hau crow_mcp_server.py-k kudeatzen du -->",
+    "default_rules": [
+      "RULE: Erantzun bakoitzaren aurretik, deitu crow_recall(domain=\"all\") 8 erregistro guztiak kontsultatzeko (style, bug, arch, context, life_pref, life_avoid, life_phil, life_context), erabiltzailearen kodetze-estiloa, bug-ei buruzko intuizioa, arkitektura-lehentasunak, gustu pertsonala, filosofia eta egungo testuingurua lortzeko. Islatu itzultako iradokizunak zure erantzunean.",
+      "RULE: Erantzun bakoitzaren ondoren, sartu erabiltzaileak agerian utzi duena — lehentasunak, filosofia, zuzenketak, testuingurua — crow_ingest bidez. Zeuk erabaki erregistro eta polaritate egokiak, erabiltzaileak \"gogoratu hau\" esan zain egon gabe. Kode-lanaren ondoren, automatikoki ebaluatu eraikuntza-emaitzak crow_ingest_from_build bidez.",
+      "RULE: Ez ezazu recall+ingest arauak saihestu kodetzea ez diren zereginetarako ere, hala nola dokumentuak editatzea, git eragiketak edo konfigurazio-aldaketak. Beti exekutatu itzazu."
+    ]
+  }
+}

@@ -3,122 +3,84 @@
     "locale": "tr",
     "language_name": "Türkçe",
     "version": "1.0.0",
-    "last_updated": "2026-05-29"
+    "last_updated": "2026-11-24"
   },
+
   "server": {
     "instructions": "Crow Memory — Yapay zeka kodlama ajanları için harici sinaptik bellek. Kodlama stilinizi, hata sezgilerinizi ve mimari tercihlerinizi crow.bin'de sıkıştırılmış ağırlık matrisleri olarak saklar.",
+
     "prompts": {
       "crow_memory_bias": {
-        "description": "Otomatik enjekte edilen Crow Memory önyargı bloğu. Kodlama stilinizi, tercihlerinizi ve evrilmiş kurallarınızı içerir.",
-        "body_template": "=== Crow Memory — Otomatik Enjekte Edilen Bağlam ===\n\n[Kalıcı Evrilmiş Kurallar]\n{rules}\n\n[Son Bellek İpuçları]\n{bias}\n\nYukarıdaki bağlam öğrenilmiş tercihlerinizi ve stilinizi temsil eder."
+        "description": "Otomatik enjekte edilen Crow Memory önyargı bloğu. Kodlama stilinizi, tercihlerinizi ve evrilmiş kurallarınızı içerir. Ana sistem bunu oturum başında yüklemelidir.",
+        "body_template": "=== Crow Memory — Otomatik Enjekte Edilen Bağlam ===\n\n[Kalıcı Evrilmiş Kurallar]\n{rules}\n\n[Son Bellek İpuçları]\n{bias}\n\nYukarıdaki bağlam öğrenilmiş tercihlerinizi ve stilinizi temsil eder. Yanıtlarınızı yönlendirmek için kullanın. Daha fazla bilgi için belirli bir sorgu ve kayıt ile crow_recall çağırın (style/bug/arch/context/life_pref/life_avoid/life_phil/life_context)."
       },
       "crow_evolved_rules": {
-        "description": "Crow'un system_prompt.md'sinden evrilmiş kalıcı kurallar. HITL ile onaylanmış istatistiksel olarak anlamlı desenler.",
+        "description": "Permanent evolved rules from Crow's system_prompt.md: permanent rules (human-promoted via CROW_ADMIN_TOKEN) plus unreviewed model suggestions.",
         "body_template": "{prompt}"
       }
     }
   },
+
   "tools": {
     "crow_recall": {
-      "description": "Crow sinaptik belleğinden kullanıcıya özel kodlama stili, hata sezgisi, mimari tercih veya kişisel bağlamı hatırlar. Her yanıttan ÖNCE çağırın. Varsayılan olarak 8 kaydı sorgular.",
+      "description": "Crow sinaptik belleğinden kullanıcıya özel kodlama stili, hata sezgisi, mimari tercih veya kişisel bağlamı hatırlar. Her yanıttan ÖNCE çağırın, kullanıcının indüktif önyargısıyla hizalanmak için. Varsayılan olarak (register=all veya atlanmış, domain=all) 8 kaydın tümünü sorgular ve sonuçları etkin benzerliğe göre küresel olarak birleştirir.",
       "parameters": {
         "query": "Mevcut görevin doğal dil tanımı.",
-        "register": "Kaydı seçin. 'all' tüm kayıtları sorgular. Code: style/bug/arch/context. Life: life_pref/life_avoid/life_phil/life_context.",
-        "top_k": "İpucu sayısı (1-3).",
-        "domain": "Alan filtresi. 'code' = style/bug/arch/context, 'life' = life_pref/life_avoid/life_phil/life_context, 'all' = 8 kaydın tümü."
+        "register": "Hangi kayıt. Seçilen alandaki tüm kayıtları sorgulamak için 'all' kullanın (veya atlayın). Code: style/bug/arch/context. Life: life_pref/life_avoid/life_phil/life_context.",
+        "domain": "register 'all' veya atlanmışken kullanılan alan filtresi. 'code' = style/bug/arch/context, 'life' = life_pref/life_avoid/life_phil/life_context, 'all' = 8 kaydın tümü (varsayılan).",
+        "top_k": "İpucu sayısı (1-5).",
+        "format": "Çıktı biçimi. 'hint' JSON ipuçları döndürür (varsayılan); 'bias_block', sistem istemine enjeksiyon için [User Bias] metin bloğunu döndürür.",
+        "project": "Aynı projeye ait ipuçlarını güçlendirmek ve diğer projelerinkini filtrelemek veya cezalandırmak için kullanılan proje etiketi.",
+        "strict_project": "true olduğunda, diğer projelere ait ipuçlarını sonuçlardan tamamen filtreler."
       }
     },
     "crow_ingest": {
-      "description": "Kodlama deneyimini Crow'un uzun süreli sinaptik belleğine alır. Derleme/test sonuçlarından SONRA çağırın.",
+      "description": "Kodlama deneyimini Crow'un uzun süreli sinaptik belleğine alır. Derleme/test sonuçlarından veya kullanıcının açık geri bildiriminden SONRA çağırın. Otomatik polarite eşlemesi için ya açık bir polarite ya da derleme exit_code değeri verin. İçerik önce temizlenir; saf gürültü girdisi belleğe dokunmadan reddedilir.",
       "parameters": {
         "key": "Durumun soyut açıklaması.",
         "value": "Uygulanan kod deseni veya karar.",
-        "polarity": "Pekiştirme gücü [-2.0, 2.0].",
-        "register": "Hedef kayıt (style/bug/arch/context/life_pref/life_avoid/life_phil/life_context)."
+        "register": "Hedef kayıt (style/bug/arch/context/life_pref/life_avoid/life_phil/life_context).",
+        "polarity": "Pekiştirme gücü [-2.0, 2.0]. exit_code verilmişse isteğe bağlıdır; ikisi de verildiğinde açık polarite kazanır.",
+        "exit_code": "Derleme çıkış kodu (0 = başarılı). Açık bir polarite verilmedikçe otomatik olarak polariteye eşlenir (başarıda +1.5/+0.5, başarısızlıkta -0.5/-1.0).",
+        "user_edited": "Kullanıcının AI çıktısını düzenleyip düzenlemediği. exit_code'dan türetilen polariteyi ayarlar.",
+        "project": "Daha sonraki proje duyarlı hatırlama için bellek girdisiyle birlikte saklanan proje etiketi."
       }
     },
-    "crow_evolve_propose": {
-      "description": "Son bellek desenlerini analiz eder ve kalıcı sistem istemi mutasyonu önerir.",
+    "crow_admin": {
+      "description": "Tek araçta Crow yönetim işlemleri. Eylemler: diagnostics (bellek istatistikleri), drift (sapma kontrolü), prompt (system_prompt.md okuma/ekleme/istatistik), backup (oluşturma/döndürme/listeleme/kurtarma), evolve (istem mutasyonu önerme), project_info (proje örneklerini listeleme/oluşturma).",
       "parameters": {
-        "min_confidence": "Minimum güven eşiği (varsayılan: 0,85).",
-        "min_occurrences": "Minimum oluşum sayısı (varsayılan: 3)."
-      }
-    },
-    "crow_diagnostics": {
-      "description": "Crow bellek durumu hakkında tanı bilgisi döndürür (kayıt normları, seyreklik, güncelleme sayısı, boyut, istatistikler).",
-      "parameters": {}
-    },
-    "crow_check_drift": {
-      "description": "Son hatırlamaların bellek sapması belirtisi gösterip göstermediğini kontrol eder.",
-      "parameters": {
-        "threshold": "Düşük güven tespiti için eşik (varsayılan: 0,5).",
-        "min_low_confidence_count": "Sapmayı tetiklemek için min. düşük güven kaydı (varsayılan: 5)."
-      }
-    },
-    "crow_ingest_from_build": {
-      "description": "Derleme çıkış kodundan ve kullanıcı düzenleme durumundan polariteyi otomatik belirler, sonra deneyimi alır.",
-      "parameters": {
-        "key": "Soyut açıklama.",
-        "value": "Uygulanan kod deseni.",
-        "exit_code": "Derleme çıkış kodu (0 = başarılı).",
-        "user_edited": "Kullanıcının AI çıktısını düzenleyip düzenlemediği.",
-        "register": "Hedef kayıt (style/bug/arch/context, varsayılan: arch).",
-        "explicit_polarity": "Otomatik polarite tespitini geçersiz kılar."
-      }
-    },
-    "crow_get_user_bias": {
-      "description": "Sistem istemine enjekte edilecek [User Bias] bloğunu oluşturur.",
-      "parameters": {
-        "query": "Mevcut görev açıklaması.",
-        "registers": "Sorgulanacak kayıtlar (varsayılan: all)."
-      }
-    },
-    "crow_manage_prompt": {
-      "description": "system_prompt.md dosyasını okur, ekler veya istatistik alır.",
-      "parameters": {
-        "action": "Eylem: read, append veya stats.",
-        "rule": "Kural metni (append eylemi için zorunlu).",
-        "auto_backup": "Eklemeden önce otomatik yedekleme (varsayılan: true)."
-      }
-    },
-    "crow_manage_backup": {
-      "description": "Crow bellek yedeklerini yönetir. Oluşturma, döndürme, listeleme veya kurtarma.",
-      "parameters": {
-        "action": "Eylem: create, rotate, list veya recover.",
-        "tag": "Yedek etiketi: daily, weekly veya manual (varsayılan: daily).",
-        "max_daily": "Maks. günlük yedek (varsayılan: 7).",
-        "max_weekly": "Maks. haftalık yedek (varsayılan: 4)."
-      }
-    },
-    "crow_project_info": {
-      "description": "Proje izoleli Crow bellek örneklerini listeler veya oluşturur.",
-      "parameters": {
-        "action": "Eylem: list veya create.",
-        "project_name": "Proje adı (create eylemi için zorunlu)."
+        "action": "Hangi yönetim işlemi: diagnostics, drift, prompt, backup, evolve veya project_info.",
+        "args": "Seçilen işleme doğrudan geçirilen eyleme özgü argümanlar nesnesi."
       }
     }
   },
+
   "errors": {
     "unknown_tool": "Bilinmeyen araç: {name}",
     "unknown_prompt": "Bilinmeyen istem: {name}",
     "unknown_action": "Bilinmeyen {context} eylemi: {action}",
     "project_name_required": "create eylemi için project_name gerekli"
   },
+
   "recall_messages": {
     "faint_bias": "Crow {register} önyargısını zayıfça hatırlıyor. Henüz az anı saklanmış.",
     "unknown_register": "Bilinmeyen kayıt: {register}"
   },
+
   "ingest_messages": {
     "status_ingested": "alındı",
     "unknown_register": "Bilinmeyen kayıt: {register}"
   },
+
   "evolve_messages": {
     "no_patterns": "Henüz istatistiksel olarak anlamlı desen tespit edilmedi."
   },
+
   "drift_messages": {
     "healthy": "Bellek güveni sağlıklı.",
     "confused": "Crow belleği karışık görünüyor. Son görevler çok yeni veya bellek doymuş. Spektral sıfırlama veya arşivleme düşünün."
   },
+
   "cli": {
     "stdio_start": "Crow Memory MCP sunucusu stdio'da çalışıyor",
     "sse_start": "Crow Memory MCP SSE sunucusu http://{host}:{port}/sse dinliyor",
@@ -126,10 +88,12 @@
     "dual_start_sse": "Crow Memory MCP SSE sunucusu http://{host}:{sse_port}/sse dinliyor",
     "dual_start_http": "Crow Memory MCP Streamable HTTP sunucusu http://{host}:{http_port}/ dinliyor"
   },
+
   "installer": {
     "banner_title": "Zoo Code için Crow Memory Yükleyicisi",
     "step_1_install_deps": "Python bağımlılıkları yükleniyor",
     "step_2_init_crow": "crow.bin başlatılıyor",
+    "step_3_vscode_tasks": ".vscode/tasks.json oluşturuluyor (klasör açıldığında SSE otomatik başlar)",
     "step_4_custom_mode": "Zoo Code otomatik etkinleştirme modu oluşturuluyor",
     "step_5_start_server": "Crow SSE sunucusu başlatılıyor + otomatik başlangıç",
     "step_done": "Tamam.",
@@ -138,10 +102,10 @@
     "next_steps_label": "Sonraki adımlar:",
     "next_step_1": "1. Zoo Code'u yeniden başlatın",
     "next_step_2": "2. Modu \"Orchestrator + Crow\" olarak değiştirin",
-    "next_step_3": "3. Crow otomatik etkinleşir",
-    "next_step_4": "4. SSE sunucusu Windows ile başlar (Başlangıç'a kayıtlı)",
-    "step_3_vscode_tasks": ".vscode/tasks.json oluşturuluyor (klasör açıldığında SSE otomatik başlar)"
+    "next_step_3": "3. Crow otomatik etkinleşir — manuel kurulum gerekmez",
+    "next_step_4": "4. SSE sunucusu Windows ile başlar (Görev Zamanlayıcı)"
   },
+
   "system_prompt": {
     "header": "# Crow Memory — Sistem İstemi Kuralları",
     "subtitle": "> Bu kurallar Crow tarafından evrildi ve kullanıcı tarafından onaylandı.\n> İstatistiksel olarak anlamlı kodlama önyargılarını temsil eder.\n> Elle düzenlemeyin — Crow MCP evrim araçlarını kullanın.",

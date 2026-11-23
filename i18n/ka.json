@@ -1,0 +1,119 @@
+{
+  "_meta": {
+    "locale": "ka",
+    "language_name": "Georgian",
+    "version": "1.0.0",
+    "last_updated": "2026-11-24"
+  },
+
+  "server": {
+    "instructions": "Crow Memory \u2014 გარე სინაფსური მეხსიერება AI კოდირების აგენტებისთვის. ინახავს თქვენს კოდირების სტილს, შეცდომების ინტუიციას და არქიტექტურულ უპირატესობებს შეკუმშვილი წონითი მატრიცების სახით crow.bin-ში.",
+
+    "prompts": {
+      "crow_memory_bias": {
+        "description": "ავტომატურად ჩასმული Crow Memory-ის მიკერძოების ბლოკი. შეიცავს თქვენს კოდირების სტილს, უპირატესობებს და განვითარებულ წესებს. ჰოსტმა ეს უნდა ჩატვირთოს სესიის დაწყებისას.",
+        "body_template": "=== Crow Memory \u2014 ავტომატურად ჩასმული კონტექსტი ===\n\n[მუდმივი განვითარებული წესები]\n{rules}\n\n[ბოლო მეხსიერების მინიშნებები]\n{bias}\n\nზემოთ მოცემული კონტექსტი წარმოადგენს თქვენს ნასწავლ უპირატესობებსა და სტილს. გამოიყენეთ ის პასუხების სამართავად. მეტი რომ გაიგოთ, გამოიძახეთ crow_recall კონკრეტული მოთხოვნით და register-ით (style/bug/arch/context/life_pref/life_avoid/life_phil/life_context)."
+      },
+      "crow_evolved_rules": {
+        "description": "Permanent evolved rules from Crow's system_prompt.md: permanent rules (human-promoted via CROW_ADMIN_TOKEN) plus unreviewed model suggestions.",
+        "body_template": "{prompt}"
+      }
+    }
+  },
+
+  "tools": {
+    "crow_recall": {
+      "description": "იხსენებს მომხმარებლის კონკრეტულ კოდირების სტილს, შეცდომების ინტუიციას, არქიტექტურულ უპირატესობას ან პირად კონტექსტს Crow-ის სინაფსური მეხსიერებიდან. გამოიძახეთ ეს ყოველ პასუხამდე, რათა შეესაბამოთ მომხმარებლის ინდუქციურ მიკერძოებას. ნაგულისხმევად (register=all ან გამოტოვებული, domain=all) იკითხავს ყველა 8 register-ს და აერთიანებს შედეგებს გლობალურად ეფექტური მსგავსებით.",
+      "parameters": {
+        "query": "მიმდინარე ამოცანის ბუნებრივი ენით აღწერა.",
+        "register": "რომელი register. გამოიყენეთ 'all' (ან გამოტოვეთ), რომ იკითხოთ ყველა register არჩეულ დომენში. Code: style/bug/arch/context. Life: life_pref/life_avoid/life_phil/life_context.",
+        "domain": "დომენის ფილტრი, გამოიყენება როცა register არის 'all' ან გამოტოვებულია. 'code' = style/bug/arch/context, 'life' = life_pref/life_avoid/life_phil/life_context, 'all' = ყველა 8 register (ნაგულისხმევი).",
+        "top_k": "მინიშნებების რაოდენობა (1-5).",
+        "format": "გამოსავლის ფორმატი. 'hint' აბრუნებს JSON მინიშნებებს (ნაგულისხმევი); 'bias_block' აბრუნებს [User Bias] ტექსტურ ბლოკს სისტემური პრომპტის ჩასასმელად.",
+        "project": "პროექტის ტეგი, რომელიც გამოიყენება იმავე პროექტის მინიშნებების გასაძლიერებლად და სხვა პროექტის მინიშნებების გასაფილტრად/დასაჯარიმებლად.",
+        "strict_project": "თუ true, მკაცრად ფილტრავს სხვა პროექტის მინიშნებებს შედეგებიდან."
+      }
+    },
+    "crow_ingest": {
+      "description": "ინახავს კოდირების გამოცდილებას Crow-ის გრძელვადიან სინაფსურ მეხსიერებაში. გამოიძახეთ build/ტესტის შედეგების ან მომხმარებლის მკაფიო უკუკავშირის შემდეგ. მიუთითეთ ან მკაფიო polarity, ან build-ის exit_code ავტომატური polarity-ის დასაკავშირებლად. შიგთავსი ჯერ იწმინდება; სუფთა ხმაურის შეყვანა უარყოფილია მეხსიერების შეხების გარეშე.",
+      "parameters": {
+        "key": "სიტუაციის აბსტრაქტული აღწერა.",
+        "value": "გამოყენებული კოდის პატერნი ან გადაწყვეტილება.",
+        "register": "register შესანახად (style/bug/arch/context/life_pref/life_avoid/life_phil/life_context).",
+        "polarity": "გაძლიერების სიძლიერე [-2.0, 2.0]. არასავალდებულოა, თუ exit_code მოცემულია; მკაფიო polarity იმარჯვებს, როცა ორივე მოცემულია.",
+        "exit_code": "build-ის გასვლის კოდი (0 = წარმატება). ავტომატურად აისახება polarity-ში (+1.5/+0.5 წარმატებისას, -0.5/-1.0 წარუმატებლობისას), თუ მკაფიო polarity არ არის მოცემული.",
+        "user_edited": "შეცვალა თუ არა მომხმარებელმა AI-ის გამოსავალი. არეგულირებს exit_code-დან მიღებულ polarity-ს.",
+        "project": "პროექტის ტეგი, რომელიც ინახება მეხსიერების ჩანაწერთან ერთად მოგვიანებით პროექტის გათვალისწინებული გახსენებისთვის."
+      }
+    },
+    "crow_admin": {
+      "description": "Crow-ის ადმინისტრაციული ოპერაციები ერთ ხელსაწყოში. მოქმედებები: diagnostics (მეხსიერების სტატისტიკა), drift (დრიფტის შემოწმება), prompt (system_prompt.md-ის წაკითხვა/დამატება/სტატისტიკა), backup (შექმნა/როტაცია/სია/აღდგენა), evolve (პრომპტის მუტაციების შეთავაზება), project_info (პროექტის ინსტანციების სია/შექმნა).",
+      "parameters": {
+        "action": "რომელი ადმინისტრაციული ოპერაცია: diagnostics, drift, prompt, backup, evolve ან project_info.",
+        "args": "მოქმედებაზე დამოკიდებული არგუმენტების ობიექტი, რომელიც გადაეცემა არჩეულ ოპერაციას."
+      }
+    }
+  },
+
+  "errors": {
+    "unknown_tool": "უცნობი ხელსაწყო: {name}",
+    "unknown_prompt": "უცნობი პრომპტი: {name}",
+    "unknown_action": "უცნობი {context} მოქმედება: {action}",
+    "project_name_required": "project_name სავალდებულოა create მოქმედებისთვის"
+  },
+
+  "recall_messages": {
+    "faint_bias": "Crow იხსენებს სუსტ {register} მიკერძოებას. ჯერ ცოტა მეხსიერებაა შენახული.",
+    "unknown_register": "უცნობი register: {register}"
+  },
+
+  "ingest_messages": {
+    "status_ingested": "შენახულია",
+    "unknown_register": "უცნობი register: {register}"
+  },
+
+  "evolve_messages": {
+    "no_patterns": "სტატისტიკურად მნიშვნელოვანი პატერნები ჯერ არ არის აღმოჩენილი."
+  },
+
+  "drift_messages": {
+    "healthy": "მეხსიერების სანდოობა ჯანსაღია.",
+    "confused": "Crow-ის მეხსიერება დაბნეული ჩანს. ბოლო ამოცანები შეიძლება ძალიან ახალია ან მეხსიერება გაჯერებულია. განიხილეთ სპექტრული გადატვირთვა ან არქივირება."
+  },
+
+  "cli": {
+    "stdio_start": "Crow Memory MCP სერვერი მუშაობს stdio-ზე",
+    "sse_start": "Crow Memory MCP SSE სერვერი ისმენს მისამართზე http://{host}:{port}/sse",
+    "http_start": "Crow Memory MCP Streamable HTTP სერვერი ისმენს მისამართზე http://{host}:{port}/",
+    "dual_start_sse": "Crow Memory MCP SSE სერვერი ისმენს მისამართზე http://{host}:{sse_port}/sse",
+    "dual_start_http": "Crow Memory MCP Streamable HTTP სერვერი ისმენს მისამართზე http://{host}:{http_port}/"
+  },
+
+  "installer": {
+    "banner_title": "Crow Memory-ის ინსტალერი Zoo Code-ისთვის",
+    "step_1_install_deps": "Python-ის დამოკიდებულებების დაყენება",
+    "step_2_init_crow": "crow.bin-ის ინიციალიზაცია",
+    "step_3_vscode_tasks": ".vscode/tasks.json-ის შექმნა (SSE-ის ავტომატური გაშვება საქაღალდის გახსნისას)",
+    "step_4_custom_mode": "Zoo Code-ის ავტოაქტივაციის რეჟიმის შექმნა",
+    "step_5_start_server": "Crow SSE სერვერის გაშვება და ავტომატური გაშვება",
+    "step_done": "დასრულდა.",
+    "complete_title": "Crow Memory-ის ინსტალაცია დასრულდა!",
+    "sse_running": "SSE სერვერი მუშაობს მისამართზე http://127.0.0.1:9020/sse",
+    "next_steps_label": "შემდეგი ნაბიჯები:",
+    "next_step_1": "1. გადატვირთეთ Zoo Code",
+    "next_step_2": "2. გადართეთ რეჟიმი \"Orchestrator + Crow\"-ზე",
+    "next_step_3": "3. Crow ავტომატურად გააქტიურდება \u2014 ხელით კონფიგურაცია არ არის საჭირო",
+    "next_step_4": "4. Crow სერვერი ავტომატურად ირთვება Windows-თან ერთად Task Scheduler-ის საშუალებით"
+  },
+
+  "system_prompt": {
+    "header": "# Crow Memory \u2014 სისტემური პრომპტის წესები",
+    "subtitle": "> ეს წესები განავითარა Crow-მა და დაამტკიცა მომხმარებელმა.\n> ისინი წარმოადგენენ სტატისტიკურად მნიშვნელოვან კოდირების მიკერძოებებს.\n> ნუ შეცვლით ხელით \u2014 გამოიყენეთ Crow MCP evolve ხელსაწყოები.",
+    "managed_by": "<!-- ამ ფაილს მართავს crow_mcp_server.py -->",
+    "default_rules": [
+      "RULE: ყოველ პასუხამდე გამოიძახეთ crow_recall(domain=\"all\"), რათა ჰკითხოთ ყველა 8 register-ს (style, bug, arch, context, life_pref, life_avoid, life_phil, life_context) მომხმარებლის კოდირების სტილზე, შეცდომების ინტუიციაზე, არქიტექტურულ უპირატესობებზე, პირად გემოვნებაზე, ფილოსოფიასა და მიმდინარე კონტექსტზე. ასახეთ დაბრუნებული მინიშნებები თქვენს პასუხში.",
+      "RULE: ყოველი პასუხის შემდეგ შეინახეთ ის, რაც მომხმარებელმა გაამჟღავნა \u2014 უპირატესობები, ფილოსოფია, შესწორებები, კონტექსტი \u2014 crow_ingest-ის მეშვეობით. თავად განსაზღვრეთ შესაბამისი register და polarity, არ დაელოდოთ მომხმარებელს, სანამ იტყვის \"დაიმახსოვრე ეს\". კოდზე მუშაობის შემდეგ ავტომატურად შეაფასეთ build-ის შედეგები crow_ingest_from_build-ის მეშვეობით.",
+      "RULE: არ გამოტოვოთ recall+ingest წესები არაკოდირების ამოცანებშიც კი, როგორიცაა დოკუმენტების რედაქტირება, git ოპერაციები ან კონფიგურაციის ცვლილებები. ყოველთვის შეასრულეთ ისინი."
+    ]
+  }
+}

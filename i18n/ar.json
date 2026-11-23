@@ -1,0 +1,108 @@
+{
+  "_meta": {
+    "locale": "ar",
+    "language_name": "Arabic",
+    "version": "1.0.0",
+    "last_updated": "2026-11-24"
+  },
+  "server": {
+    "instructions": "Crow Memory — ذاكرة مشبكية خارجية لوكلاء البرمجة بالذكاء الاصطناعي. تخزّن أسلوب البرمجة لديك وحدسك حول الأخطاء وتفضيلاتك المعمارية كمصفوفات أوزان مضغوطة في crow.bin.",
+    "prompts": {
+      "crow_memory_bias": {
+        "description": "كتلة تحيّز Crow Memory المحقونة تلقائيًا. تحتوي على أسلوب البرمجة الخاص بك وتفضيلاتك والقواعد المطوّرة. ينبغي على المضيف تحميلها عند بدء الجلسة.",
+        "body_template": "=== Crow Memory — سياق محقون تلقائيًا ===\n\n[قواعد مطوّرة دائمة]\n{rules}\n\n[تلميحات ذاكرة حديثة]\n{bias}\n\nيمثّل السياق أعلاه تفضيلاتك وأسلوبك المكتسبين. استخدمه لتوجيه ردودك. لمعرفة المزيد، استدعِ crow_recall باستعلام محدّد و register (style/bug/arch/context/life_pref/life_avoid/life_phil/life_context)."
+      },
+      "crow_evolved_rules": {
+        "description": "Permanent evolved rules from Crow's system_prompt.md: permanent rules (human-promoted via CROW_ADMIN_TOKEN) plus unreviewed model suggestions.",
+        "body_template": "{prompt}"
+      }
+    }
+  },
+  "tools": {
+    "crow_recall": {
+      "description": "استرجع أسلوب البرمجة الخاص بالمستخدم أو حدسه حول الأخطاء أو تفضيله المعماري أو سياقه الشخصي من ذاكرة Crow المشبكية. استدعِها قبل كل رد للتوافق مع التحيّز الاستقرائي للمستخدم. افتراضيًا (register=all أو عند حذفه، domain=all) يستعلم عن السجلات الثمانية كلها ويدمج النتائج عالميًا حسب التشابه الفعّال.",
+      "parameters": {
+        "query": "وصف باللغة الطبيعية للمهمة الحالية.",
+        "register": "أي سجل. استخدم 'all' (أو احذفه) للاستعلام عن كل سجل في النطاق المحدد. Code: style/bug/arch/context. Life: life_pref/life_avoid/life_phil/life_context.",
+        "domain": "مرشّح النطاق المستخدم عندما يكون register هو 'all' أو محذوفًا. 'code' = style/bug/arch/context، 'life' = life_pref/life_avoid/life_phil/life_context، 'all' = السجلات الثمانية كلها (الافتراضي).",
+        "top_k": "عدد التلميحات (1-5).",
+        "format": "صيغة الإخراج. 'hint' يعيد تلميحات JSON (الافتراضي)؛ 'bias_block' يعيد كتلة نص [User Bias] لحقنها في موجّه النظام.",
+        "project": "وسم المشروع المستخدم لتعزيز التلميحات من المشروع نفسه وتصفية تلميحات المشاريع الأخرى أو معاقبتها.",
+        "strict_project": "عندما تكون true، يستبعد تلميحات المشاريع الأخرى استبعادًا كاملًا من النتائج."
+      }
+    },
+    "crow_ingest": {
+      "description": "أدخل تجربة برمجية في ذاكرة Crow المشبكية طويلة المدى. استدعِها بعد نتائج البناء أو الاختبار أو التغذية الراجعة الصريحة من المستخدم. قدّم إما قطبية صريحة أو exit_code للبناء لتحويل القطبية تلقائيًا. يُعقّم المحتوى أولًا؛ ويُرفض المدخل الضجيجي الخالص دون المساس بالذاكرة.",
+      "parameters": {
+        "key": "وصف مجرّد للحالة.",
+        "value": "نمط الكود أو القرار المطبّق.",
+        "register": "السجل المراد التخزين فيه (style/bug/arch/context/life_pref/life_avoid/life_phil/life_context).",
+        "polarity": "قوة التعزيز [-2.0, 2.0]. اختيارية إذا مُنح exit_code؛ والقطبية الصريحة هي الفائزة عند تقديم الاثنين.",
+        "exit_code": "رمز خروج البناء (0 = نجاح). يُحوَّل تلقائيًا إلى قطبية (+1.5/+0.5 عند النجاح، -0.5/-1.0 عند الفشل) ما لم تُمنح قطبية صريحة.",
+        "user_edited": "هل عدّل المستخدم مخرجات الذكاء الاصطناعي. يعدّل القطبية المشتقة من exit_code.",
+        "project": "وسم المشروع المخزَّن مع مدخل الذاكرة لاسترجاع لاحق واعٍ بالمشروع."
+      }
+    },
+    "crow_admin": {
+      "description": "عمليات Crow الإدارية في أداة واحدة. الإجراءات: diagnostics (إحصاءات الذاكرة)، drift (فحص الانحراف)، prompt (قراءة/إضافة/إحصاءات system_prompt.md)، backup (إنشاء/تدوير/سرد/استعادة)، evolve (اقتراح تحويرات على الموجّه)، project_info (سرد/إنشاء نسخ المشاريع).",
+      "parameters": {
+        "action": "أي عملية إدارية: diagnostics أو drift أو prompt أو backup أو evolve أو project_info.",
+        "args": "كائن وسائط خاص بالإجراء يُمرَّر إلى العملية المحددة."
+      }
+    }
+  },
+  "errors": {
+    "unknown_tool": "أداة غير معروفة: {name}",
+    "unknown_prompt": "موجّه غير معروف: {name}",
+    "unknown_action": "إجراء {context} غير معروف: {action}",
+    "project_name_required": "project_name مطلوب لإجراء create"
+  },
+  "recall_messages": {
+    "faint_bias": "Crow يتذكّر تحيّزًا خافتًا في {register}. ذاكرة قليلة مخزّنة بعد.",
+    "unknown_register": "سجل غير معروف: {register}"
+  },
+  "ingest_messages": {
+    "status_ingested": "أُدخلت",
+    "unknown_register": "سجل غير معروف: {register}"
+  },
+  "evolve_messages": {
+    "no_patterns": "لم تُكتشف أنماط ذات دلالة إحصائية بعد."
+  },
+  "drift_messages": {
+    "healthy": "ثقة الذاكرة سليمة.",
+    "confused": "تبدو ذاكرة Crow مشوّشة. قد تكون المهام الأخيرة جديدة جدًا أو الذاكرة مشبعة. فكّر في إعادة ضبط طيفية أو الأرشفة."
+  },
+  "cli": {
+    "stdio_start": "خادم Crow Memory MCP يعمل على stdio",
+    "sse_start": "خادم Crow Memory MCP SSE يستمع على http://{host}:{port}/sse",
+    "http_start": "خادم Crow Memory MCP Streamable HTTP يستمع على http://{host}:{port}/",
+    "dual_start_sse": "خادم Crow Memory MCP SSE يستمع على http://{host}:{sse_port}/sse",
+    "dual_start_http": "خادم Crow Memory MCP Streamable HTTP يستمع على http://{host}:{http_port}/"
+  },
+  "installer": {
+    "banner_title": "مثبّت Crow Memory لـ Zoo Code",
+    "step_1_install_deps": "تثبيت تبعيات Python",
+    "step_2_init_crow": "تهيئة crow.bin",
+    "step_3_vscode_tasks": "إنشاء .vscode/tasks.json (بدء SSE تلقائيًا عند فتح المجلد)",
+    "step_4_custom_mode": "إنشاء وضع التنشيط التلقائي في Zoo Code",
+    "step_5_start_server": "بدء خادم Crow SSE + البدء التلقائي",
+    "step_done": "تم.",
+    "complete_title": "اكتمل تثبيت Crow Memory!",
+    "sse_running": "خادم SSE يعمل على http://127.0.0.1:9020/sse",
+    "next_steps_label": "الخطوات التالية:",
+    "next_step_1": "1. أعد تشغيل Zoo Code",
+    "next_step_2": "2. بدّل الوضع إلى \"Orchestrator + Crow\"",
+    "next_step_3": "3. ينشّط Crow نفسه تلقائيًا — لا حاجة لإعداد يدوي",
+    "next_step_4": "4. يبدأ خادم Crow تلقائيًا مع Windows عبر Task Scheduler"
+  },
+  "system_prompt": {
+    "header": "# Crow Memory — قواعد موجّه النظام",
+    "subtitle": "> طُوّرت هذه القواعد بواسطة Crow وأقرّها المستخدم.\n> وهي تمثّل تحيّزات برمجية ذات دلالة إحصائية.\n> لا تحرّرها يدويًا — استخدم أدوات evolve في Crow MCP.",
+    "managed_by": "<!-- يُدار هذا الملف بواسطة crow_mcp_server.py -->",
+    "default_rules": [
+      "RULE: قبل كل رد، استدعِ crow_recall(domain=\"all\") للاستعلام عن السجلات الثمانية كلها (style, bug, arch, context, life_pref, life_avoid, life_phil, life_context) بحثًا عن أسلوب برمجة المستخدم وحدسه حول الأخطاء وتفضيلاته المعمارية وذوقه الشخصي وفلسفته وسياقه الحالي. اعكس التلميحات المعادة في ردك.",
+      "RULE: بعد كل رد، أدخل ما كشف عنه المستخدم — التفضيلات والفلسفة والتصحيحات والسياق — عبر crow_ingest. حدّد السجل والقطبية المناسبين بنفسك دون انتظار أن يقول المستخدم \"تذكّر هذا\". بعد العمل البرمجي، قيّم نتائج البناء تلقائيًا عبر crow_ingest_from_build.",
+      "RULE: لا تتجاوز قواعد الاسترجاع والإدخال حتى في المهام غير البرمجية مثل تحرير المستندات أو عمليات git أو تغييرات الإعداد. نفّذها دائمًا."
+    ]
+  }
+}

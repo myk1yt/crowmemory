@@ -1,0 +1,108 @@
+{
+  "_meta": {
+    "locale": "su",
+    "language_name": "Sundanese",
+    "version": "1.0.0",
+    "last_updated": "2026-11-24"
+  },
+  "server": {
+    "instructions": "Crow Memory — Mémori sinaptik éksternal pikeun agén AI nu nulis kode. Nyimpen gaya nulis kode anjeun, intuisi kana kasalahan, jeung préferénsi arsitéktur anjeun salaku matriks beurat nu dikomprési dina crow.bin.",
+    "prompts": {
+      "crow_memory_bias": {
+        "description": "Blok bias Crow Memory nu diselapkeun otomatis. Ngandung gaya nulis kode anjeun, préferénsi, jeung aturan nu geus mekar. Host kedah ngamuat ieu dina awal sési.",
+        "body_template": "=== Crow Memory — Kontéks nu diselapkeun otomatis ===\n\n[Aturan permanén nu geus mekar]\n{rules}\n\n[Pitunjuk mémori anyar-anyar ieu]\n{bias}\n\nKontéks di luhur ngagambarkeun préferénsi jeung gaya anjeun nu geus diajar. Paké pikeun nungtun balesan anjeun. Pikeun terang langkung seueur, panggil crow_recall kalayan patarosan khusus jeung register (style/bug/arch/context/life_pref/life_avoid/life_phil/life_context)."
+      },
+      "crow_evolved_rules": {
+        "description": "Permanent evolved rules from Crow's system_prompt.md: permanent rules (human-promoted via CROW_ADMIN_TOKEN) plus unreviewed model suggestions.",
+        "body_template": "{prompt}"
+      }
+    }
+  },
+  "tools": {
+    "crow_recall": {
+      "description": "Ngala deui gaya nulis kode husus pangguna, intuisi kana kasalahan, préferénsi arsitéktur, atawa kontéks pribadi tina mémori sinaptik Crow. Panggil ieu SAMÉMÉHNA unggal balesan pikeun saluyu jeung inductive bias pangguna. Sacara standar (register=all atawa dileungitkeun, domain=all), éta nalungtik sadaya 8 register sarta ngagabungkeun hasil sacara global dumasar kana kamiripan éféktif.",
+      "parameters": {
+        "query": "Katerangan basa alami ngeunaan tugas ayeuna.",
+        "register": "Register mana. Paké 'all' (atawa leungitkeun) pikeun nalungtik unggal register dina domain nu dipilih. Code: style/bug/arch/context. Life: life_pref/life_avoid/life_phil/life_context.",
+        "domain": "Saringan domain nu dipaké nalika register 'all' atawa dileungitkeun. 'code' = style/bug/arch/context, 'life' = life_pref/life_avoid/life_phil/life_context, 'all' = sadaya 8 register (standar).",
+        "top_k": "Jumlah pitunjuk (1-5).",
+        "format": "Format kaluaran. 'hint' mulangkeun pitunjuk JSON (standar); 'bias_block' mulangkeun blok téks [User Bias] pikeun diselapkeun kana system prompt.",
+        "project": "Tag proyék nu dipaké pikeun ningkatkeun pitunjuk proyék nu sami sarta nyaring atawa ngahukum pitunjuk ti proyék séjén.",
+        "strict_project": "Nalika true, nyaring sacara ketat pitunjuk ti proyék séjén tina hasil."
+      }
+    },
+    "crow_ingest": {
+      "description": "Asupkeun pangalaman nulis kode kana mémori sinaptik jangka panjang Crow. Panggil SAATOS hasil build atawa tés, atawa eupan balik eksplisit pangguna. Lebetkeun polarity eksplisit atawa exit_code build pikeun pemetaan polarity otomatis. Eusi disanitasi heula; asupan nu ngan ukur noise ditolak tanpa nyabak mémori.",
+      "parameters": {
+        "key": "Katerangan abstrak ngeunaan kaayaan.",
+        "value": "Pola kode atawa kaputusan nu diterapkeun.",
+        "register": "Register pikeun nyimpen (style/bug/arch/context/life_pref/life_avoid/life_phil/life_context).",
+        "polarity": "Kakuatan panguatan [-2.0, 2.0]. Pilihan upami exit_code dipasihkeun; polarity eksplisit meunang nalika duanana dipasihkeun.",
+        "exit_code": "Kodeu kaluar build (0 = suksés). Otomatis dipetakeun kana polarity (+1.5/+0.5 nalika suksés, -0.5/-1.0 nalika gagal) iwal upami polarity eksplisit dipasihkeun.",
+        "user_edited": "Naha pangguna ngédit kaluaran AI. Nyaluyukeun polarity nu diturunkeun tina exit_code.",
+        "project": "Tag proyék nu disimpen babarengan jeung éntri mémori pikeun ngala deui engké kalayan sadar proyék."
+      }
+    },
+    "crow_admin": {
+      "description": "Operasi administrasi Crow dina hiji alat. Aksi: diagnostics (statistik mémori), drift (pamariksaan drift), prompt (maca/ngagedékeun/statistik system_prompt.md), backup (nyieun/ngarotasi/daptar/mulangkeun), evolve (ngajukeun mutasi prompt), project_info (daptar/nyieun proyék).",
+      "parameters": {
+        "action": "Operasi administrasi mana: diagnostics, drift, prompt, backup, evolve, atawa project_info.",
+        "args": "Objék argumen husus aksi nu dikirimkeun ka operasi nu dipilih."
+      }
+    }
+  },
+  "errors": {
+    "unknown_tool": "Alat teu dipikanyaho: {name}",
+    "unknown_prompt": "Prompt teu dipikanyaho: {name}",
+    "unknown_action": "Aksi {context} teu dipikanyaho: {action}",
+    "project_name_required": "project_name diperlukeun pikeun aksi create"
+  },
+  "recall_messages": {
+    "faint_bias": "Crow nginget bias {register} nu lemah. Saeutik mémori nu disimpen.",
+    "unknown_register": "Register teu dipikanyaho: {register}"
+  },
+  "ingest_messages": {
+    "status_ingested": "geus diasupkeun",
+    "unknown_register": "Register teu dipikanyaho: {register}"
+  },
+  "evolve_messages": {
+    "no_patterns": "Teu acan aya pola nu signifikan sacara statistik nu kapanggih."
+  },
+  "drift_messages": {
+    "healthy": "Kapercayaan mémori séhat.",
+    "confused": "Mémori Crow sigana bingung. Tugas anyar-anyar ieu meureun teuing anyar atawa mémori geus pinuh. Pertimbangkeun spectral reset atawa arsip."
+  },
+  "cli": {
+    "stdio_start": "Crow Memory MCP server dijalankeun dina stdio",
+    "sse_start": "Crow Memory MCP SSE server ngadangukeun di http://{host}:{port}/sse",
+    "http_start": "Crow Memory MCP Streamable HTTP server ngadangukeun di http://{host}:{port}/",
+    "dual_start_sse": "Crow Memory MCP SSE server ngadangukeun di http://{host}:{sse_port}/sse",
+    "dual_start_http": "Crow Memory MCP Streamable HTTP server ngadangukeun di http://{host}:{http_port}/"
+  },
+  "installer": {
+    "banner_title": "Pamasang Crow Memory pikeun Zoo Code",
+    "step_1_install_deps": "Masangkeun dependensi Python",
+    "step_2_init_crow": "Ngamimitian crow.bin",
+    "step_3_vscode_tasks": "Nyieun .vscode/tasks.json (ngamimitian SSE otomatis nalika polder dibuka)",
+    "step_4_custom_mode": "Nyieun mode aktivasina otomatis Zoo Code",
+    "step_5_start_server": "Ngamimitian Crow SSE server + ngamimitian otomatis",
+    "step_done": "Réngsé.",
+    "complete_title": "Pamasangan Crow Memory parantos réngsé!",
+    "sse_running": "SSE server dijalankeun dina http://127.0.0.1:9020/sse",
+    "next_steps_label": "Léngkah salajengna:",
+    "next_step_1": "1. Balikan deui Zoo Code",
+    "next_step_2": "2. Ganti mode ka \"Orchestrator + Crow\"",
+    "next_step_3": "3. Crow aktip sacara otomatis — teu peryogi setélan manual",
+    "next_step_4": "4. Crow server mimiti otomatis jeung Windows ngaliwatan Task Scheduler"
+  },
+  "system_prompt": {
+    "header": "# Crow Memory — Aturan System Prompt",
+    "subtitle": "> Aturan ieu dimekarkeun ku Crow sarta disatujuan ku pangguna.\n> Éta ngagambarkeun bias nulis kode nu signifikan sacara statistik.\n> Ulah ngédit sacara manual — paké alat evolve Crow MCP.",
+    "managed_by": "<!-- Ieu file diurus ku crow_mcp_server.py -->",
+    "default_rules": [
+      "RULE: Saméméh unggal balesan, panggil crow_recall(domain=\"all\") pikeun nalungtik sadaya 8 register (style, bug, arch, context, life_pref, life_avoid, life_phil, life_context) pikeun gaya nulis kode pangguna, intuisi kana kasalahan, préferénsi arsitéktur, rasa pribadi, filsafat, jeung kontéks ayeuna. Témbongkeun pitunjuk nu dipulangkeun dina balesan anjeun.",
+      "RULE: Sanggeus unggal balesan, asupkeun naon nu diungkabkeun ku pangguna — préferénsi, filsafat, koréksi, kontéks — ngaliwatan crow_ingest. Tangtukeun sorangan register jeung polarity nu merenah tanpa ngadagoan pangguna nyebut \"inget ieu.\" Sanggeus gawean kode, evaluasi hasil build sacara otomatis ngaliwatan crow_ingest_from_build.",
+      "RULE: Ulah ngalangkungan aturan recall+ingest sanajan pikeun tugas nu lain kode saperti ngédit dokumén, operasi git, atawa parobahan konfigurasi. Sok jalankeun."
+    ]
+  }
+}

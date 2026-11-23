@@ -3,153 +3,117 @@
     "locale": "hr",
     "language_name": "Hrvatski",
     "version": "1.0.0",
-    "last_updated": "2026-05-29"
+    "last_updated": "2026-11-24"
   },
+
   "server": {
     "instructions": "Crow Memory — Vanjska sinaptička memorija za AI agente kodiranja. Pohranjuje stil kodiranja, intuiciju grešaka i arhitektonske preferencije u crow.bin.",
+
     "prompts": {
       "crow_memory_bias": {
-        "description": "Automatski injektirani Crow Memory blok pristranosti. Sadrži vaš stil kodiranja, preferencije i evolvirana pravila.",
-        "body_template": "=== Crow Memory — Automaticky vložený kontext ===\n\n[Trvalá evoluovaná pravidla]\n{rules}\n\n[Nedávné paměťové tipy]\n{bias}\n\nVýše uvedený kontext představuje vaše naučené preference a styl. Použijte jej k vedení svých odpovědí."
+        "description": "Automatski injektirani Crow Memory blok pristranosti. Sadrži vaš stil kodiranja, preferencije i evoluirana pravila.",
+        "body_template": "=== Crow Memory — Automatski injektirani kontekst ===\n\n[Trajna evoluirana pravila]\n{rules}\n\n[Nedavni memorijski tragovi]\n{bias}\n\nGore navedeni kontekst predstavlja vaša naučena preferencija i stil. Koristite ga za vođenje svojih odgovora. Za više informacija pozovite crow_recall s određenim upitom i registerom (style/bug/arch/context/life_pref/life_avoid/life_phil/life_context)."
       },
       "crow_evolved_rules": {
-        "description": "Trvalá evoluovaná pravidla z system_prompt.md Crow. Statisticky významné vzory schválené přes HITL.",
+        "description": "Permanent evolved rules from Crow's system_prompt.md: permanent rules (human-promoted via CROW_ADMIN_TOKEN) plus unreviewed model suggestions.",
         "body_template": "{prompt}"
       }
     }
   },
+
   "tools": {
     "crow_recall": {
-      "description": "Vyvolá uživatelský styl kódování, intuici chyb, architektonické preference nebo osobní kontext ze synaptické paměti Crow. Volejte PŘED každou odpovědí. Výchozí dotazuje všech 8 registrů.",
+      "description": "Dohvaća korisnički stil kodiranja, intuiciju za greške, arhitektonske preferencije ili osobni kontekst iz Crowove sinaptičke memorije. Pozovite PRIJE svakog odgovora kako biste se uskladili s korisnikovom induktivnom pristranošću. Zadano (register=all ili izostavljeno, domain=all) upituje svih 8 registara i globalno spaja rezultate prema učinkovitoj sličnosti.",
       "parameters": {
-        "query": "Popis aktuálního úkolu přirozeným jazykem.",
-        "register": "Vyberte registr. 'all' dotazuje všechny (stejné jako domain=all). Code: style/bug/arch/context. Život: life_pref/life_avoid/life_phil/life_context.",
-        "top_k": "Počet tipů (1-3).",
-        "domain": "Zkratka filtru domény. 'code' = style/bug/arch/context, 'life' = life_pref/life_avoid/life_phil/life_context, 'all' = všech 8 registrů (výchozí)."
+        "query": "Opis trenutnog zadatka prirodnim jezikom.",
+        "register": "Koji registar. Koristite 'all' (ili izostavite) za upit svih registara u odabranoj domeni. Code: style/bug/arch/context. Život: life_pref/life_avoid/life_phil/life_context.",
+        "domain": "Filtar domene koji se koristi kada je register 'all' ili izostavljen. 'code' = style/bug/arch/context, 'life' = life_pref/life_avoid/life_phil/life_context, 'all' = svih 8 registara (zadano).",
+        "top_k": "Broj tragova (1-5).",
+        "format": "Izlazni format. 'hint' vraća JSON tragove (zadano); 'bias_block' vraća [User Bias] tekstualni blok za injekciju u sustavski prompt.",
+        "project": "Oznaka projekta koja pojačava tragove istog projekta te filtrira ili kažnjava tragove drugih projekata.",
+        "strict_project": "Kada je true, uklanja tragove drugih projekata iz rezultata."
       }
     },
     "crow_ingest": {
-      "description": "Vstřebá zkušenost s kódováním do dlouhodobé synaptické paměti Crow. Volejte PO výsledcích sestavení/testů nebo explicitní zpětné vazbě.",
+      "description": "Ugrađuje iskustvo kodiranja u Crowovu dugoročnu sinaptičku memoriju. Pozovite NAKON rezultata izgradnje/testiranja ili izričite povratne informacije korisnika. Navedite ili izričitu polaritet ili exit_code izgradnje za automatsko mapiranje polariteta. Sadržaj se prvo čisti; ulaz čistog šuma odbacuje se bez diranja memorije.",
       "parameters": {
-        "key": "Abstraktní popis situace.",
-        "value": "Použitý vzor kódu nebo rozhodnutí.",
-        "polarity": "Síla zesílení [-2.0, 2.0].",
-        "register": "Cílový registr (style/bug/arch/context/life_pref/life_avoid/life_phil/life_context)."
+        "key": "Apstraktni opis situacije.",
+        "value": "Primijenjeni uzorak koda ili odluka.",
+        "register": "Registar za pohranu (style/bug/arch/context/life_pref/life_avoid/life_phil/life_context).",
+        "polarity": "Jačina pojačavanja [-2.0, 2.0]. Neobavezno ako je zadan exit_code; izričit polaritet pobjeđuje kada su oba navedena.",
+        "exit_code": "Izlazni kod izgradnje (0 = success). Automatski se mapira na polaritet (+1.5/+0.5 pri uspjehu, -0.5/-1.0 pri neuspjehu) osim ako nije zadan izričit polaritet.",
+        "user_edited": "Je li korisnik uređivao AI izlaz. Prilagođava polaritet izveden iz exit_code.",
+        "project": "Oznaka projekta pohranjena s memorijskim unosom za kasnije dohvaćanje po projektu."
       }
     },
-    "crow_evolve_propose": {
-      "description": "Analyzuje nedávné vzory paměti a navrhuje trvalou mutaci systémového promptu. Vrací pouze návrh; k přijetí je nutné lidské schválení.",
+    "crow_admin": {
+      "description": "Crowove administrativne operacije u jednom alatu. Akcije: diagnostics (statistike memorije), drift (provjera drifta), prompt (čitanje/dodavanje/statistike system_prompt.md), backup (stvaranje/rotacija/popis/obnova), evolve (prijedlog mutacija prompta), project_info (popis/stvaranje instanci projekta).",
       "parameters": {
-        "min_confidence": "Minimální práh spolehlivosti (výchozí: 0,85).",
-        "min_occurrences": "Minimální počet výskytů (výchozí: 3)."
-      }
-    },
-    "crow_diagnostics": {
-      "description": "Vrací diagnostiku stavu paměti Crow (normy registrů, řídkost, počet aktualizací, velikost banky hodnot, statistiky promptu).",
-      "parameters": {}
-    },
-    "crow_check_drift": {
-      "description": "Kontroluje, zda nedávná vyvolání vykazují známky paměťového driftu.",
-      "parameters": {
-        "threshold": "Práh spolehlivosti pro detekci nízké spolehlivosti (výchozí: 0,5).",
-        "min_low_confidence_count": "Min. počet záznamů s nízkou spolehlivostí pro spuštění driftu (výchozí: 5)."
-      }
-    },
-    "crow_ingest_from_build": {
-      "description": "Automaticky určí polaritu z kódu ukončení sestavení a stavu úprav uživatele, poté vstřebá zkušenost. Použijte po npm run build.",
-      "parameters": {
-        "key": "Abstraktní popis.",
-        "value": "Použitý vzor kódu.",
-        "exit_code": "Kód ukončení sestavení (0 = úspěch).",
-        "user_edited": "Zda uživatel upravil výstup AI.",
-        "register": "Cílový registr (style/bug/arch/context, výchozí: arch).",
-        "explicit_polarity": "Přepíše automatické určení polarity."
-      }
-    },
-    "crow_get_user_bias": {
-      "description": "Generuje blok [User Bias] pro vložení do systémového promptu. Dotazuje všechny registry a formátuje tipy pro přidání na začátek promptu.",
-      "parameters": {
-        "query": "Popis aktuálního úkolu.",
-        "registers": "Registry k dotazování (výchozí: all)."
-      }
-    },
-    "crow_manage_prompt": {
-      "description": "Čtení, přidávání nebo získávání statistik o souboru system_prompt.md. 'read' pro zobrazení, 'append' pro přijetí pravidla, 'stats' pro metriky.",
-      "parameters": {
-        "action": "Akce: read, append nebo stats.",
-        "rule": "Text pravidla (vyžadováno pro append).",
-        "auto_backup": "Automatické vytvoření zálohy před přidáním (výchozí: true)."
-      }
-    },
-    "crow_manage_backup": {
-      "description": "Spravuje zálohy paměti Crow. Vytváření, rotace, výpis nebo obnova z driftu.",
-      "parameters": {
-        "action": "Akce: create, rotate, list nebo recover.",
-        "tag": "Značka zálohy: daily, weekly nebo manual (výchozí: daily).",
-        "max_daily": "Max. denních záloh k uchování (výchozí: 7).",
-        "max_weekly": "Max. týdenních záloh k uchování (výchozí: 4)."
-      }
-    },
-    "crow_project_info": {
-      "description": "Zobrazí nebo vytvoří projektově izolované instance paměti Crow.",
-      "parameters": {
-        "action": "Akce: list nebo create.",
-        "project_name": "Název projektu (vyžadováno pro create)."
+        "action": "Koja administrativna operacija: diagnostics, drift, prompt, backup, evolve ili project_info.",
+        "args": "Objekt argumenata specifičnih za akciju, prosljeđuje se odabranoj operaciji."
       }
     }
   },
+
   "errors": {
-    "unknown_tool": "Neznámý nástroj: {name}",
-    "unknown_prompt": "Neznámý prompt: {name}",
-    "unknown_action": "Neznámá akce {context}: {action}",
-    "project_name_required": "project_name je vyžadováno pro akci create"
+    "unknown_tool": "Nepoznati alat: {name}",
+    "unknown_prompt": "Nepoznati prompt: {name}",
+    "unknown_action": "Nepoznata {context} akcija: {action}",
+    "project_name_required": "project_name je obavezan za create akciju"
   },
+
   "recall_messages": {
-    "faint_bias": "Crow si matně vybavuje zkreslení {register}. Zatím uloženo málo vzpomínek.",
-    "unknown_register": "Neznámý registr: {register}"
+    "faint_bias": "Crow slabo prisjeća {register} pristranosti. Još je malo sjećanja pohranjeno.",
+    "unknown_register": "Nepoznati registar: {register}"
   },
+
   "ingest_messages": {
-    "status_ingested": "vstřebáno",
-    "unknown_register": "Neznámý registr: {register}"
+    "status_ingested": "pohranjeno",
+    "unknown_register": "Nepoznati registar: {register}"
   },
+
   "evolve_messages": {
-    "no_patterns": "Zatím nebyly detekovány žádné statisticky významné vzory."
+    "no_patterns": "Još nisu otkriveni statistički značajni obrasci."
   },
+
   "drift_messages": {
-    "healthy": "Spolehlivost paměti je zdravá.",
-    "confused": "Paměť Crow vypadá zmateně. Nedávné úkoly mohou být příliš nové nebo paměť nasycená. Zvažte spektrální reset nebo archivaci."
+    "healthy": "Pouzdanost memorije je zdrava.",
+    "confused": "Crowova memorija djeluje zbunjeno. Nedavni zadaci možda su previše novi ili je memorija zasićena. Razmislite o spektralnom resetu ili arhiviranju."
   },
+
   "cli": {
-    "stdio_start": "Server MCP Crow Memory běží na stdio",
-    "sse_start": "Server MCP SSE Crow Memory naslouchá na http://{host}:{port}/sse",
-    "http_start": "Server MCP Streamable HTTP Crow Memory naslouchá na http://{host}:{port}/",
-    "dual_start_sse": "Server MCP SSE Crow Memory naslouchá na http://{host}:{sse_port}/sse",
-    "dual_start_http": "Server MCP Streamable HTTP Crow Memory naslouchá na http://{host}:{http_port}/"
+    "stdio_start": "Crow Memory MCP poslužitelj radi na stdio",
+    "sse_start": "Crow Memory MCP SSE poslužitelj sluša na http://{host}:{port}/sse",
+    "http_start": "Crow Memory MCP Streamable HTTP poslužitelj sluša na http://{host}:{port}/",
+    "dual_start_sse": "Crow Memory MCP SSE poslužitelj sluša na http://{host}:{sse_port}/sse",
+    "dual_start_http": "Crow Memory MCP Streamable HTTP poslužitelj sluša na http://{host}:{http_port}/"
   },
+
   "installer": {
-    "banner_title": "Crow Memory Hrvatski telepítő",
-    "step_1_install_deps": "Instalace Python závislostí",
-    "step_2_init_crow": "Inicializace crow.bin",
-    "step_4_custom_mode": "Vytváření režimu automatické aktivace Zoo Code",
-    "step_5_start_server": "Spouštění Crow SSE serveru + automatický start",
-    "step_done": "Hotovo.",
-    "complete_title": "Instalace Crow Memory dokončena!",
-    "sse_running": "SSE server běží na http://127.0.0.1:9020/sse",
-    "next_steps_label": "Další kroky:",
-    "next_step_1": "1. Restartujte Zoo Code",
-    "next_step_2": "2. Přepněte režim na \"Orchestrator + Crow\"",
-    "next_step_3": "3. Crow se aktivuje automaticky — není nutné ruční nastavení",
-    "next_step_4": "4. SSE server startuje s Windows (registrován ve spuštění)",
-    "step_3_vscode_tasks": "Vytváření .vscode/tasks.json (automatický start SSE při otevření složky)"
+    "banner_title": "Instalacijski program Crow Memorya za Zoo Code",
+    "step_1_install_deps": "Instaliranje Python ovisnosti",
+    "step_2_init_crow": "Inicijalizacija crow.bin",
+    "step_3_vscode_tasks": "Stvaranje .vscode/tasks.json (automatski pokret SSE-a pri otvaranju mape)",
+    "step_4_custom_mode": "Stvaranje Zoo Code načina automatske aktivacije",
+    "step_5_start_server": "Pokretanje Crow SSE poslužitelja + automatski pokret",
+    "step_done": "Gotovo.",
+    "complete_title": "Instalacija Crow Memorya dovršena!",
+    "sse_running": "SSE poslužitelj radi na http://127.0.0.1:9020/sse",
+    "next_steps_label": "Sljedeći koraci:",
+    "next_step_1": "1. Ponovo pokrenite Zoo Code",
+    "next_step_2": "2. Prijeđite na način rada \"Orchestrator + Crow\"",
+    "next_step_3": "3. Crow se aktivira automatski — ručno postavljanje nije potrebno",
+    "next_step_4": "4. Crow poslužitelj automatski se pokreće sa sustavom Windows (Task Scheduler)"
   },
+
   "system_prompt": {
-    "header": "# Crow Memory — Pravidla systémového promptu",
-    "subtitle": "> Tato pravidla byla evoluována Crow a schválena uživatelem.\n> Představují statisticky významná zkreslení kódování.\n> Neupravujte ručně — používejte nástroje evoluce Crow MCP.",
-    "managed_by": "<!-- Tento soubor je spravován crow_mcp_server.py -->",
+    "header": "# Crow Memory — Pravila sustavskog prompta",
+    "subtitle": "> Ova su pravila evoluirana od strane Crowa i odobrena od korisnika.\n> Predstavljaju statistički značajne pristranosti u kodiranju.\n> Nemojte uređivati ručno — koristite Crow MCP alate za evoluciju.",
+    "managed_by": "<!-- Ovom datotekom upravlja crow_mcp_server.py -->",
     "default_rules": [
-      "RULE: Před každou odpovědí zavolejte crow_recall(domain=\"all\") pro dotaz na všech 8 registrů (style, bug, arch, context, life_pref, life_avoid, life_phil, life_context) ohledně stylu kódování, intuice chyb, architektonických preferencí, osobního vkusu, filozofie a aktuálního kontextu uživatele. Odražte vrácené tipy ve své odpovědi.",
-      "RULE: Po každé odpovědi vstřebejte, co uživatel odhalil — preference, filozofii, opravy, kontext — přes crow_ingest. Sami určete vhodný registr a polaritu, aniž byste čekali, až uživatel řekne \"zapamatuj si to\". Po práci s kódem automaticky vyhodnoťte výsledky sestavení přes crow_ingest_from_build.",
-      "RULE: Nepřeskakujte pravidla recall+ingest ani u úkolů nesouvisejících s kódováním, jako je úprava dokumentů, git operace nebo změny konfigurace. Vždy je provádějte."
+      "RULE: Prije svakog odgovora pozovite crow_recall(domain=\"all\") kako biste upitali svih 8 registara (style, bug, arch, context, life_pref, life_avoid, life_phil, life_context) za korisnikov stil kodiranja, intuiciju grešaka, arhitektonske preferencije, osobni ukus, filozofiju i trenutni kontekst. Odrazite vraćene tragove u svom odgovoru.",
+      "RULE: Nakon svakog odgovora ugradite ono što je korisnik otkrio — preferencije, filozofiju, ispravke, kontekst — putem crow_ingest. Sami procijenite odgovarajući registar i polaritet, a da ne čekate da korisnik kaže \"zapamti ovo\". Nakon radova na kodu automatski procijenite rezultate izgradnje putem crow_ingest_from_build.",
+      "RULE: Ne preskačite pravila recall+ingest čak ni za zadatke koji nisu kodiranje, kao što su uređivanje dokumenata, git operacije ili izmjene konfiguracije. Uvijek ih izvršite."
     ]
   }
 }

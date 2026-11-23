@@ -1,0 +1,119 @@
+{
+  "_meta": {
+    "locale": "he",
+    "language_name": "Hebrew",
+    "version": "1.0.0",
+    "last_updated": "2026-11-24"
+  },
+
+  "server": {
+    "instructions": "Crow Memory — זיכרון סינפטי חיצוני לסוכני תכנות מבוססי בינה מלאכותית. שומר את סגנון התכנות שלך, את האינטואיציה שלך לגבי באגים ואת ההעדפות האדריכליות שלך כמטריצות משקל דחוסות בקובץ crow.bin.",
+
+    "prompts": {
+      "crow_memory_bias": {
+        "description": "בלוק הטיה של Crow Memory המוזרק אוטומטית. מכיל את סגנון התכנות שלך, את ההעדפות שלך ואת הכללים שהתפתחו. המארח צריך לטעון אותו בתחילת הסשן.",
+        "body_template": "=== Crow Memory — הקשר המוזרק אוטומטית ===\n\n[כללים קבועים שהתפתחו]\n{rules}\n\n[רמזי זיכרון אחרונים]\n{bias}\n\nההקשר שלעיל מייצג את ההעדפות והסגנון שלמדת. השתמש בו כדי להנחות את התשובות שלך. למידע נוסף, קרא ל-crow_recall עם שאילתה ספציפית ו-register (style/bug/arch/context/life_pref/life_avoid/life_phil/life_context)."
+      },
+      "crow_evolved_rules": {
+        "description": "Permanent evolved rules from Crow's system_prompt.md: permanent rules (human-promoted via CROW_ADMIN_TOKEN) plus unreviewed model suggestions.",
+        "body_template": "{prompt}"
+      }
+    }
+  },
+
+  "tools": {
+    "crow_recall": {
+      "description": "שולף את סגנון התכנות הייחודי של המשתמש, את האינטואיציה לגבי באגים, את ההעדפה האדריכלית או את ההקשר האישי מהזיכרון הסינפטי של Crow. יש לקרוא לזה לפני כל תשובה כדי להתיישר עם ההטיה האינדוקטיבית של המשתמש. כברירת מחדל (register=all או השמטה, domain=all), נשאלים כל 8 ה-register והתוצאות ממוזגות גלובלית לפי דמיון אפקטיבי.",
+      "parameters": {
+        "query": "תיאור בשפה טבעית של המשימה הנוכחית.",
+        "register": "איזה register. השתמש ב-'all' (או השמט) כדי לשאול כל register בדומיין שנבחר. Code: style/bug/arch/context. Life: life_pref/life_avoid/life_phil/life_context.",
+        "domain": "מסנן דומיין שמשמש כאשר register הוא 'all' או מושמט. 'code' = style/bug/arch/context, 'life' = life_pref/life_avoid/life_phil/life_context, 'all' = כל 8 ה-register (ברירת מחדל).",
+        "top_k": "מספר הרמזים (1-5).",
+        "format": "פורמט הפלט. 'hint' מחזיר רמזי JSON (ברירת מחדל); 'bias_block' מחזיר את בלוק הטקסט [User Bias] להזרקה לפרומפט המערכת.",
+        "project": "תג פרויקט שמשמש לחיזוק רמזים מאותו פרויקט ולסינון או הפחתת ערך של רמזים מפרויקטים אחרים.",
+        "strict_project": "כאשר true, מסיר לחלוטין את הרמזים מפרויקטים אחרים מהתוצאות."
+      }
+    },
+    "crow_ingest": {
+      "description": "קולט חוויית תכנות לתוך הזיכרון הסינפטי ארוך הטווח של Crow. יש לקרוא לזה לאחר תוצאות build/test או משוב מפורש של המשתמש. ספק polarity מפורש או exit_code של build למיפוי אוטומטי של הקוטביות. התוכן עובר סניטציה תחילה; קלט שהוא רעש טהור נדחה בלי לגעת בזיכרון.",
+      "parameters": {
+        "key": "תיאור מופשט של המצב.",
+        "value": "דפוס הקוד או ההחלטה שיושמו.",
+        "register": "ה-register לאחסון (style/bug/arch/context/life_pref/life_avoid/life_phil/life_context).",
+        "polarity": "עוצמת החיזוק [-2.0, 2.0]. אופציונלי אם ניתן exit_code; polarity מפורש גובר כאשר ניתן גם הוא.",
+        "exit_code": "קוד יציאה של ה-build (0 = הצלחה). ממופה אוטומטית לקוטביות (+1.5/+0.5 בהצלחה, -0.5/-1.0 בכישלון) אלא אם ניתן polarity מפורש.",
+        "user_edited": "האם המשתמש ערך את הפלט של ה-AI. מתאים את הקוטביות הנגזרת מה-exit_code.",
+        "project": "תג פרויקט הנשמר עם רשומת הזיכרון לשליפה עתידית מודעת-פרויקט."
+      }
+    },
+    "crow_admin": {
+      "description": "פעולות ניהול של Crow בכלי אחד. פעולות: diagnostics (סטטיסטיקת זיכרון), drift (בדיקת סחיפה), prompt (קריאה/הוספה/סטטיסטיקה של system_prompt.md), backup (יצירה/סבב/רשימה/שחזור), evolve (הצעת מוטציות לפרומפט), project_info (רשימה/יצירה של מופעי פרויקט).",
+      "parameters": {
+        "action": "איזו פעולת ניהול: diagnostics, drift, prompt, backup, evolve או project_info.",
+        "args": "אובייקט ארגומנטים ספציפי לפעולה שמועבר לפעולה שנבחרה."
+      }
+    }
+  },
+
+  "errors": {
+    "unknown_tool": "כלי לא מוכר: {name}",
+    "unknown_prompt": "פרומפט לא מוכר: {name}",
+    "unknown_action": "פעולת {context} לא מוכרת: {action}",
+    "project_name_required": "project_name נדרש עבור פעולת create"
+  },
+
+  "recall_messages": {
+    "faint_bias": "Crow נזכר בהטיית {register} קלושה. מעט זיכרונות נשמרו עדיין.",
+    "unknown_register": "register לא מוכר: {register}"
+  },
+
+  "ingest_messages": {
+    "status_ingested": "נקלט",
+    "unknown_register": "register לא מוכר: {register}"
+  },
+
+  "evolve_messages": {
+    "no_patterns": "עדיין לא זוהו דפוסים מובהקים סטטיסטית."
+  },
+
+  "drift_messages": {
+    "healthy": "ביטחון הזיכרון תקין.",
+    "confused": "נראה שהזיכרון של Crow מבולבל. ייתכן שהמשימות האחרונות חדשניות מדי או שהזיכרון רווי. שקול איפוס ספקטרלי או ארכוב."
+  },
+
+  "cli": {
+    "stdio_start": "שרת Crow Memory MCP פועל על stdio",
+    "sse_start": "שרת Crow Memory MCP SSE מאזין בכתובת http://{host}:{port}/sse",
+    "http_start": "שרת Crow Memory MCP Streamable HTTP מאזין בכתובת http://{host}:{port}/",
+    "dual_start_sse": "שרת Crow Memory MCP SSE מאזין בכתובת http://{host}:{sse_port}/sse",
+    "dual_start_http": "שרת Crow Memory MCP Streamable HTTP מאזין בכתובת http://{host}:{http_port}/"
+  },
+
+  "installer": {
+    "banner_title": "מתקין Crow Memory עבור Zoo Code",
+    "step_1_install_deps": "מתקין תלויות Python",
+    "step_2_init_crow": "מאתחל את crow.bin",
+    "step_3_vscode_tasks": "יוצר את .vscode/tasks.json (הפעלה אוטומטית של SSE בפתיחת התיקייה)",
+    "step_4_custom_mode": "יוצר מצב הפעלה אוטומטית של Zoo Code",
+    "step_5_start_server": "מפעיל את שרת Crow SSE + הפעלה אוטומטית",
+    "step_done": "סיום.",
+    "complete_title": "התקנת Crow Memory הושלמה!",
+    "sse_running": "שרת SSE פועל בכתובת http://127.0.0.1:9020/sse",
+    "next_steps_label": "השלבים הבאים:",
+    "next_step_1": "1. הפעל מחדש את Zoo Code",
+    "next_step_2": "2. החלף את המצב ל-\"Orchestrator + Crow\"",
+    "next_step_3": "3. Crow מופעל אוטומטית — אין צורך בהגדרה ידנית",
+    "next_step_4": "4. שרת Crow מופעל אוטומטית עם Windows באמצעות Task Scheduler"
+  },
+
+  "system_prompt": {
+    "header": "# Crow Memory — כללי פרומפט המערכת",
+    "subtitle": "> כללים אלה פותחו על ידי Crow ואושרו על ידי המשתמש.\n> הם מייצגים הטיות תכנות מובהקות סטטיסטית.\n> אין לערוך ידנית — השתמש בכלי ה-evolve של Crow MCP.",
+    "managed_by": "<!-- קובץ זה מנוהל על ידי crow_mcp_server.py -->",
+    "default_rules": [
+      "RULE: לפני כל תשובה, קרא ל-crow_recall(domain=\"all\") כדי לשאול את כל 8 ה-register (style, bug, arch, context, life_pref, life_avoid, life_phil, life_context) על סגנון התכנות, האינטואיציה לגבי באגים, ההעדפות האדריכליות, הטעם האישי, הפילוסופיה וההקשר הנוכחי של המשתמש. השתקף את הרמזים שהוחזרו בתשובתך.",
+      "RULE: אחרי כל תשובה, קלוט את מה שהמשתמש חשף — העדפות, פילוסופיה, תיקונים, הקשר — באמצעות crow_ingest. שפוט בעצמך את ה-register וה-polarity המתאימים בלי להמתין שהמשתמש יאמר \"תזכור את זה\". לאחר עבודת קוד, הערך אוטומטית את תוצאות ה-build באמצעות crow_ingest_from_build.",
+      "RULE: אל תדלג על כללי ה-recall+ingest גם במשימות שאינן תכנות, כגון עריכת מסמכים, פעולות git או שינויי תצורה. בצע אותם תמיד."
+    ]
+  }
+}

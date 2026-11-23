@@ -1,0 +1,119 @@
+{
+  "_meta": {
+    "locale": "sd",
+    "language_name": "Sindhi",
+    "version": "1.0.0",
+    "last_updated": "2026-11-24"
+  },
+
+  "server": {
+    "instructions": "Crow Memory — AI ڪوڊنگ ايجنٽن لاءِ خارجي سيناپٽڪ يادگيري. توهان جو ڪوڊنگ اسٽائل، بگ بابت وجداني سمجهه ۽ آرڪيٽيڪچر ترجيحات crow.bin ۾ دٻيل وزن ميٽرڪس طور محفوظ ڪري ٿي.",
+
+    "prompts": {
+      "crow_memory_bias": {
+        "description": "پاڻمرادو داخل ٿيل Crow Memory بائيس بلاڪ. ان ۾ توهان جو ڪوڊنگ اسٽائل، ترجيحات ۽ اڀريل اصول شامل آهن. ميزبان کي اهو سيشن جي شروعات ۾ لوڊ ڪرڻ گهرجي.",
+        "body_template": "=== Crow Memory — پاڻمرادو داخل ٿيل حوالي ===\n\n[مستقل اڀريل اصول]\n{rules}\n\n[تازيون يادگيري جون نشانيون]\n{bias}\n\nمٿيون حوالي توهان جون سکيل ترجيحات ۽ اسٽائل ظاهر ڪري ٿو. پنهنجن جوابن جي رهنمائي لاءِ ان کي استعمال ڪريو. وڌيڪ ڄاڻڻ لاءِ، مخصوص query ۽ register (style/bug/arch/context/life_pref/life_avoid/life_phil/life_context) سان crow_recall ڪال ڪريو."
+      },
+      "crow_evolved_rules": {
+        "description": "Permanent evolved rules from Crow's system_prompt.md: permanent rules (human-promoted via CROW_ADMIN_TOKEN) plus unreviewed model suggestions.",
+        "body_template": "{prompt}"
+      }
+    }
+  },
+
+  "tools": {
+    "crow_recall": {
+      "description": "Crow سيناپٽڪ يادگيري مان استعمال ڪندڙ جو مخصوص ڪوڊنگ اسٽائل، بگ بابت وجدان، آرڪيٽيڪچر ترجيح يا ذاتي حوالي ياد ڪريو. استعمال ڪندڙ جي استنباطي بائيس سان هم آهنگ ٿيڻ لاءِ هر جواب کان اڳ هي ڪال ڪريو. بطور ڊفالٽ (register=all يا ڇڏيل، domain=all)، سڀ 8 رجسٽر ڳولي ٿي ۽ نتيجا مؤثر مشابهت مطابق عالمي طور گڏ ڪري ٿي.",
+      "parameters": {
+        "query": "موجوده ڪم جو قدرتي ٻوليءَ ۾ بيان.",
+        "register": "ڪهڙو رجسٽر. 'all' استعمال ڪريو (يا ڇڏي ڏيو) ته چونڊيل ڊومين جا سڀ رجسٽر ڳوليا وڃن. ڪوڊ: style/bug/arch/context. زندگي: life_pref/life_avoid/life_phil/life_context.",
+        "domain": "ڊومين فلٽر جيڪو تڏهن استعمال ٿئي ٿو جڏهن register 'all' آهي يا ڇڏيل آهي. 'code' = style/bug/arch/context، 'life' = life_pref/life_avoid/life_phil/life_context، 'all' = سڀ 8 رجسٽر (ڊفالٽ).",
+        "top_k": "اشارن جو تعداد (1-5).",
+        "format": "آئوٽ پٽ فارميٽ. 'hint' JSON اشارا موٽائي ٿو (ڊفالٽ)؛ 'bias_block' سسٽم پرامپٽ داخل ڪرڻ لاءِ [User Bias] متن بلاڪ موٽائي ٿو.",
+        "project": "پروجيڪٽ ٽيگ جيڪو ساڳئي پروجيڪٽ جي اشارن کي وڌائڻ ۽ ٻين پروجيڪٽن جي اشارن کي فلٽر يا سزا ڏيڻ لاءِ استعمال ٿئي ٿو.",
+        "strict_project": "جڏهن true هجي، ٻين پروجيڪٽن جا اشارا نتيجن مان مڪمل طور هٽائي ٿو."
+      }
+    },
+    "crow_ingest": {
+      "description": "ڪوڊنگ تجربو Crow جي ڊگهي مدي واري سيناپٽڪ يادگيري ۾ داخل ڪريو. build/test نتيجن يا استعمال ڪندڙ جي واضح راءِ کان پوءِ ڪال ڪريو. پاڻمرادو polarity ميپنگ لاءِ يا واضح polarity يا build exit_code ڏيو. مواد پهرين صاف ڪيو وڃي ٿو؛ رڳو شور وارو ان پٽ يادگيري کي ڇهڻ کان سواءِ رد ڪيو وڃي ٿو.",
+      "parameters": {
+        "key": "حالت جو تجريدي بيان.",
+        "value": "لاڳو ڪيل ڪوڊ نمونو يا فيصلو.",
+        "register": "محفوظ ڪرڻ لاءِ رجسٽر (style/bug/arch/context/life_pref/life_avoid/life_phil/life_context).",
+        "polarity": "مضبوطي جي طاقت [-2.0, 2.0]. جيڪڏهن exit_code ڏنل هجي ته اختياري؛ جڏهن ٻئي ڏنل هجن ته واضح polarity غالب رهي ٿي.",
+        "exit_code": "build جي نڪرڻ جو ڪوڊ (0 = ڪاميابي). جيستائين واضح polarity نه ڏني وڃي، پاڻمرادو polarity ۾ ميپ ٿئي ٿو (ڪاميابي تي +1.5/+0.5، ناڪامي تي -0.5/-1.0).",
+        "user_edited": "ڇا استعمال ڪندڙ AI جي آئوٽ پٽ ۾ ترميم ڪئي. exit_code مان نڪتل polarity کي ترتيب ڏئي ٿو.",
+        "project": "پروجيڪٽ ٽيگ جيڪو اڳتي پروجيڪٽ-آگاهه ياد لاءِ يادگيري اندراج سان محفوظ ٿئي ٿو."
+      }
+    },
+    "crow_admin": {
+      "description": "Crow جا انتظامي عمل هڪ اوزار ۾. عمل: diagnostics (يادگيري شماريات)، drift (drift جاچ)، prompt (system_prompt.md: read/append/stats)، backup (create/rotate/list/recover)، evolve (prompt تبديلين جو تجويز)، project_info (پروجيڪٽ انسٽانس فهرست/ٺاهڻ).",
+      "parameters": {
+        "action": "ڪهڙو انتظامي عمل: diagnostics، drift، prompt، backup، evolve يا project_info.",
+        "args": "چونڊيل عمل ڏانهن موڪليل عمل-مخصوص arguments آبجڪٽ."
+      }
+    }
+  },
+
+  "errors": {
+    "unknown_tool": "اڻڄاتل اوزار: {name}",
+    "unknown_prompt": "اڻڄاتل prompt: {name}",
+    "unknown_action": "اڻڄاتل {context} عمل: {action}",
+    "project_name_required": "create عمل لاءِ project_name گهربل آهي"
+  },
+
+  "recall_messages": {
+    "faint_bias": "Crow {register} بائيس کي ڌنڌلو ياد ڪري ٿي. اڃا ٿوريون يادگيريون محفوظ ٿيل آهن.",
+    "unknown_register": "اڻڄاتل رجسٽر: {register}"
+  },
+
+  "ingest_messages": {
+    "status_ingested": "محفوظ ٿيو",
+    "unknown_register": "اڻڄاتل رجسٽر: {register}"
+  },
+
+  "evolve_messages": {
+    "no_patterns": "اڃا تائين شمارياتي طور اهم نمونا نه مليا آهن."
+  },
+
+  "drift_messages": {
+    "healthy": "يادگيري جو اعتماد صحتمند آهي.",
+    "confused": "Crow جي يادگيري مونجهاري ۾ لڳي ٿي. تازا ڪم تمام نوان ٿي سگهن ٿا يا يادگيري ڀريل آهي. اسپيڪٽرل ريسيٽ يا آرڪائيو ڪرڻ تي غور ڪريو."
+  },
+
+  "cli": {
+    "stdio_start": "Crow Memory MCP سرور stdio تي هلي رهيو آهي",
+    "sse_start": "Crow Memory MCP SSE سرور http://{host}:{port}/sse تي ٻڌي رهيو آهي",
+    "http_start": "Crow Memory MCP Streamable HTTP سرور http://{host}:{port}/ تي ٻڌي رهيو آهي",
+    "dual_start_sse": "Crow Memory MCP SSE سرور http://{host}:{sse_port}/sse تي ٻڌي رهيو آهي",
+    "dual_start_http": "Crow Memory MCP Streamable HTTP سرور http://{host}:{http_port}/ تي ٻڌي رهيو آهي"
+  },
+
+  "installer": {
+    "banner_title": "Zoo Code لاءِ Crow Memory انسٽالر",
+    "step_1_install_deps": "Python انحصار انسٽال پيا وڃن",
+    "step_2_init_crow": "crow.bin شروع پيو ڪيو وڃي",
+    "step_3_vscode_tasks": ".vscode/tasks.json ٺاهيو پيو وڃي (فولڊر کولڻ تي SSE پاڻمرادو شروع)",
+    "step_4_custom_mode": "Zoo Code پاڻمرادو فعال ٿيڻ وارو موڊ ٺاهيو پيو وڃي",
+    "step_5_start_server": "Crow SSE سرور شروع ڪيو پيو وڃي + پاڻمرادو شروعات",
+    "step_done": "ڪم پورو.",
+    "complete_title": "Crow Memory جي انسٽاليشن مڪمل ٿي وئي!",
+    "sse_running": "SSE سرور http://127.0.0.1:9020/sse تي هلي رهيو آهي",
+    "next_steps_label": "اڳيون قدم:",
+    "next_step_1": "1. Zoo Code ٻيهر شروع ڪريو",
+    "next_step_2": "2. موڊ \"Orchestrator + Crow\" تي تبديل ڪريو",
+    "next_step_3": "3. Crow پاڻمرادو فعال ٿي وڃي ٿي — دستي سيٽ اپ جي ضرورت ناهي",
+    "next_step_4": "4. Task Scheduler ذريعي Windows سان گڏ Crow سرور پاڻمرادو شروع ٿئي ٿو"
+  },
+
+  "system_prompt": {
+    "header": "# Crow Memory — سسٽم پرامپٽ اصول",
+    "subtitle": "> اهي اصول Crow طرفان اڀاريا ويا ۽ استعمال ڪندڙ طرفان منظور ٿيا.\n> اهي شمارياتي طور اهم ڪوڊنگ بائيسن جي نمائندگي ڪن ٿا.\n> دستي طور ترميم نه ڪريو — Crow MCP evolve اوزار استعمال ڪريو.",
+    "managed_by": "<!-- هي فائل crow_mcp_server.py طرفان سنڀالي وڃي ٿي -->",
+    "default_rules": [
+      "RULE: هر جواب کان اڳ crow_recall(domain=\"all\") ڪال ڪري استعمال ڪندڙ جي ڪوڊنگ اسٽائل، بگ وجدان، آرڪيٽيڪچر ترجيح، ذاتي پسند، فلسفو ۽ موجوده حوالي لاءِ سڀ 8 رجسٽر (style, bug, arch, context, life_pref, life_avoid, life_phil, life_context) ڳوليو. موٽيل اشارا پنهنجي جواب ۾ ظاهر ڪريو.",
+      "RULE: هر جواب کان پوءِ استعمال ڪندڙ جي ظاهر ڪيل ترجيحن، فلسفي، سڌارن ۽ حوالي کي crow_ingest ذريعي محفوظ ڪريو. استعمال ڪندڙ جي \"هي ياد رکو\" چوڻ جي انتظار کان سواءِ مناسب register ۽ polarity پاڻ طئي ڪريو. ڪوڊ جي ڪم کان پوءِ crow_ingest_from_build ذريعي build نتيجن جو پاڻمرادو جائزو وٺو.",
+      "RULE: دستاويزن جي ترميم، git ڪمن يا ترتيب جي تبديلين جهڙن غير ڪوڊنگ ڪمن لاءِ به recall+ingest اصول نه ڇڏيو. هميشه لاڳو ڪريو."
+    ]
+  }
+}

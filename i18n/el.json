@@ -3,153 +3,117 @@
     "locale": "el",
     "language_name": "Ελληνικά",
     "version": "1.0.0",
-    "last_updated": "2026-05-29"
+    "last_updated": "2026-11-24"
   },
+
   "server": {
-    "instructions": "Crow Memory — Εξωτερική συναπτική μνήμη για πράκτορες κωδικοποίησης AI. Αποθηκεύει στυλ κωδικοποίησης, διαίσθηση σφαλμάτων και αρχιτεκτονικές προτιμήσεις στο crow.bin.",
+    "instructions": "Crow Memory — Εξωτερική συναπτική μνήμη για πράκτορες κωδικοποίησης AI. Αποθηκεύει το στυλ κωδικοποίησης, τη διαίσθηση σφαλμάτων και τις αρχιτεκτονικές προτιμήσεις σας ως συμπιεσμένους πίνακες βαρών στο crow.bin.",
+
     "prompts": {
       "crow_memory_bias": {
-        "description": "Αυτόματα ενέσιμο μπλοκ προκατάληψης Crow Memory. Περιέχει το στυλ κωδικοποίησης, τις προτιμήσεις και τους εξελιγμένους κανόνες.",
-        "body_template": "=== Crow Memory — Automaticky vložený kontext ===\n\n[Trvalá evoluovaná pravidla]\n{rules}\n\n[Nedávné paměťové tipy]\n{bias}\n\nVýše uvedený kontext představuje vaše naučené preference a styl. Použijte jej k vedení svých odpovědí."
+        "description": "Αυτόματα εγχεόμενο μπλοκ προκατάληψης Crow Memory. Περιέχει το στυλ κωδικοποίησης, τις προτιμήσεις και τους εξελιγμένους κανόνες σας. Ο κεντρικός κώδικας πρέπει να το φορτώσει στην έναρξη της συνεδρίας.",
+        "body_template": "=== Crow Memory — Αυτόματα εγχεόμενο πλαίσιο ===\n\n[Μόνιμοι εξελιγμένοι κανόνες]\n{rules}\n\n[Πρόσφατες ενδείξεις μνήμης]\n{bias}\n\nΤο παραπάνω πλαίσιο αντιπροσωπεύει τις εκμαθεμένες προτιμήσεις και το στυλ σας. Χρησιμοποιήστε το για να καθοδηγείτε τις απαντήσεις σας. Για να μάθετε περισσότερα, καλέστε το crow_recall με συγκεκριμένο ερώτημα και register (style/bug/arch/context/life_pref/life_avoid/life_phil/life_context)."
       },
       "crow_evolved_rules": {
-        "description": "Trvalá evoluovaná pravidla z system_prompt.md Crow. Statisticky významné vzory schválené přes HITL.",
+        "description": "Permanent evolved rules from Crow's system_prompt.md: permanent rules (human-promoted via CROW_ADMIN_TOKEN) plus unreviewed model suggestions.",
         "body_template": "{prompt}"
       }
     }
   },
+
   "tools": {
     "crow_recall": {
-      "description": "Vyvolá uživatelský styl kódování, intuici chyb, architektonické preference nebo osobní kontext ze synaptické paměti Crow. Volejte PŘED každou odpovědí. Výchozí dotazuje všech 8 registrů.",
+      "description": "Ανακαλεί το στυλ κωδικοποίησης, τη διαίσθηση σφαλμάτων, τις αρχιτεκτονικές προτιμήσεις ή το προσωπικό πλαίσιο του χρήστη από τη συναπτική μνήμη του Crow. Καλέστε το ΠΡΙΝ από κάθε απάντηση για ευθυγράμμιση με την επαγωγική προκατάληψη του χρήστη. Από προεπιλογή (register=all ή παραλειπόμενο, domain=all) αναζητά και τα 8 register και συγχωνεύει τα αποτελέσματα καθολικά κατά αποτελεσματική ομοιότητα.",
       "parameters": {
-        "query": "Popis aktuálního úkolu přirozeným jazykem.",
-        "register": "Vyberte registr. 'all' dotazuje všechny (stejné jako domain=all). Code: style/bug/arch/context. Život: life_pref/life_avoid/life_phil/life_context.",
-        "top_k": "Počet tipů (1-3).",
-        "domain": "Zkratka filtru domény. 'code' = style/bug/arch/context, 'life' = life_pref/life_avoid/life_phil/life_context, 'all' = všech 8 registrů (výchozí)."
+        "query": "Περιγραφή της τρέχουσας εργασίας σε φυσική γλώσσα.",
+        "register": "Ποιο register. Χρησιμοποιήστε 'all' (ή παραλείψτε το) για αναζήτηση σε κάθε register της επιλεγμένης τομέα. Code: style/bug/arch/context. Life: life_pref/life_avoid/life_phil/life_context.",
+        "domain": "Φίλτρο τομέα που χρησιμοποιείται όταν το register είναι 'all' ή παραλειπόμενο. 'code' = style/bug/arch/context, 'life' = life_pref/life_avoid/life_phil/life_context, 'all' = και τα 8 register (προεπιλογή).",
+        "top_k": "Αριθμός ενδείξεων (1-5).",
+        "format": "Μορφή εξόδου. Το 'hint' επιστρέφει ενδείξεις JSON (προεπιλογή)· το 'bias_block' επιστρέφει το μπλοκ κειμένου [User Bias] για έγχυση στο σύστημα προτροπών.",
+        "project": "Ετικέτα έργου που χρησιμοποιείται για ενίσχυση ενδείξεων του ίδιου έργου και φιλτράρισμα/πέναλτι σε ξένα έργα.",
+        "strict_project": "Όταν είναι true, αφαιρεί εντελώς από τα αποτελέσματα τις ενδείξεις άλλων έργων."
       }
     },
     "crow_ingest": {
-      "description": "Vstřebá zkušenost s kódováním do dlouhodobé synaptické paměti Crow. Volejte PO výsledcích sestavení/testů nebo explicitní zpětné vazbě.",
+      "description": "Εισάγει μια εμπειρία κωδικοποίησης στη μακροπρόθεσμη συναπτική μνήμη του Crow. Καλέστε το ΜΕΤΑ από αποτελέσματα build/δοκιμών ή ρητή ανατροφοδότηση του χρήστη. Παρέχετε είτε ρητή πολικότητα είτε exit_code του build για αυτόματη αντιστοίχιση πολικότητας. Το περιεχόμενο καθαρίζεται πρώτα· δεδομένα που είναι καθαρός θόρυβος απορρίπτονται χωρίς να αγγίξουν τη μνήμη.",
       "parameters": {
-        "key": "Abstraktní popis situace.",
-        "value": "Použitý vzor kódu nebo rozhodnutí.",
-        "polarity": "Síla zesílení [-2.0, 2.0].",
-        "register": "Cílový registr (style/bug/arch/context/life_pref/life_avoid/life_phil/life_context)."
+        "key": "Αφηρημένη περιγραφή της κατάστασης.",
+        "value": "Εφαρμοσμένο μοτίβο κώδικα ή απόφαση.",
+        "register": "Register αποθήκευσης (style/bug/arch/context/life_pref/life_avoid/life_phil/life_context).",
+        "polarity": "Ισχύς ενίσχυσης [-2.0, 2.0]. Προαιρετική αν δοθεί exit_code· η ρητή πολικότητα επικρατεί όταν δίνονται και τα δύο.",
+        "exit_code": "Κωδικός εξόδου build (0 = επιτυχία). Αντιστοιχεί αυτόματα σε πολικότητα (+1.5/+0.5 σε επιτυχία, -0.5/-1.0 σε αποτυχία), εκτός αν δοθεί ρητή πολικότητα.",
+        "user_edited": "Αν ο χρήστης επεξεργάστηκε την έξοδο της AI. Προσαρμόζει την πολικότητα που προκύπτει από το exit_code.",
+        "project": "Ετικέτα έργου που αποθηκεύεται με την εγγραφή μνήμης για μετέπειτα ανάκληση με επίγνωση έργου."
       }
     },
-    "crow_evolve_propose": {
-      "description": "Analyzuje nedávné vzory paměti a navrhuje trvalou mutaci systémového promptu. Vrací pouze návrh; k přijetí je nutné lidské schválení.",
+    "crow_admin": {
+      "description": "Διαχειριστικές λειτουργίες του Crow σε ένα εργαλείο. Ενέργειες: diagnostics (στατιστικά μνήμης), drift (έλεγχος drift), prompt (ανάγνωση/προσάρτηση/στατιστικά του system_prompt.md), backup (δημιουργία/περιστροφή/λίστα/ανάκτηση), evolve (πρόταση μεταλλάξεων προτροπών), project_info (λίστα/δημιουργία στιγμιότυπων έργου).",
       "parameters": {
-        "min_confidence": "Minimální práh spolehlivosti (výchozí: 0,85).",
-        "min_occurrences": "Minimální počet výskytů (výchozí: 3)."
-      }
-    },
-    "crow_diagnostics": {
-      "description": "Vrací diagnostiku stavu paměti Crow (normy registrů, řídkost, počet aktualizací, velikost banky hodnot, statistiky promptu).",
-      "parameters": {}
-    },
-    "crow_check_drift": {
-      "description": "Kontroluje, zda nedávná vyvolání vykazují známky paměťového driftu.",
-      "parameters": {
-        "threshold": "Práh spolehlivosti pro detekci nízké spolehlivosti (výchozí: 0,5).",
-        "min_low_confidence_count": "Min. počet záznamů s nízkou spolehlivostí pro spuštění driftu (výchozí: 5)."
-      }
-    },
-    "crow_ingest_from_build": {
-      "description": "Automaticky určí polaritu z kódu ukončení sestavení a stavu úprav uživatele, poté vstřebá zkušenost. Použijte po npm run build.",
-      "parameters": {
-        "key": "Abstraktní popis.",
-        "value": "Použitý vzor kódu.",
-        "exit_code": "Kód ukončení sestavení (0 = úspěch).",
-        "user_edited": "Zda uživatel upravil výstup AI.",
-        "register": "Cílový registr (style/bug/arch/context, výchozí: arch).",
-        "explicit_polarity": "Přepíše automatické určení polarity."
-      }
-    },
-    "crow_get_user_bias": {
-      "description": "Generuje blok [User Bias] pro vložení do systémového promptu. Dotazuje všechny registry a formátuje tipy pro přidání na začátek promptu.",
-      "parameters": {
-        "query": "Popis aktuálního úkolu.",
-        "registers": "Registry k dotazování (výchozí: all)."
-      }
-    },
-    "crow_manage_prompt": {
-      "description": "Čtení, přidávání nebo získávání statistik o souboru system_prompt.md. 'read' pro zobrazení, 'append' pro přijetí pravidla, 'stats' pro metriky.",
-      "parameters": {
-        "action": "Akce: read, append nebo stats.",
-        "rule": "Text pravidla (vyžadováno pro append).",
-        "auto_backup": "Automatické vytvoření zálohy před přidáním (výchozí: true)."
-      }
-    },
-    "crow_manage_backup": {
-      "description": "Spravuje zálohy paměti Crow. Vytváření, rotace, výpis nebo obnova z driftu.",
-      "parameters": {
-        "action": "Akce: create, rotate, list nebo recover.",
-        "tag": "Značka zálohy: daily, weekly nebo manual (výchozí: daily).",
-        "max_daily": "Max. denních záloh k uchování (výchozí: 7).",
-        "max_weekly": "Max. týdenních záloh k uchování (výchozí: 4)."
-      }
-    },
-    "crow_project_info": {
-      "description": "Zobrazí nebo vytvoří projektově izolované instance paměti Crow.",
-      "parameters": {
-        "action": "Akce: list nebo create.",
-        "project_name": "Název projektu (vyžadováno pro create)."
+        "action": "Ποια διαχειριστική λειτουργία: diagnostics, drift, prompt, backup, evolve ή project_info.",
+        "args": "Αντικείμενο ορισμάτων ειδικό για την ενέργεια, που περνά στην επιλεγμένη λειτουργία."
       }
     }
   },
+
   "errors": {
-    "unknown_tool": "Neznámý nástroj: {name}",
-    "unknown_prompt": "Neznámý prompt: {name}",
-    "unknown_action": "Neznámá akce {context}: {action}",
-    "project_name_required": "project_name je vyžadováno pro akci create"
+    "unknown_tool": "Άγνωστο εργαλείο: {name}",
+    "unknown_prompt": "Άγνωστη προτροπή: {name}",
+    "unknown_action": "Άγνωστη ενέργεια {context}: {action}",
+    "project_name_required": "Το project_name απαιτείται για την ενέργεια create"
   },
+
   "recall_messages": {
-    "faint_bias": "Crow si matně vybavuje zkreslení {register}. Zatím uloženo málo vzpomínek.",
-    "unknown_register": "Neznámý registr: {register}"
+    "faint_bias": "Το Crow ανακαλεί μια αμυδρή προκατάληψη {register}. Έχουν αποθηκευτεί ακόμη λίγες αναμνήσεις.",
+    "unknown_register": "Άγνωστο register: {register}"
   },
+
   "ingest_messages": {
-    "status_ingested": "vstřebáno",
-    "unknown_register": "Neznámý registr: {register}"
+    "status_ingested": "καταχωρήθηκε",
+    "unknown_register": "Άγνωστο register: {register}"
   },
+
   "evolve_messages": {
-    "no_patterns": "Zatím nebyly detekovány žádné statisticky významné vzory."
+    "no_patterns": "Δεν έχουν ανιχνευθεί ακόμη στατιστικά σημαντικά μοτίβα."
   },
+
   "drift_messages": {
-    "healthy": "Spolehlivost paměti je zdravá.",
-    "confused": "Paměť Crow vypadá zmateně. Nedávné úkoly mohou být příliš nové nebo paměť nasycená. Zvažte spektrální reset nebo archivaci."
+    "healthy": "Η εμπιστοσύνη της μνήμης είναι υγιής.",
+    "confused": "Η μνήμη του Crow φαίνεται μπερδεμένη. Οι πρόσφατες εργασίες μπορεί να είναι πολύ νέες ή η μνήμη κορεσμένη. Εξετάστε φασματική επαναφορά ή αρχειοθέτηση."
   },
+
   "cli": {
-    "stdio_start": "Server MCP Crow Memory běží na stdio",
-    "sse_start": "Server MCP SSE Crow Memory naslouchá na http://{host}:{port}/sse",
-    "http_start": "Server MCP Streamable HTTP Crow Memory naslouchá na http://{host}:{port}/",
-    "dual_start_sse": "Server MCP SSE Crow Memory naslouchá na http://{host}:{sse_port}/sse",
-    "dual_start_http": "Server MCP Streamable HTTP Crow Memory naslouchá na http://{host}:{http_port}/"
+    "stdio_start": "Ο διακομιστής MCP Crow Memory εκτελείται σε stdio",
+    "sse_start": "Ο διακομιστής MCP SSE Crow Memory ακούει στο http://{host}:{port}/sse",
+    "http_start": "Ο διακομιστής MCP Streamable HTTP Crow Memory ακούει στο http://{host}:{port}/",
+    "dual_start_sse": "Ο διακομιστής MCP SSE Crow Memory ακούει στο http://{host}:{sse_port}/sse",
+    "dual_start_http": "Ο διακομιστής MCP Streamable HTTP Crow Memory ακούει στο http://{host}:{http_port}/"
   },
+
   "installer": {
-    "banner_title": "Crow Memory Ελληνικά telepítő",
-    "step_1_install_deps": "Instalace Python závislostí",
-    "step_2_init_crow": "Inicializace crow.bin",
-    "step_4_custom_mode": "Vytváření režimu automatické aktivace Zoo Code",
-    "step_5_start_server": "Spouštění Crow SSE serveru + automatický start",
-    "step_done": "Hotovo.",
-    "complete_title": "Instalace Crow Memory dokončena!",
-    "sse_running": "SSE server běží na http://127.0.0.1:9020/sse",
-    "next_steps_label": "Další kroky:",
-    "next_step_1": "1. Restartujte Zoo Code",
-    "next_step_2": "2. Přepněte režim na \"Orchestrator + Crow\"",
-    "next_step_3": "3. Crow se aktivuje automaticky — není nutné ruční nastavení",
-    "next_step_4": "4. SSE server startuje s Windows (registrován ve spuštění)",
-    "step_3_vscode_tasks": "Vytváření .vscode/tasks.json (automatický start SSE při otevření složky)"
+    "banner_title": "Πρόγραμμα εγκατάστασης Crow Memory για Zoo Code",
+    "step_1_install_deps": "Εγκατάσταση εξαρτήσεων Python",
+    "step_2_init_crow": "Αρχικοποίηση crow.bin",
+    "step_3_vscode_tasks": "Δημιουργία .vscode/tasks.json (αυτόματη εκκίνηση SSE κατά το άνοιγμα φακέλου)",
+    "step_4_custom_mode": "Δημιουργία λειτουργίας αυτόματης ενεργοποίησης Zoo Code",
+    "step_5_start_server": "Εκκίνηση διακομιστή Crow SSE + αυτόματη εκκίνηση",
+    "step_done": "Ολοκληρώθηκε.",
+    "complete_title": "Η εγκατάσταση του Crow Memory ολοκληρώθηκε!",
+    "sse_running": "Ο διακομιστής SSE εκτελείται στο http://127.0.0.1:9020/sse",
+    "next_steps_label": "Επόμενα βήματα:",
+    "next_step_1": "1. Επανεκκινήστε το Zoo Code",
+    "next_step_2": "2. Αλλάξτε τη λειτουργία σε \"Orchestrator + Crow\"",
+    "next_step_3": "3. Το Crow ενεργοποιείται αυτόματα — δεν απαιτείται χειροκίνητη ρύθμιση",
+    "next_step_4": "4. Ο διακομιστής Crow ξεκινά αυτόματα με τα Windows μέσω Task Scheduler"
   },
+
   "system_prompt": {
-    "header": "# Crow Memory — Pravidla systémového promptu",
-    "subtitle": "> Tato pravidla byla evoluována Crow a schválena uživatelem.\n> Představují statisticky významná zkreslení kódování.\n> Neupravujte ručně — používejte nástroje evoluce Crow MCP.",
-    "managed_by": "<!-- Tento soubor je spravován crow_mcp_server.py -->",
+    "header": "# Crow Memory — Κανόνες συστήματος προτροπών",
+    "subtitle": "> Αυτοί οι κανόνες εξελίχθηκαν από το Crow και εγκρίθηκαν από τον χρήστη.\n> Αντιπροσωπεύουν στατιστικά σημαντικές προκαταλήψεις κωδικοποίησης.\n> Μην τους επεξεργάζεστε χειροκίνητα — χρησιμοποιήστε τα εργαλεία εξέλιξης Crow MCP.",
+    "managed_by": "<!-- Αυτό το αρχείο διαχειρίζεται από το crow_mcp_server.py -->",
     "default_rules": [
-      "RULE: Před každou odpovědí zavolejte crow_recall(domain=\"all\") pro dotaz na všech 8 registrů (style, bug, arch, context, life_pref, life_avoid, life_phil, life_context) ohledně stylu kódování, intuice chyb, architektonických preferencí, osobního vkusu, filozofie a aktuálního kontextu uživatele. Odražte vrácené tipy ve své odpovědi.",
-      "RULE: Po každé odpovědi vstřebejte, co uživatel odhalil — preference, filozofii, opravy, kontext — přes crow_ingest. Sami určete vhodný registr a polaritu, aniž byste čekali, až uživatel řekne \"zapamatuj si to\". Po práci s kódem automaticky vyhodnoťte výsledky sestavení přes crow_ingest_from_build.",
-      "RULE: Nepřeskakujte pravidla recall+ingest ani u úkolů nesouvisejících s kódováním, jako je úprava dokumentů, git operace nebo změny konfigurace. Vždy je provádějte."
+      "RULE: Πριν από κάθε απάντηση, καλέστε crow_recall(domain=\"all\") για αναζήτηση και στα 8 register (style, bug, arch, context, life_pref, life_avoid, life_phil, life_context) για το στυλ κωδικοποίησης, τη διαίσθηση σφαλμάτων, τις αρχιτεκτονικές προτιμήσεις, το προσωπικό γούστο, τη φιλοσοφία και το τρέχον πλαίσιο του χρήστη. Αντανακλάστε τις επιστρεφόμενες ενδείξεις στην απάντησή σας.",
+      "RULE: Μετά από κάθε απάντηση, καταχωρήστε ό,τι αποκάλυψε ο χρήστης — προτιμήσεις, φιλοσοφία, διορθώσεις, πλαίσιο — μέσω crow_ingest. Κρίνετε μόνοι σας το κατάλληλο register και την κατάλληλη πολικότητα χωρίς να περιμένετε ο χρήστης να πει \"θυμήσου το\". Μετά από δουλειά με κώδικα, αξιολογήστε αυτόματα τα αποτελέσματα build μέσω crow_ingest_from_build.",
+      "RULE: Μην παραλείπετε τους κανόνες recall+ingest ακόμη και για μη κωδικοποιητικές εργασίες όπως επεξεργασία εγγράφων, λειτουργίες git ή αλλαγές ρυθμίσεων. Εκτελέστε τους πάντα."
     ]
   }
 }

@@ -1,0 +1,119 @@
+{
+  "_meta": {
+    "locale": "co",
+    "language_name": "Corsican",
+    "version": "1.0.0",
+    "last_updated": "2026-11-24"
+  },
+
+  "server": {
+    "instructions": "Crow Memory — memoria sinaptica esterna per l'agenti AI di prugrammazione. Conserva u vostru stilu di prugrammazione, l'intuizione di i bug è e preferenze architetturali cum'è matrici di pesu cumpressi in crow.bin.",
+
+    "prompts": {
+      "crow_memory_bias": {
+        "description": "Bloccu di bias Crow Memory injectatu automaticamente. Cuntene u vostru stilu di prugrammazione, e preferenze è e regule evolute. L'ospite deve carricallu à l'iniziu di a sessione.",
+        "body_template": "=== Crow Memory — Cuntestu injectatu automaticamente ===\n\n[Regule eterne evolute]\n{rules}\n\n[Indizii recenti di a memoria]\n{bias}\n\nU cuntestu quì sopra rapprisenta e vostre preferenze è u vostru stilu amparati. Adupratelu per guidà e vostre risposte. Per sapene di più, chjamate crow_recall cù una dumanda specifica è un registru (style/bug/arch/context/life_pref/life_avoid/life_phil/life_context)."
+      },
+      "crow_evolved_rules": {
+        "description": "Permanent evolved rules from Crow's system_prompt.md: permanent rules (human-promoted via CROW_ADMIN_TOKEN) plus unreviewed model suggestions.",
+        "body_template": "{prompt}"
+      }
+    }
+  },
+
+  "tools": {
+    "crow_recall": {
+      "description": "Ricupera u stilu di prugrammazione specificu à l'utilizatore, l'intuizione di i bug, a preferenza architetturale o u cuntestu persunale da a memoria sinaptica Crow. Chjamatelu PRIMA di ogni risposta per allineà vi à u bias induttivu di l'utilizatore. Per difettu (register=all o omessu, domain=all), interroga tutti l'8 registri è combina i risultati à livellu glubale sicondu a similarità effettiva.",
+      "parameters": {
+        "query": "Descrizione in lingua naturale di u compitu attuale.",
+        "register": "Quale registru. Aduprate 'all' (o omettite) per interrogà tutti i registri in u duminiu sceltu. Code: style/bug/arch/context. Life: life_pref/life_avoid/life_phil/life_context.",
+        "domain": "Filtru di duminiu adupratu quandu register hè 'all' o omessu. 'code' = style/bug/arch/context, 'life' = life_pref/life_avoid/life_phil/life_context, 'all' = tutti l'8 registri (difettu).",
+        "top_k": "Numaru d'indizii (1-5).",
+        "format": "Formatu di sortita. 'hint' rende indizii JSON (difettu); 'bias_block' rende u bloccu di testu [User Bias] per l'iniezione in u prompt di sistema.",
+        "project": "Etichetta di prughjettu aduprata per rinfurzà l'indizii di u listessu prughjettu è filtrà o penalizà quelli di altri prughjetti.",
+        "strict_project": "S'ellu hè veru, esclude di manera rigurosa l'indizii di altri prughjetti da i risultati."
+      }
+    },
+    "crow_ingest": {
+      "description": "Ingerisce un'esperienza di prugrammazione in a memoria sinaptica à longu termine di Crow. Chjamatelu DOPU à i risultati di build o di test, o à un feedback esplicitu di l'utilizatore. Furnite o una polarità esplicita o un exit_code di build per una mappatura automatica di a polarità. U cuntenutu hè prima mundatu; un input di puro rumore hè rifiutatu senza tuccà a memoria.",
+      "parameters": {
+        "key": "Descrizione astratta di a situazione.",
+        "value": "Mudellu di codice o decisione applicata.",
+        "register": "Registru induve conservà (style/bug/arch/context/life_pref/life_avoid/life_phil/life_context).",
+        "polarity": "Forza di rinfurzamentu [-2.0, 2.0]. Facultativu s'ellu hè datu exit_code; a polarità esplicita vince quandu i dui sò furniti.",
+        "exit_code": "Codice di sortita di u build (0 = successu). Si cartografia automaticamente in polarità (+1.5/+0.5 in casu di successu, -0.5/-1.0 in casu di fallimentu) salvu ch'ellu sia data una polarità esplicita.",
+        "user_edited": "S'ellu l'utilizatore hà mudificatu a sortita di l'AI. Aggiusta a polarità derivata da exit_code.",
+        "project": "Etichetta di prughjettu cunservata cù l'entrata di memoria per un ricuperu appughjatu nant'à u prughjettu più tardi."
+      }
+    },
+    "crow_admin": {
+      "description": "Operazioni amministrative di Crow in un solu strumentu. Azzioni: diagnostics (statistiche di a memoria), drift (verifica di a deriva), prompt (lettura/aghjunta/statistiche di system_prompt.md), backup (creazione/rotazione/lista/ricuperu), evolve (prupone mutazioni di u prompt), project_info (lista/creazione d'istanze di prughjettu).",
+      "parameters": {
+        "action": "Quale operazione amministrativa: diagnostics, drift, prompt, backup, evolve, o project_info.",
+        "args": "Oggettu d'argumenti specificu à l'azzione passatu à l'operazione scelta."
+      }
+    }
+  },
+
+  "errors": {
+    "unknown_tool": "Strumentu scunnisciutu: {name}",
+    "unknown_prompt": "Prompt scunnisciutu: {name}",
+    "unknown_action": "Azzione {context} scunnisciuta: {action}",
+    "project_name_required": "project_name hè necessariu per l'azzione create"
+  },
+
+  "recall_messages": {
+    "faint_bias": "Crow ricupera un debule bias {register}. Poche memorie sò cunservate fin'à avà.",
+    "unknown_register": "Registru scunnisciutu: {register}"
+  },
+
+  "ingest_messages": {
+    "status_ingested": "ingeritu",
+    "unknown_register": "Registru scunnisciutu: {register}"
+  },
+
+  "evolve_messages": {
+    "no_patterns": "Nessun mudellu statisticamente significativu hè statu rilevatu ancora."
+  },
+
+  "drift_messages": {
+    "healthy": "A cunfidenza di a memoria hè sana.",
+    "confused": "A memoria di Crow pare cunfusa. I compiti recenti ponu esse troppu novi o a memoria hè saturata. Cunsiderate un reset spettrale o un archiviu."
+  },
+
+  "cli": {
+    "stdio_start": "U servitore MCP Crow Memory funziona nant'à stdio",
+    "sse_start": "U servitore MCP SSE Crow Memory ascolta nant'à http://{host}:{port}/sse",
+    "http_start": "U servitore MCP Streamable HTTP Crow Memory ascolta nant'à http://{host}:{port}/",
+    "dual_start_sse": "U servitore MCP SSE Crow Memory ascolta nant'à http://{host}:{sse_port}/sse",
+    "dual_start_http": "U servitore MCP Streamable HTTP Crow Memory ascolta nant'à http://{host}:{http_port}/"
+  },
+
+  "installer": {
+    "banner_title": "Installadore di Crow Memory per Zoo Code",
+    "step_1_install_deps": "Installazione di e dipendenze Python",
+    "step_2_init_crow": "Inizializazione di crow.bin",
+    "step_3_vscode_tasks": "Creazione di .vscode/tasks.json (avviu automaticu di SSE à l'apertura di a cartulare)",
+    "step_4_custom_mode": "Creazione di u modu d'attivazione automatica di Zoo Code",
+    "step_5_start_server": "Avviu di u servitore Crow SSE + avviu automaticu",
+    "step_done": "Fattu.",
+    "complete_title": "L'installazione di Crow Memory hè compia!",
+    "sse_running": "U servitore SSE funziona nant'à http://127.0.0.1:9020/sse",
+    "next_steps_label": "Passi successivi:",
+    "next_step_1": "1. Riavviate Zoo Code",
+    "next_step_2": "2. Cambiate u modu in «Orchestrator + Crow»",
+    "next_step_3": "3. Crow s'attiva automaticamente — nisuna cunfigurazione manuale necessaria",
+    "next_step_4": "4. U servitore Crow s'avvia automaticamente cù Windows via Task Scheduler"
+  },
+
+  "system_prompt": {
+    "header": "# Crow Memory — Regule di u prompt di sistema",
+    "subtitle": "> Queste regule sò state evolute da Crow è appruvate da l'utilizatore.\n> Rapprisentanu bias di prugrammazione statisticamente significativi.\n> Ùn mudificate micca manualmente — aduprate l'arnesi evolve di Crow MCP.",
+    "managed_by": "<!-- Stu schedariu hè gestitu da crow_mcp_server.py -->",
+    "default_rules": [
+      "RULE: Prima di ogni risposta, chjamate crow_recall(domain=\"all\") per interrogà tutti l'8 registri (style, bug, arch, context, life_pref, life_avoid, life_phil, life_context) per u stilu di prugrammazione, l'intuizione di i bug, e preferenze architetturali, u gustu persunale, a filusufia è u cuntestu attuale di l'utilizatore. Riflettete l'indizii riturnati in a vostra risposta.",
+      "RULE: Dopu ogni risposta, ingerite ciò chì l'utilizatore hà rivelatu — preferenze, filusufia, correzioni, cuntestu — via crow_ingest. Ghjudicate voi stessi u registru è a polarità adatti senza aspettà chì l'utilizatore dica «arricordati questu». Dopu u travagliu nant'à u codice, valutate automaticamente i risultati di u build via crow_ingest_from_build.",
+      "RULE: Ùn saltate micca e regule recall+ingest mancu per i compiti chì ùn sò micca di prugrammazione, cum'è a mudifica di documenti, l'operazioni git o i cambiamenti di cunfigurazione. Eseguitele sempre."
+    ]
+  }
+}

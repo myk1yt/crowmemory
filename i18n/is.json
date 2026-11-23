@@ -1,0 +1,119 @@
+{
+  "_meta": {
+    "locale": "is",
+    "language_name": "Icelandic",
+    "version": "1.0.0",
+    "last_updated": "2026-11-24"
+  },
+
+  "server": {
+    "instructions": "Crow Memory \u2014 Ytra taugaminni fyrir AI-kóðunareigendur. Geymir kóðunarstíl þinn, innsæi um villur og arkitektúrval þitt sem þjöppuð þyngdarfylki í crow.bin.",
+
+    "prompts": {
+      "crow_memory_bias": {
+        "description": "Sjálfvirkt innspýttur hlutdrægniblokkur Crow Memory. Inniheldur kóðunarstíl þinn, val og þróaðar reglur. Hýsillinn ætti að hlaða þessu við upphaf lotu.",
+        "body_template": "=== Crow Memory \u2014 Sjálfvirkt innspýtt samhengi ===\n\n[Varanlegar þróaðar reglur]\n{rules}\n\n[Nýlegar minnisvísbendingar]\n{bias}\n\nSamhengið hér að ofan táknar lærða val þín og stíl. Notaðu það til að leiðbeina svörum þínum. Til að læra meira skaltu kalla crow_recall með skýrri fyrirspurn og register (style/bug/arch/context/life_pref/life_avoid/life_phil/life_context)."
+      },
+      "crow_evolved_rules": {
+        "description": "Permanent evolved rules from Crow's system_prompt.md: permanent rules (human-promoted via CROW_ADMIN_TOKEN) plus unreviewed model suggestions.",
+        "body_template": "{prompt}"
+      }
+    }
+  },
+
+  "tools": {
+    "crow_recall": {
+      "description": "Nær í kóðunarstíl, innsæi um villur, arkitektúrval eða persónulegt samhengi notandans úr taugaminni Crow. Kallaðu þetta fyrir hvert svar til að miða við ályktunarhlutdrægni notandans. Sjálfgefið (register=all eða sleppt, domain=all) spyr í öllum 8 skrám og sameinar niðurstöður á heimsvísu eftir virkri líkindi.",
+      "parameters": {
+        "query": "Náttúruleg lýsing á núverandi verkefni.",
+        "register": "Hvaða skrá. Notaðu 'all' (eða sleppa) til að spyrja í hverri skrá í völdu léninu. Code: style/bug/arch/context. Life: life_pref/life_avoid/life_phil/life_context.",
+        "domain": "Lénssía sem notuð er þegar register er 'all' eða sleppt. 'code' = style/bug/arch/context, 'life' = life_pref/life_avoid/life_phil/life_context, 'all' = öll 8 skrárnar (sjálfgefið).",
+        "top_k": "Fjöldi vísbendinga (1-5).",
+        "format": "Úttaksform. 'hint' skilar JSON vísbendingum (sjálfgefið); 'bias_block' skilar [User Bias] textablokk fyrir innspýtingu í kerfiskvaðningu.",
+        "project": "Verkefnamerki sem notað er til að efla vísbendingar úr sama verkefni og sía/refsa fyrir vísbendingar úr öðrum verkefnum.",
+        "strict_project": "Þegar true, sía harðlega vísbendingum úr öðrum verkefnum út úr niðurstöðunum."
+      }
+    },
+    "crow_ingest": {
+      "description": "Skráir kóðunarreynslu í langtímataugaminni Crow. Kallaðu eftir byggingar- eða prófunarniðurstöðum eða skýrri endurgjöf notanda. Gefðu annaðhvort skýra polarity eða byggingar exit_code fyrir sjálfvirka polarity-vörpun. Efnið er hreinsað fyrst; hreint hávaðainntak er hafnað án að snerta minnið.",
+      "parameters": {
+        "key": "Óhlutbundin lýsing á aðstæðunum.",
+        "value": "Kóðunarmynstur eða ákvörðun sem beitt var.",
+        "register": "Skrá til að geyma í (style/bug/arch/context/life_pref/life_avoid/life_phil/life_context).",
+        "polarity": "Styrkur styrkingar [-2.0, 2.0]. Valfrjálst ef exit_code er gefið; skýr polarity gildir þegar bæði eru gefin.",
+        "exit_code": "Byggingarútgöngukóði (0 = velgengni). Varpar sjálfkrafa í polarity (+1.5/+0.5 við velgengni, -0.5/-1.0 við mistök) nema skýr polarity sé gefin.",
+        "user_edited": "Hvort notandinn breytti úttaki AI. Stillir polarity sem fæst úr exit_code.",
+        "project": "Verkefnamerki geymt með minnisfærslunni fyrir verkefnameðvitaða endurheimt síðar."
+      }
+    },
+    "crow_admin": {
+      "description": "Stjórnunaraðgerðir Crow í einu tóli. Aðgerðir: diagnostics (minnistölfræði), drift (fráviksprófun), prompt (lesa/bæta við/tölfræði system_prompt.md), backup (búa til/snúa/lýsa/endurheimta), evolve (leggja til kvaðningarbreytingar), project_info (lista/búa til verkefnatilvik).",
+      "parameters": {
+        "action": "Hvaða stjórnunaraðgerð: diagnostics, drift, prompt, backup, evolve eða project_info.",
+        "args": "Aðgerðarsértækt hlut af rökum sem sent er til völdu aðgerðarinnar."
+      }
+    }
+  },
+
+  "errors": {
+    "unknown_tool": "Óþekkt tól: {name}",
+    "unknown_prompt": "Óþekkt kvaðning: {name}",
+    "unknown_action": "Óþekkt {context} aðgerð: {action}",
+    "project_name_required": "project_name er nauðsynlegt fyrir create aðgerð"
+  },
+
+  "recall_messages": {
+    "faint_bias": "Crow rifjar upp daufa {register} hlutdrægni. Fá minni geymd ennþá.",
+    "unknown_register": "Óþekkt skrá: {register}"
+  },
+
+  "ingest_messages": {
+    "status_ingested": "skráð",
+    "unknown_register": "Óþekkt skrá: {register}"
+  },
+
+  "evolve_messages": {
+    "no_patterns": "Engin tölfræðilega marktæk mynstur greind ennþá."
+  },
+
+  "drift_messages": {
+    "healthy": "Minnisöryggi er heilbrigt.",
+    "confused": "Minni Crow virðist ruglað. Nýleg verkefni gætu verið of nýstárleg eða minnið er mettað. Íhugaðu litrófsendurstillingu eða arkivingu."
+  },
+
+  "cli": {
+    "stdio_start": "Crow Memory MCP þjónn keyrir á stdio",
+    "sse_start": "Crow Memory MCP SSE þjónn hlustar á http://{host}:{port}/sse",
+    "http_start": "Crow Memory MCP Streamable HTTP þjónn hlustar á http://{host}:{port}/",
+    "dual_start_sse": "Crow Memory MCP SSE þjónn hlustar á http://{host}:{sse_port}/sse",
+    "dual_start_http": "Crow Memory MCP Streamable HTTP þjónn hlustar á http://{host}:{http_port}/"
+  },
+
+  "installer": {
+    "banner_title": "Crow Memory uppsetningarforrit fyrir Zoo Code",
+    "step_1_install_deps": "Setur upp Python-háðar pakka",
+    "step_2_init_crow": "Frumstillir crow.bin",
+    "step_3_vscode_tasks": "Býr til .vscode/tasks.json (sjálfvirk ræsing SSE þegar mappa er opnuð)",
+    "step_4_custom_mode": "Býr til sjálfvirknistillingu Zoo Code",
+    "step_5_start_server": "Ræsir Crow SSE þjón og sjálfvirka ræsingu",
+    "step_done": "Lokið.",
+    "complete_title": "Uppsetningu Crow Memory er lokið!",
+    "sse_running": "SSE þjónn keyrir á http://127.0.0.1:9020/sse",
+    "next_steps_label": "Næstu skref:",
+    "next_step_1": "1. Endurræstu Zoo Code",
+    "next_step_2": "2. Skiptu um ham í \"Orchestrator + Crow\"",
+    "next_step_3": "3. Crow virkjast sjálfkrafa \u2014 engin handvirk uppsetning þörf",
+    "next_step_4": "4. Crow þjónn ræsist sjálfkrafa með Windows í gegnum Task Scheduler"
+  },
+
+  "system_prompt": {
+    "header": "# Crow Memory \u2014 Reglur kerfiskvaðningar",
+    "subtitle": "> Þessar reglur voru þróaðar af Crow og samþykktar af notandanum.\n> Þær tákna tölfræðilega marktæka kóðunarhlutdrægni.\n> Ekki breyta handvirkt \u2014 notaðu Crow MCP evolve-tólin.",
+    "managed_by": "<!-- Þessari skrá stýrir crow_mcp_server.py -->",
+    "default_rules": [
+      "RULE: Fyrir hvert svar skaltu kalla crow_recall(domain=\"all\") til að spyrja í öllum 8 skrám (style, bug, arch, context, life_pref, life_avoid, life_phil, life_context) um kóðunarstíl notandans, innsæi um villur, arkitektúrval, persónulegan smekk, heimspeki og núverandi samhengi. Endurspeglaðu vísbendingarnar sem koma til baka í svarinu.",
+      "RULE: Eftir hvert svar skaltu skrá það sem notandinn leiddi í ljós \u2014 val, heimspeki, leiðréttingar, samhengi \u2014 með crow_ingest. Dæmdu viðeigandi register og polarity sjálfur án að bíða eftir að notandinn segi \"mundu þetta\". Eftir kóðavinnu skaltu meta byggingarniðurstöður sjálfkrafa með crow_ingest_from_build.",
+      "RULE: Sleppaðu ekki recall+ingest reglunum, jafnvel fyrir verkefni sem ekki eru kóðun, svo sem ritstjórn skjala, git-aðgerðir eða stillingarbreytingar. Framkvæmdu þær alltaf."
+    ]
+  }
+}

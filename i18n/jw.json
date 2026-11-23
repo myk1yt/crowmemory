@@ -1,0 +1,119 @@
+{
+  "_meta": {
+    "locale": "jw",
+    "language_name": "Javanese",
+    "version": "1.0.0",
+    "last_updated": "2026-11-24"
+  },
+
+  "server": {
+    "instructions": "Crow Memory \u2014 Memori sinaptik eksternal kanggo agen pemrograman AI. Nyimpen gaya ngoding, intuisi bug, lan preferensi arsitektur sampeyan minangka matriks bobot sing dipadatkan ing crow.bin.",
+
+    "prompts": {
+      "crow_memory_bias": {
+        "description": "Blok bias Crow Memory sing diinjeksi otomatis. Ngemot gaya ngoding, preferensi, lan aturan sing wis ngrembaka. Host kudu ngemot iki nalika wiwitan sesi.",
+        "body_template": "=== Crow Memory \u2014 Konteks sing Diinjeksi Otomatis ===\n\n[Aturan Ngrembaka Permanen]\n{rules}\n\n[Petunjuk Memori Pungkasan]\n{bias}\n\nKonteks ing ndhuwur nuduhake preferensi lan gaya sing wis disinaoni. Gunakake kanggo nuntun wangsulan sampeyan. Kanggo mangerteni luwih akeh, nelpon crow_recall nganggo pitakon tartamtu lan register (style/bug/arch/context/life_pref/life_avoid/life_phil/life_context)."
+      },
+      "crow_evolved_rules": {
+        "description": "Permanent evolved rules from Crow's system_prompt.md: permanent rules (human-promoted via CROW_ADMIN_TOKEN) plus unreviewed model suggestions.",
+        "body_template": "{prompt}"
+      }
+    }
+  },
+
+  "tools": {
+    "crow_recall": {
+      "description": "Ngelingi gaya ngoding, intuisi bug, preferensi arsitektur, utawa konteks pribadi pangguna saka memori sinaptik Crow. Telpon iki sadurunge saben wangsulan supaya selaras karo bias induktif pangguna. Kanthi standar (register=all utawa ora diisi, domain=all), nliti kabeh 8 register lan nggabungake asil sacara global miturut kemiripan efektif.",
+      "parameters": {
+        "query": "Katrangan basa alami babagan tugas saiki.",
+        "register": "Register endi. Gunakake 'all' (utawa ora diisi) kanggo nliti kabeh register ing domain sing dipilih. Code: style/bug/arch/context. Life: life_pref/life_avoid/life_phil/life_context.",
+        "domain": "Filter domain sing digunakake nalika register yaiku 'all' utawa ora diisi. 'code' = style/bug/arch/context, 'life' = life_pref/life_avoid/life_phil/life_context, 'all' = kabeh 8 register (standar).",
+        "top_k": "Cacahing petunjuk (1-5).",
+        "format": "Format output. 'hint' ngasilake petunjuk JSON (standar); 'bias_block' ngasilake blok teks [User Bias] kanggo injeksi prompt sistem.",
+        "project": "Tag proyek sing digunakake kanggo nggedhekake petunjuk saka proyek sing padha lan nyaring/nyuda petunjuk saka proyek liya.",
+        "strict_project": "Yen true, nyaring petunjuk saka proyek liya kanthi keras saka asil."
+      }
+    },
+    "crow_ingest": {
+      "description": "Nyimpen pengalaman ngoding menyang memori sinaptik jangka panjang Crow. Telpon sawise asil build/test utawa umpan balik eksplisit pangguna. Wenehake polarity eksplisit utawa exit_code build kanggo pemetaan polarity otomatis. Isi diresiki dhisik; input swara murni ditolak tanpa ngrusak memori.",
+      "parameters": {
+        "key": "Katrangan abstrak babagan kahanan.",
+        "value": "Pola kode utawa keputusan sing ditrapake.",
+        "register": "Register kanggo nyimpen (style/bug/arch/context/life_pref/life_avoid/life_phil/life_context).",
+        "polarity": "Kekuwatan penguatan [-2.0, 2.0]. Opsional yen exit_code diwenehake; polarity eksplisit menang yen loro-lorone diwenehake.",
+        "exit_code": "Kode metu build (0 = sukses). Otomatis dipetakake menyang polarity (+1.5/+0.5 yen sukses, -0.5/-1.0 yen gagal) kajaba polarity eksplisit diwenehake.",
+        "user_edited": "Apa pangguna nyunting output AI. Nyetel polarity sing asale saka exit_code.",
+        "project": "Tag proyek sing disimpen karo entri memori kanggo pangelingan sadar-proyek mengko."
+      }
+    },
+    "crow_admin": {
+      "description": "Operasi administratif Crow ing siji alat. Tumindak: diagnostics (statistik memori), drift (pamariksaan drift), prompt (maca/nambah/statistik system_prompt.md), backup (nggawe/mutar/dhaptar/mbalekake), evolve (ngusulake mutasi prompt), project_info (dhaptar/nggawe instansi proyek).",
+      "parameters": {
+        "action": "Operasi admin endi: diagnostics, drift, prompt, backup, evolve, utawa project_info.",
+        "args": "Objek argumen khusus tumindak sing diterusake menyang operasi sing dipilih."
+      }
+    }
+  },
+
+  "errors": {
+    "unknown_tool": "Alat ora dikenal: {name}",
+    "unknown_prompt": "Prompt ora dikenal: {name}",
+    "unknown_action": "Tumindak {context} ora dikenal: {action}",
+    "project_name_required": "project_name dibutuhake kanggo tumindak create"
+  },
+
+  "recall_messages": {
+    "faint_bias": "Crow ngelingi bias {register} sing samar. Isih sithik memori sing disimpen.",
+    "unknown_register": "Register ora dikenal: {register}"
+  },
+
+  "ingest_messages": {
+    "status_ingested": "wis disimpen",
+    "unknown_register": "Register ora dikenal: {register}"
+  },
+
+  "evolve_messages": {
+    "no_patterns": "Durung ditemokake pola sing signifikan sacara statistik."
+  },
+
+  "drift_messages": {
+    "healthy": "Kapercayan memori sehat.",
+    "confused": "Memori Crow katon bingung. Tugas pungkasan bisa uga banget anyar utawa memori wis jenuh. Coba reset spektral utawa arsip."
+  },
+
+  "cli": {
+    "stdio_start": "Server Crow Memory MCP mlaku ing stdio",
+    "sse_start": "Server Crow Memory MCP SSE ngrungokake ing http://{host}:{port}/sse",
+    "http_start": "Server Crow Memory MCP Streamable HTTP ngrungokake ing http://{host}:{port}/",
+    "dual_start_sse": "Server Crow Memory MCP SSE ngrungokake ing http://{host}:{sse_port}/sse",
+    "dual_start_http": "Server Crow Memory MCP Streamable HTTP ngrungokake ing http://{host}:{http_port}/"
+  },
+
+  "installer": {
+    "banner_title": "Installer Crow Memory kanggo Zoo Code",
+    "step_1_install_deps": "Nginstal dependensi Python",
+    "step_2_init_crow": "Miwiti crow.bin",
+    "step_3_vscode_tasks": "Nggawe .vscode/tasks.json (miwiti SSE otomatis nalika folder dibukak)",
+    "step_4_custom_mode": "Nggawe mode aktivasi otomatis Zoo Code",
+    "step_5_start_server": "Miwiti server Crow SSE + wiwitan otomatis",
+    "step_done": "Rampung.",
+    "complete_title": "Instalasi Crow Memory wis rampung!",
+    "sse_running": "Server SSE mlaku ing http://127.0.0.1:9020/sse",
+    "next_steps_label": "Langkah sabanjure:",
+    "next_step_1": "1. Wiwiti maneh Zoo Code",
+    "next_step_2": "2. Ganti mode dadi \"Orchestrator + Crow\"",
+    "next_step_3": "3. Crow aktif otomatis \u2014 ora perlu setelan manual",
+    "next_step_4": "4. Server Crow wiwit otomatis bareng Windows liwat Task Scheduler"
+  },
+
+  "system_prompt": {
+    "header": "# Crow Memory \u2014 Aturan Prompt Sistem",
+    "subtitle": "> Aturan iki wis ngrembaka dening Crow lan disetujoni dening pangguna.\n> Iki nuduhake bias ngoding sing signifikan sacara statistik.\n> Aja nyunting kanthi manual \u2014 gunakake alat evolve Crow MCP.",
+    "managed_by": "<!-- Berkas iki dikelola dening crow_mcp_server.py -->",
+    "default_rules": [
+      "RULE: Sadurunge saben wangsulan, telpon crow_recall(domain=\"all\") kanggo nliti kabeh 8 register (style, bug, arch, context, life_pref, life_avoid, life_phil, life_context) babagan gaya ngoding pangguna, intuisi bug, preferensi arsitektur, selera pribadi, filosofi, lan konteks saiki. Cerminake petunjuk sing bali ing wangsulan sampeyan.",
+      "RULE: Sawise saben wangsulan, simpen apa sing diungkapake pangguna \u2014 preferensi, filosofi, koreksi, konteks \u2014 liwat crow_ingest. Timbang register lan polarity sing cocog dhewe tanpa ngenteni pangguna ngomong \"elinga iki\". Sawise nggarap kode, evaluasi asil build kanthi otomatis liwat crow_ingest_from_build.",
+      "RULE: Aja nglewati aturan recall+ingest sanajan kanggo tugas dudu ngoding kayata nyunting dokumen, operasi git, utawa owah-owahan konfigurasi. Tansah nindakake."
+    ]
+  }
+}

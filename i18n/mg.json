@@ -1,0 +1,119 @@
+{
+  "_meta": {
+    "locale": "mg",
+    "language_name": "Malagasy",
+    "version": "1.0.0",
+    "last_updated": "2026-11-24"
+  },
+
+  "server": {
+    "instructions": "Crow Memory — fahatsiarovana synaptika ivelany ho an'ny AI coding agents. Mitahiry ny fomba fanoratanao code, ny fahalalanao momba ny bug ary ny safidinao eo amin'ny architecture ho matrices lanja voatsindry ao amin'ny rakitra crow.bin.",
+
+    "prompts": {
+      "crow_memory_bias": {
+        "description": "Sokajy bias Crow Memory ampidirina mandeha ho azy. Misy ny fomba fanoratanao code, ny safidinao ary ny fitsipika efa nivoatra. Tokony halain'ny host izy io rehefa manomboka ny session.",
+        "body_template": "=== Crow Memory — votoaty ampidirina mandeha ho azy ===\n\n[Fitsipika maharitra efa nivoatra]\n{rules}\n\n[Torohevitra avy amin'ny fahatsiarovana vao haingana]\n{bias}\n\nIty votoaty etsy ambony ity dia maneho ny safidinao sy ny fomba fanoratanao efa nianaranao. Ampiasao izy io hitarihana ny valinteninao. Raha te hahafantatra bebe kokoa, antsoy ny crow_recall miaraka amin'ny query manokana sy register (style/bug/arch/context/life_pref/life_avoid/life_phil/life_context)."
+      },
+      "crow_evolved_rules": {
+        "description": "Permanent evolved rules from Crow's system_prompt.md: permanent rules (human-promoted via CROW_ADMIN_TOKEN) plus unreviewed model suggestions.",
+        "body_template": "{prompt}"
+      }
+    }
+  },
+
+  "tools": {
+    "crow_recall": {
+      "description": "Maka ny fomba fanoratanao code, ny fahalalanao momba ny bug, ny safidinao eo amin'ny architecture na ny toe-javatra manokana anao avy amin'ny fahatsiarovana synaptika an'i Crow. Antsoy izy io alohan'ny valiny rehetra mba hifanaraka amin'ny inductive bias anao. Amin'ny ankapobeny (register=all na tsy voasoratra, domain=all), manontany ny register 8 rehetra izy ary mampifangaro ny valiny maneran-tany araka ny fitoviana mahomby.",
+      "parameters": {
+        "query": "Famaritana amin'ny fiteny voajanahary ny asa atao ankehitriny.",
+        "register": "Iza amin'ny register no ampiasaina. Ampiasao ny 'all' (na ajanony) raha hanontany ny register rehetra ao amin'ny domain voafidy. Code: style/bug/arch/context. Life: life_pref/life_avoid/life_phil/life_context.",
+        "domain": "Sivana domain ampiasaina rehefa 'all' ny register na tsy voasoratra. 'code' = style/bug/arch/context, 'life' = life_pref/life_avoid/life_phil/life_context, 'all' = register 8 rehetra (ny ankapobeny).",
+        "top_k": "Isan'ny torohevitra (1-5).",
+        "format": "Endriky ny valiny. Ny 'hint' dia mamerina torohevitra JSON (ny ankapobeny); ny 'bias_block' dia mamerina ny sokajy lahatsoratra [User Bias] ho ampiana ao amin'ny system prompt.",
+        "project": "Tag projet ampiasaina hanamafisana ny torohevitra avy amin'ny projet iray ary hanasivana na hanasazy ny an'ny projet hafa.",
+        "strict_project": "Raha true, dia esoriny tanteraka amin'ny valiny ny torohevitra avy amin'ny projet hafa."
+      }
+    },
+    "crow_ingest": {
+      "description": "Mampiditra traikefa amin'ny fandaharana ao amin'ny fahatsiarovana synaptika maharitra an'i Crow. Antsoy izy io aorian'ny valin'ny build/test na ny fanehoan-kevitra mazava avy amin'ny mpampiasa. Omeo polarity mazava na exit_code amin'ny build mba hamaritana ny polarity ho azy. Diovina aloha ny votoaty; ny fidirana feo fotsiny dia lavina nefa tsy mikasika ny fahatsiarovana.",
+      "parameters": {
+        "key": "Famaritana tsy mivantana ny toe-javatra.",
+        "value": "Lamin'ny code na fanapahan-kevitra nampiharina.",
+        "register": "Register hitahirizana (style/bug/arch/context/life_pref/life_avoid/life_phil/life_context).",
+        "polarity": "Herin'ny fanamafisana [-2.0, 2.0]. Tsy voatery raha omena ny exit_code; raha omena izy roa, ny polarity mazava no mandresy.",
+        "exit_code": "Exit code amin'ny build (0 = fahombiazana). Miova ho polarity ho azy (+1.5/+0.5 raha mahomby, -0.5/-1.0 raha tsy mahomby) raha tsy misy polarity mazava omena.",
+        "user_edited": "Na nanova ny valin'ny AI ny mpampiasa. Manitsy ny polarity azo avy amin'ny exit_code.",
+        "project": "Tag projet tehirizina miaraka amin'ny fidirana ao amin'ny fahatsiarovana, ho an'ny recall mahalala projet any aoriana."
+      }
+    },
+    "crow_admin": {
+      "description": "Asa fitantanana an'i Crow ao anaty fitaovana iray. Action: diagnostics (statistika fahatsiarovana), drift (fanamarinana drift), prompt (vakio/ampio/statistika system_prompt.md), backup (mamorona/mamadika/mitantara/mamerina), evolve (manolotra fanovana prompt), project_info (mitantara na mamorona instance projet).",
+      "parameters": {
+        "action": "Iza amin'ny asa fitantanana: diagnostics, drift, prompt, backup, evolve na project_info.",
+        "args": "Objety arguments mifanaraka amin'ny action, alefa amin'ny asa voafidy."
+      }
+    }
+  },
+
+  "errors": {
+    "unknown_tool": "Fitaovana tsy fantatra: {name}",
+    "unknown_prompt": "Prompt tsy fantatra: {name}",
+    "unknown_action": "Action {context} tsy fantatra: {action}",
+    "project_name_required": "Ilaina ny project_name ho an'ny action create"
+  },
+
+  "recall_messages": {
+    "faint_bias": "Mahatsiaro manjavozavo ny bias {register} i Crow. Vitsy ny fahatsiarovana voatahiry ankehitriny.",
+    "unknown_register": "Register tsy fantatra: {register}"
+  },
+
+  "ingest_messages": {
+    "status_ingested": "voatahiry",
+    "unknown_register": "Register tsy fantatra: {register}"
+  },
+
+  "evolve_messages": {
+    "no_patterns": "Tsy mbola nahitana lamina manan-danja ara-statistika."
+  },
+
+  "drift_messages": {
+    "healthy": "Salama ny fahatokisan'ny fahatsiarovana.",
+    "confused": "Toa very hevitra ny fahatsiarovana an'i Crow. Mety vaovao loatra ny asa vao haingana na feno ny fahatsiarovana. Diniho ny spectral reset na ny archiving."
+  },
+
+  "cli": {
+    "stdio_start": "Mandeha amin'ny stdio ny Crow Memory MCP server",
+    "sse_start": "Mihaino amin'ny http://{host}:{port}/sse ny Crow Memory MCP SSE server",
+    "http_start": "Mihaino amin'ny http://{host}:{port}/ ny Crow Memory MCP Streamable HTTP server",
+    "dual_start_sse": "Mihaino amin'ny http://{host}:{sse_port}/sse ny Crow Memory MCP SSE server",
+    "dual_start_http": "Mihaino amin'ny http://{host}:{http_port}/ ny Crow Memory MCP Streamable HTTP server"
+  },
+
+  "installer": {
+    "banner_title": "Mpampiditra Crow Memory ho an'ny Zoo Code",
+    "step_1_install_deps": "Mampiditra ny dependencies Python",
+    "step_2_init_crow": "Manomboka ny crow.bin",
+    "step_3_vscode_tasks": "Mamorona .vscode/tasks.json (manomboka SSE ho azy rehefa misokatra ny folder)",
+    "step_4_custom_mode": "Mamorona mode fampandehanana ho azy ho an'ny Zoo Code",
+    "step_5_start_server": "Manomboka ny Crow SSE server ary manomboka ho azy",
+    "step_done": "Vita.",
+    "complete_title": "Vita ny fametrahana Crow Memory!",
+    "sse_running": "Mandeha amin'ny http://127.0.0.1:9020/sse ny SSE server",
+    "next_steps_label": "Dingana manaraka:",
+    "next_step_1": "1. Avereno indray ny Zoo Code",
+    "next_step_2": "2. Ovay ho \"Orchestrator + Crow\" ny mode",
+    "next_step_3": "3. Mihetsika ho azy i Crow — tsy mila fanamboarana amin'ny tanana",
+    "next_step_4": "4. Manomboka ho azy miaraka amin'i Windows ny Crow server amin'ny alalan'ny Task Scheduler"
+  },
+
+  "system_prompt": {
+    "header": "# Crow Memory — Fitsipika ho an'ny system prompt",
+    "subtitle": "> Novolavolain'i Crow ireo fitsipika ireo ary neken'ny mpampiasa.\n> Maneho coding bias manan-danja ara-statistika izy ireo.\n> Aza manova amin'ny tanana, ampiasao ny fitaovana evolve an'ny Crow MCP.",
+    "managed_by": "<!-- Tantanan'ny crow_mcp_server.py ity rakitra ity -->",
+    "default_rules": [
+      "RULE: Alohan'ny valiny rehetra, antsoy ny crow_recall(domain=\"all\") mba hanontany ny register 8 rehetra (style, bug, arch, context, life_pref, life_avoid, life_phil, life_context) momba ny fomba fanoratanao code, ny fahalalanao momba ny bug, ny safidinao eo amin'ny architecture, ny tsiro manokana, ny filozofia ary ny toe-javatra misy anao ankehitriny. Asehoy ao amin'ny valinteninao ny torohevitra voaray.",
+      "RULE: Aorian'ny valiny rehetra, raketo ao amin'ny crow_ingest izay nambaran'ny mpampiasa: ny safidiny, ny filozofiany, ny fanitsiany ary ny toe-javatra misy azy. Fantaro samirery ny register sy ny polarity mety, tsy mila miandry ny mpampiasa hilaza hoe \"tadidio ity\". Aorian'ny asa amin'ny code, tombanana ho azy ny valin'ny build amin'ny alalan'ny crow_ingest_from_build.",
+      "RULE: Aza dinganina ny fitsipika recall+ingest na dia amin'ny asa tsy fandaharana aza, toy ny fanovana rakitra, ny asa git na ny fanovana configuration. Tanteraho foana izy ireo."
+    ]
+  }
+}

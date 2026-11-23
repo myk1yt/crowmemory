@@ -1,0 +1,119 @@
+{
+  "_meta": {
+    "locale": "lb",
+    "language_name": "Luxembourgish",
+    "version": "1.0.0",
+    "last_updated": "2026-11-24"
+  },
+
+  "server": {
+    "instructions": "Crow Memory — Externe synaptesche Gediechtnes fir AI-Coding-Agenten. Et späichert Äre Coding-Stil, Är Intuitioun fir Bugs an Är Architektur-Präferenzen als kompriméiert Gewiichtsmatrize an der Datei crow.bin.",
+
+    "prompts": {
+      "crow_memory_bias": {
+        "description": "Automatesch agefüügte Bias-Block vum Crow Memory. Enthält Äre Coding-Stil, Är Präferenzen an déi evoluéiert Reegelen. Den Host soll dësen am Ufank vun der Sessioun lueden.",
+        "body_template": "=== Crow Memory — Automatesch agefüügte Kontext ===\n\n[Dauerhaft evoluéiert Reegelen]\n{rules}\n\n[Rezent Hiweiser aus dem Gediechtnes]\n{bias}\n\nDen uewe genannte Kontext representéiert Är geléiert Präferenzen a Stil. Benotzt en fir Är Äntwerten ze guidéieren. Fir méi ze léieren, rufft crow_recall mat enger spezifescher query an engem register op (style/bug/arch/context/life_pref/life_avoid/life_phil/life_context)."
+      },
+      "crow_evolved_rules": {
+        "description": "Permanent evolved rules from Crow's system_prompt.md: permanent rules (human-promoted via CROW_ADMIN_TOKEN) plus unreviewed model suggestions.",
+        "body_template": "{prompt}"
+      }
+    }
+  },
+
+  "tools": {
+    "crow_recall": {
+      "description": "Ruft benotzerspezifesche Coding-Stil, Intuitioun fir Bugs, Architektur-Präferenzen oder perséinleche Kontext aus dem synaptesche Gediechtnes vum Crow of. Rufft dëst VIRUN ALL ÄNTWERT op, fir Iech un den induktive Bias vum Benotzer unzepassen. Par Defaut (register=all oder ewech gelooss, domain=all) ginn all 8 Register befrot an d'Resultater ginn global no effektiver Ähnlechkeet fusionéiert.",
+      "parameters": {
+        "query": "Beschreiwung vun der aktueller Aufgab an natierlecher Sprooch.",
+        "register": "Wéi ee Register. Benotzt 'all' (oder loosst en ewech) fir all Register am gewielten Domain ze befroen. Code: style/bug/arch/context. Life: life_pref/life_avoid/life_phil/life_context.",
+        "domain": "Domain-Filter, deen benotzt gëtt wann register 'all' ass oder ewech gelooss gëtt. 'code' = style/bug/arch/context, 'life' = life_pref/life_avoid/life_phil/life_context, 'all' = all 8 Register (Standard).",
+        "top_k": "Zuel vun den Hiweiser (1-5).",
+        "format": "Ausgabformat. 'hint' gëtt JSON-Hiweiser zréck (Standard); 'bias_block' gëtt den Textblock [User Bias] zréck, dee soll an de System-Prompt agebaut ginn.",
+        "project": "Projet-Tag, deen déi Hiweiser aus dem selwechte Projet stäerkt an déi aus anere Projete filtert oder penaliséiert.",
+        "strict_project": "Wann true, da filtert et Hiweiser aus anere Projete streng aus den Resultater eraus."
+      }
+    },
+    "crow_ingest": {
+      "description": "Huet eng Coding-Erfahrung an d'laangfristegt synaptescht Gediechtnes vum Crow eran. Rufft dëst NOM Build- oder Testresultater oder no enger expliziter Réckmeldung vum Benotzer op. Gitt entweder eng explizit polarity oder en exit_code vum Build un, fir d'Polaritéit automatesch ze mappen. Den Inhalt gëtt als éischt sanéiert; rengen Rausche-Input gëtt ofgelehnt, ouni d'Gediechtnes ze beréieren.",
+      "parameters": {
+        "key": "Abstrakt Beschreiwung vun der Situatioun.",
+        "value": "Code-Muster oder Entscheedung, déi ugewandt gouf.",
+        "register": "Register an deem gespäichert gëtt (style/bug/arch/context/life_pref/life_avoid/life_phil/life_context).",
+        "polarity": "Stäerkt vun der Verstäerkung [-2.0, 2.0]. Optional wann en exit_code ugeet; wann béides ugeet, gewënnt déi explizit polarity.",
+        "exit_code": "Exit-Code vum Build (0 = Erfolleg). Gëtt automatesch op d'Polaritéit gemappt (+1.5/+0.5 bei Erfolleg, -0.5/-1.0 bei Feeler), ausser et gëtt eng explizit polarity uginn.",
+        "user_edited": "Ob de Benotzer d'Ausgab vun der AI geännert huet. Passt d'Polaritéit un, déi aus dem exit_code ofgeleet gouf.",
+        "project": "Projet-Tag, deen mam Gediechtnes-Antrag gespäichert gëtt, fir spéider e projetaartegen Recall."
+      }
+    },
+    "crow_admin": {
+      "description": "Administratiounsoperatioune vum Crow an engem eenzegen Tool. Aktiounen: diagnostics (Gediechtnes-Statistiken), drift (Drift-Kontroll), prompt (system_prompt.md liesen, derbäisetzen an Statistiken), backup (erstellen, rotéieren, oplëschten a recuperéieren), evolve (Prompt-Mutatiounen proposéieren), project_info (Projet-Instanzen oplëschten an erstellen).",
+      "parameters": {
+        "action": "Wéi eng Administratiounsoperatioun: diagnostics, drift, prompt, backup, evolve oder project_info.",
+        "args": "Aktiounsspezifeschen Argumenter-Objet, deen un déi gewielt Operatioun weidergëtt."
+      }
+    }
+  },
+
+  "errors": {
+    "unknown_tool": "Onbekannten Tool: {name}",
+    "unknown_prompt": "Onbekannte Prompt: {name}",
+    "unknown_action": "Onbekannt {context}-Aktioun: {action}",
+    "project_name_required": "project_name ass erfuerderlech fir d'create-Aktioun"
+  },
+
+  "recall_messages": {
+    "faint_bias": "Crow erënnert sech nach just schwaach un de {register}-Bias. Et si nach wéineg Gediechtnisser gespäichert.",
+    "unknown_register": "Onbekannte Register: {register}"
+  },
+
+  "ingest_messages": {
+    "status_ingested": "opgeholl",
+    "unknown_register": "Onbekannte Register: {register}"
+  },
+
+  "evolve_messages": {
+    "no_patterns": "Nach keng statistesch signifikant Muster entdeckt."
+  },
+
+  "drift_messages": {
+    "healthy": "D'Konfidenz vum Gediechtnes ass gesond.",
+    "confused": "D'Gediechtnes vum Crow schéngt duercherneen ze sinn. Déi rezent Aufgabe si vläicht ze nei oder d'Gediechtnes ass saturéiert. Denkt un e spektrale Reset oder un eng Archivéierung."
+  },
+
+  "cli": {
+    "stdio_start": "Crow Memory MCP-Server leeft op stdio",
+    "sse_start": "Crow Memory MCP SSE-Server lauschtert op http://{host}:{port}/sse",
+    "http_start": "Crow Memory MCP Streamable HTTP-Server lauschtert op http://{host}:{port}/",
+    "dual_start_sse": "Crow Memory MCP SSE-Server lauschtert op http://{host}:{sse_port}/sse",
+    "dual_start_http": "Crow Memory MCP Streamable HTTP-Server lauschtert op http://{host}:{http_port}/"
+  },
+
+  "installer": {
+    "banner_title": "Crow Memory Installateur fir Zoo Code",
+    "step_1_install_deps": "Python-Abhängegkeeten installéieren",
+    "step_2_init_crow": "crow.bin initialiséieren",
+    "step_3_vscode_tasks": ".vscode/tasks.json erstellen (SSE automatesch starten, wann den Ordner opgemaach gëtt)",
+    "step_4_custom_mode": "Automateschen Aktivéierungsmodus fir Zoo Code erstellen",
+    "step_5_start_server": "Crow SSE-Server starten an automatesch starten",
+    "step_done": "Fäerdeg.",
+    "complete_title": "D'Installatioun vu Crow Memory ass fäerdeg!",
+    "sse_running": "SSE-Server leeft op http://127.0.0.1:9020/sse",
+    "next_steps_label": "Nächst Schrëtt:",
+    "next_step_1": "1. Zoo Code nei starten",
+    "next_step_2": "2. De Modus op \"Orchestrator + Crow\" wiesselen",
+    "next_step_3": "3. Crow aktivéiert sech automatesch, eng manuell Konfiguratioun ass net néideg",
+    "next_step_4": "4. De Crow-Server startet automatesch mam Windows iwwer den Task Scheduler"
+  },
+
+  "system_prompt": {
+    "header": "# Crow Memory — Reegelen fir de System-Prompt",
+    "subtitle": "> Dës Reegelen goufe vum Crow evoluéiert a vum Benotzer approuvéiert.\n> Si representéieren statistesch signifikant Coding-Biasen.\n> Ännert si net manuell, benotzt d'Evolutiounstools vum Crow MCP.",
+    "managed_by": "<!-- Dës Datei gëtt vun crow_mcp_server.py geréiert -->",
+    "default_rules": [
+      "RULE: Rufft virun all Äntwert crow_recall(domain=\"all\") op, fir all 8 Register (style, bug, arch, context, life_pref, life_avoid, life_phil, life_context) fir de Coding-Stil, d'Intuitioun fir Bugs, d'Architektur-Präferenzen, de perséinleche Goût, d'Philosophie an de aktuelle Kontext vum Benotzer ze befroen. Reflektéiert déi zréckginn Hiweiser an Ärer Äntwert.",
+      "RULE: Halt no all Äntwert fest, wat de Benotzer verroden huet (Präferenzen, Philosophie, Korrekturen, Kontext), an dat iwwer crow_ingest. Bestëmmt de passende register an d'polarity selwer, ouni ze waarden, bis de Benotzer seet \"denk drun\". No der Codearbecht bewäert automatesch d'Build-Resultater iwwer crow_ingest_from_build.",
+      "RULE: Iwwerspréngt d'Reegelen zu recall an ingest och bei Aufgabe baussent dem Coding net, wéi Dokumenter editéieren, Git-Operatiounen oder Ännerunge vun der Konfiguratioun. Féiert si ëmmer aus."
+    ]
+  }
+}

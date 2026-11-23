@@ -3,153 +3,117 @@
     "locale": "th",
     "language_name": "ไทย",
     "version": "1.0.0",
-    "last_updated": "2026-05-29"
+    "last_updated": "2026-11-24"
   },
+
   "server": {
     "instructions": "Crow Memory — หน่วยความจำซินแนปติกภายนอกสำหรับเอเจนต์การเขียนโค้ด AI จัดเก็บสไตล์การเขียนโค้ด สัญชาตญาณข้อบกพร่อง และความชอบทางสถาปัตยกรรมใน crow.bin",
+
     "prompts": {
       "crow_memory_bias": {
-        "description": "บล็อกอคติ Crow Memory ที่ถูกฉีดโดยอัตโนมัติ ประกอบด้วยสไตล์การเขียนโค้ด ความชอบ และกฎที่วิวัฒนาการแล้วของคุณ",
-        "body_template": "=== Crow Memory — Automaticky vložený kontext ===\n\n[Trvalá evoluovaná pravidla]\n{rules}\n\n[Nedávné paměťové tipy]\n{bias}\n\nVýše uvedený kontext představuje vaše naučené preference a styl. Použijte jej k vedení svých odpovědí."
+        "description": "บล็อกอคติ Crow Memory ที่ถูกฉีดโดยอัตโนมัติ ประกอบด้วยสไตล์การเขียนโค้ด ความชอบ และกฎที่วิวัฒนาการแล้วของคุณ โฮสต์ควรโหลดบล็อกนี้เมื่อเริ่มเซสชัน",
+        "body_template": "=== Crow Memory — บริบทที่ถูกฉีดโดยอัตโนมัติ ===\n\n[กฎถาวรที่วิวัฒนาการแล้ว]\n{rules}\n\n[คำใบ้ความจำล่าสุด]\n{bias}\n\nบริบทข้างต้นแสดงถึงความชอบและสไตล์ที่คุณเรียนรู้มา ใช้เพื่อเป็นแนวทางในการตอบ หากต้องการเรียนรู้เพิ่มเติม ให้เรียก crow_recall พร้อมคำค้นและรีจิสเตอร์ที่เฉพาะเจาะจง (style/bug/arch/context/life_pref/life_avoid/life_phil/life_context)"
       },
       "crow_evolved_rules": {
-        "description": "Trvalá evoluovaná pravidla z system_prompt.md Crow. Statisticky významné vzory schválené přes HITL.",
+        "description": "Permanent evolved rules from Crow's system_prompt.md: permanent rules (human-promoted via CROW_ADMIN_TOKEN) plus unreviewed model suggestions.",
         "body_template": "{prompt}"
       }
     }
   },
+
   "tools": {
     "crow_recall": {
-      "description": "Vyvolá uživatelský styl kódování, intuici chyb, architektonické preference nebo osobní kontext ze synaptické paměti Crow. Volejte PŘED každou odpovědí. Výchozí dotazuje všech 8 registrů.",
+      "description": "เรียกคืนสไตล์การเขียนโค้ดเฉพาะของผู้ใช้ สัญชาตญาณข้อบกพร่อง ความชอบทางสถาปัตยกรรม หรือบริบทส่วนตัวจากหน่วยความจำซินแนปติกของ Crow เรียกใช้ก่อนทุกคำตอบเพื่อให้สอดคล้องกับอคติเชิงเหตุผลของผู้ใช้ โดยค่าเริ่มต้น (register=all หรือไม่ระบุ, domain=all) จะสอบถามรีจิสเตอร์ทั้ง 8 ตัวและรวมผลลัพธ์ทั่วโลกตามความคล้ายคลึงที่มีประสิทธิภาพ",
       "parameters": {
-        "query": "Popis aktuálního úkolu přirozeným jazykem.",
-        "register": "Vyberte registr. 'all' dotazuje všechny (stejné jako domain=all). Code: style/bug/arch/context. Život: life_pref/life_avoid/life_phil/life_context.",
-        "top_k": "Počet tipů (1-3).",
-        "domain": "Zkratka filtru domény. 'code' = style/bug/arch/context, 'life' = life_pref/life_avoid/life_phil/life_context, 'all' = všech 8 registrů (výchozí)."
+        "query": "คำอธิบายงานปัจจุบันเป็นภาษาธรรมชาติ",
+        "register": "รีจิสเตอร์ใด ใช้ 'all' (หรือไม่ระบุ) เพื่อสอบถามทุกรีจิสเตอร์ในโดเมนที่เลือก Code: style/bug/arch/context. Life: life_pref/life_avoid/life_phil/life_context.",
+        "domain": "ตัวกรองโดเมนที่ใช้เมื่อ register เป็น 'all' หรือไม่ระบุ 'code' = style/bug/arch/context, 'life' = life_pref/life_avoid/life_phil/life_context, 'all' = รีจิสเตอร์ทั้ง 8 ตัว (ค่าเริ่มต้น)",
+        "top_k": "จำนวนคำใบ้ (1-5)",
+        "format": "รูปแบบผลลัพธ์ 'hint' คืนคำใบ้ในรูปแบบ JSON (ค่าเริ่มต้น); 'bias_block' คืนบล็อกข้อความ [User Bias] สำหรับฉีดเข้าสู่ system prompt",
+        "project": "แท็กโปรเจกต์ที่ใช้เพื่อเพิ่มน้ำหนักคำใบ้จากโปรเจกต์เดียวกันและกรองหรือลดคะแนนคำใบ้จากโปรเจกต์อื่น",
+        "strict_project": "เมื่อเป็น true จะกรองคำใบ้จากโปรเจกต์อื่นออกจากผลลัพธ์อย่างเด็ดขาด"
       }
     },
     "crow_ingest": {
-      "description": "Vstřebá zkušenost s kódováním do dlouhodobé synaptické paměti Crow. Volejte PO výsledcích sestavení/testů nebo explicitní zpětné vazbě.",
+      "description": "บันทึกประสบการณ์การเขียนโค้ดลงในหน่วยความจำซินแนปติกระยะยาวของ Crow เรียกใช้หลังผลการ build/test หรือข้อเสนอแนะอย่างชัดแจ้งของผู้ใช้ ระบุ polarity อย่างชัดเจน หรือ exit_code ของ build เพื่อให้ระบบกำหนด polarity โดยอัตโนมัติ เนื้อหาจะถูกทำความสะอาดก่อน อินพุตที่เป็นสัญญาณรบกวนล้วนจะถูกปฏิเสธโดยไม่แตะต้องหน่วยความจำ",
       "parameters": {
-        "key": "Abstraktní popis situace.",
-        "value": "Použitý vzor kódu nebo rozhodnutí.",
-        "polarity": "Síla zesílení [-2.0, 2.0].",
-        "register": "Cílový registr (style/bug/arch/context/life_pref/life_avoid/life_phil/life_context)."
+        "key": "คำอธิบายเชิงนามธรรมของสถานการณ์",
+        "value": "รูปแบบโค้ดหรือการตัดสินใจที่นำไปใช้",
+        "register": "รีจิสเตอร์ที่จะจัดเก็บ (style/bug/arch/context/life_pref/life_avoid/life_phil/life_context)",
+        "polarity": "ความแรงของการเสริม [-2.0, 2.0] ไม่บังคับหากให้ exit_code มา หากให้ทั้งคู่ polarity ที่ระบุชัดเจนจะมีผลเหนือกว่า",
+        "exit_code": "รหัสสถานะสิ้นสุดของ build (0 = สำเร็จ) จะถูกแปลงเป็น polarity โดยอัตโนมัติ (+1.5/+0.5 เมื่อสำเร็จ, -0.5/-1.0 เมื่อล้มเหลว) เว้นแต่จะระบุ polarity ชัดเจน",
+        "user_edited": "ผู้ใช้แก้ไขผลลัพธ์ของ AI หรือไม่ ปรับ polarity ที่ได้จาก exit_code",
+        "project": "แท็กโปรเจกต์ที่จัดเก็บพร้อมรายการหน่วยความจำเพื่อการเรียกคืนที่คำนึงถึงโปรเจกต์ในภายหลัง"
       }
     },
-    "crow_evolve_propose": {
-      "description": "Analyzuje nedávné vzory paměti a navrhuje trvalou mutaci systémového promptu. Vrací pouze návrh; k přijetí je nutné lidské schválení.",
+    "crow_admin": {
+      "description": "การดำเนินการผู้ดูแลระบบของ Crow ในเครื่องมือเดียว การกระทำ: diagnostics (สถิติหน่วยความจำ), drift (ตรวจสอบการเบี่ยงเบน), prompt (อ่าน/เพิ่ม/สถิติ system_prompt.md), backup (สร้าง/หมุนเวียน/รายการ/กู้คืน), evolve (เสนอการเปลี่ยนแปลง prompt), project_info (รายการ/สร้างอินสแตนซ์โปรเจกต์)",
       "parameters": {
-        "min_confidence": "Minimální práh spolehlivosti (výchozí: 0,85).",
-        "min_occurrences": "Minimální počet výskytů (výchozí: 3)."
-      }
-    },
-    "crow_diagnostics": {
-      "description": "Vrací diagnostiku stavu paměti Crow (normy registrů, řídkost, počet aktualizací, velikost banky hodnot, statistiky promptu).",
-      "parameters": {}
-    },
-    "crow_check_drift": {
-      "description": "Kontroluje, zda nedávná vyvolání vykazují známky paměťového driftu.",
-      "parameters": {
-        "threshold": "Práh spolehlivosti pro detekci nízké spolehlivosti (výchozí: 0,5).",
-        "min_low_confidence_count": "Min. počet záznamů s nízkou spolehlivostí pro spuštění driftu (výchozí: 5)."
-      }
-    },
-    "crow_ingest_from_build": {
-      "description": "Automaticky určí polaritu z kódu ukončení sestavení a stavu úprav uživatele, poté vstřebá zkušenost. Použijte po npm run build.",
-      "parameters": {
-        "key": "Abstraktní popis.",
-        "value": "Použitý vzor kódu.",
-        "exit_code": "Kód ukončení sestavení (0 = úspěch).",
-        "user_edited": "Zda uživatel upravil výstup AI.",
-        "register": "Cílový registr (style/bug/arch/context, výchozí: arch).",
-        "explicit_polarity": "Přepíše automatické určení polarity."
-      }
-    },
-    "crow_get_user_bias": {
-      "description": "Generuje blok [User Bias] pro vložení do systémového promptu. Dotazuje všechny registry a formátuje tipy pro přidání na začátek promptu.",
-      "parameters": {
-        "query": "Popis aktuálního úkolu.",
-        "registers": "Registry k dotazování (výchozí: all)."
-      }
-    },
-    "crow_manage_prompt": {
-      "description": "Čtení, přidávání nebo získávání statistik o souboru system_prompt.md. 'read' pro zobrazení, 'append' pro přijetí pravidla, 'stats' pro metriky.",
-      "parameters": {
-        "action": "Akce: read, append nebo stats.",
-        "rule": "Text pravidla (vyžadováno pro append).",
-        "auto_backup": "Automatické vytvoření zálohy před přidáním (výchozí: true)."
-      }
-    },
-    "crow_manage_backup": {
-      "description": "Spravuje zálohy paměti Crow. Vytváření, rotace, výpis nebo obnova z driftu.",
-      "parameters": {
-        "action": "Akce: create, rotate, list nebo recover.",
-        "tag": "Značka zálohy: daily, weekly nebo manual (výchozí: daily).",
-        "max_daily": "Max. denních záloh k uchování (výchozí: 7).",
-        "max_weekly": "Max. týdenních záloh k uchování (výchozí: 4)."
-      }
-    },
-    "crow_project_info": {
-      "description": "Zobrazí nebo vytvoří projektově izolované instance paměti Crow.",
-      "parameters": {
-        "action": "Akce: list nebo create.",
-        "project_name": "Název projektu (vyžadováno pro create)."
+        "action": "การดำเนินการผู้ดูแลระบบใด: diagnostics, drift, prompt, backup, evolve หรือ project_info",
+        "args": "อ็อบเจกต์อาร์กิวเมนต์เฉพาะการกระทำ ส่งต่อไปยังการดำเนินการที่เลือก"
       }
     }
   },
+
   "errors": {
-    "unknown_tool": "Neznámý nástroj: {name}",
-    "unknown_prompt": "Neznámý prompt: {name}",
-    "unknown_action": "Neznámá akce {context}: {action}",
-    "project_name_required": "project_name je vyžadováno pro akci create"
+    "unknown_tool": "ไม่รู้จักเครื่องมือ: {name}",
+    "unknown_prompt": "ไม่รู้จักพรอมป์: {name}",
+    "unknown_action": "ไม่รู้จักการกระทำ {context}: {action}",
+    "project_name_required": "ต้องระบุ project_name สำหรับการกระทำ create"
   },
+
   "recall_messages": {
-    "faint_bias": "Crow si matně vybavuje zkreslení {register}. Zatím uloženo málo vzpomínek.",
-    "unknown_register": "Neznámý registr: {register}"
+    "faint_bias": "Crow เรียกคืนอคติ {register} ได้เพียงเลือนราง มีความจำที่จัดเก็บไว้น้อย",
+    "unknown_register": "ไม่รู้จักรีจิสเตอร์: {register}"
   },
+
   "ingest_messages": {
-    "status_ingested": "vstřebáno",
-    "unknown_register": "Neznámý registr: {register}"
+    "status_ingested": "บันทึกแล้ว",
+    "unknown_register": "ไม่รู้จักรีจิสเตอร์: {register}"
   },
+
   "evolve_messages": {
-    "no_patterns": "Zatím nebyly detekovány žádné statisticky významné vzory."
+    "no_patterns": "ยังไม่พบรูปแบบที่มีนัยสำคัญทางสถิติ"
   },
+
   "drift_messages": {
-    "healthy": "Spolehlivost paměti je zdravá.",
-    "confused": "Paměť Crow vypadá zmateně. Nedávné úkoly mohou být příliš nové nebo paměť nasycená. Zvažte spektrální reset nebo archivaci."
+    "healthy": "ความมั่นใจของหน่วยความจำอยู่ในสถานะปกติ",
+    "confused": "หน่วยความจำของ Crow ดูสับสน งานล่าสุดอาจใหม่เกินไปหรือหน่วยความจำอิ่มตัว พิจารณารีเซ็ตเชิงสเปกตรัมหรือการจัดเก็บถาวร"
   },
+
   "cli": {
-    "stdio_start": "Server MCP Crow Memory běží na stdio",
-    "sse_start": "Server MCP SSE Crow Memory naslouchá na http://{host}:{port}/sse",
-    "http_start": "Server MCP Streamable HTTP Crow Memory naslouchá na http://{host}:{port}/",
-    "dual_start_sse": "Server MCP SSE Crow Memory naslouchá na http://{host}:{sse_port}/sse",
-    "dual_start_http": "Server MCP Streamable HTTP Crow Memory naslouchá na http://{host}:{http_port}/"
+    "stdio_start": "เซิร์ฟเวอร์ MCP Crow Memory กำลังทำงานบน stdio",
+    "sse_start": "เซิร์ฟเวอร์ MCP SSE Crow Memory กำลังรอฟังที่ http://{host}:{port}/sse",
+    "http_start": "เซิร์ฟเวอร์ MCP Streamable HTTP Crow Memory กำลังรอฟังที่ http://{host}:{port}/",
+    "dual_start_sse": "เซิร์ฟเวอร์ MCP SSE Crow Memory กำลังรอฟังที่ http://{host}:{sse_port}/sse",
+    "dual_start_http": "เซิร์ฟเวอร์ MCP Streamable HTTP Crow Memory กำลังรอฟังที่ http://{host}:{http_port}/"
   },
+
   "installer": {
-    "banner_title": "Crow Memory ไทย telepítő",
-    "step_1_install_deps": "Instalace Python závislostí",
-    "step_2_init_crow": "Inicializace crow.bin",
-    "step_4_custom_mode": "Vytváření režimu automatické aktivace Zoo Code",
-    "step_5_start_server": "Spouštění Crow SSE serveru + automatický start",
-    "step_done": "Hotovo.",
-    "complete_title": "Instalace Crow Memory dokončena!",
-    "sse_running": "SSE server běží na http://127.0.0.1:9020/sse",
-    "next_steps_label": "Další kroky:",
-    "next_step_1": "1. Restartujte Zoo Code",
-    "next_step_2": "2. Přepněte režim na \"Orchestrator + Crow\"",
-    "next_step_3": "3. Crow se aktivuje automaticky — není nutné ruční nastavení",
-    "next_step_4": "4. SSE server startuje s Windows (registrován ve spuštění)",
-    "step_3_vscode_tasks": "Vytváření .vscode/tasks.json (automatický start SSE při otevření složky)"
+    "banner_title": "โปรแกรมติดตั้ง Crow Memory สำหรับ Zoo Code",
+    "step_1_install_deps": "กำลังติดตั้ง dependencies ของ Python",
+    "step_2_init_crow": "กำลังเริ่มต้น crow.bin",
+    "step_3_vscode_tasks": "กำลังสร้าง .vscode/tasks.json (เริ่ม SSE อัตโนมัติเมื่อเปิดโฟลเดอร์)",
+    "step_4_custom_mode": "กำลังสร้างโหมดการเปิดใช้งานอัตโนมัติของ Zoo Code",
+    "step_5_start_server": "กำลังเริ่มเซิร์ฟเวอร์ Crow SSE + การเริ่มต้นอัตโนมัติ",
+    "step_done": "เสร็จสิ้น",
+    "complete_title": "การติดตั้ง Crow Memory เสร็จสมบูรณ์!",
+    "sse_running": "เซิร์ฟเวอร์ SSE กำลังทำงานที่ http://127.0.0.1:9020/sse",
+    "next_steps_label": "ขั้นตอนถัดไป:",
+    "next_step_1": "1. รีสตาร์ท Zoo Code",
+    "next_step_2": "2. สลับโหมดเป็น \"Orchestrator + Crow\"",
+    "next_step_3": "3. Crow เปิดใช้งานอัตโนมัติ ไม่ต้องตั้งค่าด้วยตนเอง",
+    "next_step_4": "4. เซิร์ฟเวอร์ SSE เริ่มต้นพร้อม Windows ผ่าน Task Scheduler"
   },
+
   "system_prompt": {
-    "header": "# Crow Memory — Pravidla systémového promptu",
-    "subtitle": "> Tato pravidla byla evoluována Crow a schválena uživatelem.\n> Představují statisticky významná zkreslení kódování.\n> Neupravujte ručně — používejte nástroje evoluce Crow MCP.",
-    "managed_by": "<!-- Tento soubor je spravován crow_mcp_server.py -->",
+    "header": "# Crow Memory — กฎของ System Prompt",
+    "subtitle": "> กฎเหล่านี้ถูกวิวัฒนาการโดย Crow และได้รับการอนุมัติจากผู้ใช้\n> แสดงถึงอคติการเขียนโค้ดที่มีนัยสำคัญทางสถิติ\n> อย่าแก้ไขด้วยตนเอง ให้ใช้เครื่องมือวิวัฒนาการของ Crow MCP",
+    "managed_by": "<!-- ไฟล์นี้จัดการโดย crow_mcp_server.py -->",
     "default_rules": [
-      "RULE: Před každou odpovědí zavolejte crow_recall(domain=\"all\") pro dotaz na všech 8 registrů (style, bug, arch, context, life_pref, life_avoid, life_phil, life_context) ohledně stylu kódování, intuice chyb, architektonických preferencí, osobního vkusu, filozofie a aktuálního kontextu uživatele. Odražte vrácené tipy ve své odpovědi.",
-      "RULE: Po každé odpovědi vstřebejte, co uživatel odhalil — preference, filozofii, opravy, kontext — přes crow_ingest. Sami určete vhodný registr a polaritu, aniž byste čekali, až uživatel řekne \"zapamatuj si to\". Po práci s kódem automaticky vyhodnoťte výsledky sestavení přes crow_ingest_from_build.",
-      "RULE: Nepřeskakujte pravidla recall+ingest ani u úkolů nesouvisejících s kódováním, jako je úprava dokumentů, git operace nebo změny konfigurace. Vždy je provádějte."
+      "RULE: ก่อนทุกคำตอบ เรียก crow_recall(domain=\"all\") เพื่อสอบถามรีจิสเตอร์ทั้ง 8 ตัว (style, bug, arch, context, life_pref, life_avoid, life_phil, life_context) เกี่ยวกับสไตล์การเขียนโค้ด สัญชาตญาณข้อบกพร่อง ความชอบทางสถาปัตยกรรม รสนิยมส่วนตัว ปรัชญา และบริบทปัจจุบันของผู้ใช้ สะท้อนคำใบ้ที่ได้รับในคำตอบของคุณ",
+      "RULE: หลังทุกคำตอบ บันทึกสิ่งที่ผู้ใช้เปิดเผย ความชอบ ปรัชญา การแก้ไข บริบท ผ่าน crow_ingest ตัดสินรีจิสเตอร์และ polarity ที่เหมาะสมด้วยตนเอง โดยไม่ต้องรอให้ผู้ใช้พูดว่า \"จำไว้\" หลังจากทำงานกับโค้ด ให้ประเมินผลการ build โดยอัตโนมัติผ่าน crow_ingest_from_build",
+      "RULE: อย่าข้ามกฎ recall+ingest แม้กับงานที่ไม่ใช่การเขียนโค้ด เช่น การแก้ไขเอกสาร การดำเนินการ git หรือการเปลี่ยนแปลงการตั้งค่า ให้ดำเนินการเสมอ"
     ]
   }
 }

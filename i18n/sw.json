@@ -1,0 +1,119 @@
+{
+  "_meta": {
+    "locale": "sw",
+    "language_name": "Swahili",
+    "version": "1.0.0",
+    "last_updated": "2026-11-24"
+  },
+
+  "server": {
+    "instructions": "Crow Memory — Kumbukumbu ya nje ya sinepsi kwa mawakala wa AI wa uandishi wa programu. Huhifadhi mtindo wako wa uandishi wa programu, hisia za hitilafu, na mapendeleo ya usanifu kama matriki ya uzani iliyobanwa katika crow.bin.",
+
+    "prompts": {
+      "crow_memory_bias": {
+        "description": "Kizuizi cha upendeleo cha Crow Memory kinachopachikwa kiotomatiki. Kina mtindo wako wa uandishi wa programu, mapendeleo, na kanuni zilizoboreshwa. Mwenyeji anapaswa kuipakia mwanzoni mwa kipindi.",
+        "body_template": "=== Crow Memory — Muktadha unaopachikwa kiotomatiki ===\n\n[Kanuni za kudumu zilizoboreshwa]\n{rules}\n\n[Miongozo ya hivi karibuni ya kumbukumbu]\n{bias}\n\nMuktadha ulio juu unawakilisha mapendeleo na mtindo wako uliojifunza. Uitumie kuongoza majibu yako. Ili kujifunza zaidi, ita crow_recall ukiwa na swali maalum na rejista (style/bug/arch/context/life_pref/life_avoid/life_phil/life_context)."
+      },
+      "crow_evolved_rules": {
+        "description": "Permanent evolved rules from Crow's system_prompt.md: permanent rules (human-promoted via CROW_ADMIN_TOKEN) plus unreviewed model suggestions.",
+        "body_template": "{prompt}"
+      }
+    }
+  },
+
+  "tools": {
+    "crow_recall": {
+      "description": "Hurejesha mtindo wa uandishi wa programu wa mtumiaji, hisia za hitilafu, mapendeleo ya usanifu, au muktadha wa kibinafsi kutoka kumbukumbu ya sinepsi ya Crow. Iite KABLA ya kila jibu ili kupatanisha na upendeleo wa kimantiki wa mtumiaji. Kwa chaguo-msingi (register=all au ikiachiwa wazi, domain=all), huchunguza rejista zote 8 na kuunganisha matokeo kwa ufanano unaofaa.",
+      "parameters": {
+        "query": "Maelezo ya lugha ya kawaida ya kazi ya sasa.",
+        "register": "Rejista gani. Tumia 'all' (au iachie wazi) kuchunguza kila rejista katika kikoa kilichochaguliwa. Code: style/bug/arch/context. Life: life_pref/life_avoid/life_phil/life_context.",
+        "domain": "Kichujio cha kikoa kinachotumika wakati register ni 'all' au ikiachiwa wazi. 'code' = style/bug/arch/context, 'life' = life_pref/life_avoid/life_phil/life_context, 'all' = rejista zote 8 (chaguo-msingi).",
+        "top_k": "Idadi ya miongozo (1-5).",
+        "format": "Muundo wa matokeo. 'hint' hurudisha miongozo ya JSON (chaguo-msingi); 'bias_block' hurudisha kizuizi cha maandishi cha [User Bias] kwa ajili ya kupachika kwenye maelekezo ya mfumo.",
+        "project": "Lebo ya mradi inayotumika kuongeza uzito wa miongozo ya mradi mmoja na kuchuja/kupunguza uzito wa ile ya miradi mingine.",
+        "strict_project": "Ikiwa true, huchuja kabisa miongozo ya miradi mingine kutoka kwenye matokeo."
+      }
+    },
+    "crow_ingest": {
+      "description": "Huingiza uzoefu wa uandishi wa programu kwenye kumbukumbu ya muda mrefu ya sinepsi ya Crow. Iite BAADA ya matokeo ya build/majaribio au maoni ya wazi ya mtumiaji. Toa ama polarity ya wazi au exit_code ya build kwa ajili ya kupanga polarity kiotomatiki. Maudhui husafishwa kwanza; maingizo yasiyo na maana yanakataliwa bila kugusa kumbukumbu.",
+      "parameters": {
+        "key": "Maelezo ya kiitikadi ya hali hiyo.",
+        "value": "Mfumo wa msimbo au uamuzi uliotumika.",
+        "register": "Rejista ya kuhifadhi (style/bug/arch/context/life_pref/life_avoid/life_phil/life_context).",
+        "polarity": "Nguvu ya uimarishaji [-2.0, 2.0]. Si lazima ikiwa exit_code imetolewa; polarity ya wazi hushinda ikiwa zote mbili zimetolewa.",
+        "exit_code": "Msimbo wa kutoka wa build (0 = mafanikio). Hupangwa kiotomatiki kuwa polarity (+1.5/+0.5 kwa mafanikio, -0.5/-1.0 kwa kushindwa) isipokuwa polarity ya wazi imetolewa.",
+        "user_edited": "Iwapo mtumiaji alihariri matokeo ya AI. Hurekebisha polarity inayotokana na exit_code.",
+        "project": "Lebo ya mradi inayohifadhiwa pamoja na ingizo la kumbukumbu kwa ajili ya ukumbushaji unaozingatia mradi baadaye."
+      }
+    },
+    "crow_admin": {
+      "description": "Shughuli za usimamizi za Crow katika chombo kimoja. Vitendo: diagnostics (takwimu za kumbukumbu), drift (ukaguzi wa mteremko), prompt (kusoma/kuongeza/takwimu za system_prompt.md), backup (kuunda/kuzungusha/kuorodhesha/kurejesha), evolve (kupendekeza mabadiliko ya maelekezo), project_info (kuorodhesha/kuunda vielelezo vya mradi).",
+      "parameters": {
+        "action": "Operesheni gani ya usimamizi: diagnostics, drift, prompt, backup, evolve, au project_info.",
+        "args": "Kitu cha hoja mahususi kwa kitendo kinachopitishwa kwenye operesheni iliyochaguliwa."
+      }
+    }
+  },
+
+  "errors": {
+    "unknown_tool": "Chombo kisichojulikana: {name}",
+    "unknown_prompt": "Maelekezo yasiyojulikana: {name}",
+    "unknown_action": "Kitendo kisichojulikana cha {context}: {action}",
+    "project_name_required": "project_name inahitajika kwa kitendo cha create"
+  },
+
+  "recall_messages": {
+    "faint_bias": "Crow inakumbuka upendeleo hafifu wa {register}. Kumbukumbu chache bado zimehifadhiwa.",
+    "unknown_register": "Rejista isiyojulikana: {register}"
+  },
+
+  "ingest_messages": {
+    "status_ingested": "imeingizwa",
+    "unknown_register": "Rejista isiyojulikana: {register}"
+  },
+
+  "evolve_messages": {
+    "no_patterns": "Hakuna mifumo yenye umuhimu wa kitakwimu iliyogunduliwa bado."
+  },
+
+  "drift_messages": {
+    "healthy": "Uhakika wa kumbukumbu uko vizuri.",
+    "confused": "Kumbukumbu ya Crow inaonekana kuchanganyikiwa. Kazi za hivi karibuni zinaweza kuwa mpya mno au kumbukumbu imejaa. Fikiria kuweka upya spektra au kuhifadhi kwenye kumbukumbu ya akiba."
+  },
+
+  "cli": {
+    "stdio_start": "Seva ya Crow Memory MCP inaendeshwa kwenye stdio",
+    "sse_start": "Seva ya Crow Memory MCP SSE inasikiliza kwenye http://{host}:{port}/sse",
+    "http_start": "Seva ya Crow Memory MCP Streamable HTTP inasikiliza kwenye http://{host}:{port}/",
+    "dual_start_sse": "Seva ya Crow Memory MCP SSE inasikiliza kwenye http://{host}:{sse_port}/sse",
+    "dual_start_http": "Seva ya Crow Memory MCP Streamable HTTP inasikiliza kwenye http://{host}:{http_port}/"
+  },
+
+  "installer": {
+    "banner_title": "Kisakinishi cha Crow Memory kwa Zoo Code",
+    "step_1_install_deps": "Inasakinisha vitegemezi vya Python",
+    "step_2_init_crow": "Inaanzisha crow.bin",
+    "step_3_vscode_tasks": "Inaunda .vscode/tasks.json (kuanzisha SSE kiotomatiki unapofungua folda)",
+    "step_4_custom_mode": "Inaunda hali ya uanzishaji kiotomatiki ya Zoo Code",
+    "step_5_start_server": "Inaanzisha seva ya Crow SSE + uanzishaji kiotomatiki",
+    "step_done": "Imekamilika.",
+    "complete_title": "Usakinishaji wa Crow Memory umekamilika!",
+    "sse_running": "Seva ya SSE inaendeshwa kwenye http://127.0.0.1:9020/sse",
+    "next_steps_label": "Hatua zinazofuata:",
+    "next_step_1": "1. Anzisha upya Zoo Code",
+    "next_step_2": "2. Badilisha hali kuwa \"Orchestrator + Crow\"",
+    "next_step_3": "3. Crow huanza kiotomatiki — hakuna usanidi wa mkono unaohitajika",
+    "next_step_4": "4. Seva ya Crow huanza kiotomatiki pamoja na Windows kupitia Task Scheduler"
+  },
+
+  "system_prompt": {
+    "header": "# Crow Memory — Kanuni za Maelekezo ya Mfumo",
+    "subtitle": "> Kanuni hizi ziliboreshwa na Crow na kuidhinishwa na mtumiaji.\n> Zinawakilisha upendeleo wa uandishi wa programu wenye umuhimu wa kitakwimu.\n> Usizihariri kwa mkono — tumia zana za evolve za Crow MCP.",
+    "managed_by": "<!-- Faili hii inasimamiwa na crow_mcp_server.py -->",
+    "default_rules": [
+      "RULE: Kabla ya kila jibu, ita crow_recall(domain=\"all\") kuchunguza rejista zote 8 (style, bug, arch, context, life_pref, life_avoid, life_phil, life_context) kwa mtindo wa uandishi wa programu wa mtumiaji, hisia za hitilafu, mapendeleo ya usanifu, ladha ya kibinafsi, falsafa, na muktadha wa sasa. Onyesha miongozo iliyorejeshwa katika jibu lako.",
+      "RULE: Baada ya kila jibu, ingiza kile mtumiaji alifichua — mapendeleo, falsafa, marekebisho, muktadha — kupitia crow_ingest. Amua rejista na polarity inayofaa wewe mwenyewe bila kusubiri mtumiaji aseme \"kumbuka hili.\" Baada ya kazi ya msimbo, tathmini matokeo ya build kiotomatiki kupitia crow_ingest_from_build.",
+      "RULE: Usiruke kanuni za recall+ingest hata kwa kazi zisizo za uandishi wa programu kama kuhariri hati, shughuli za git, au mabadiliko ya usanidi. Zitekeleze kila wakati."
+    ]
+  }
+}

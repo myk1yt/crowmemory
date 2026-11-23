@@ -1,0 +1,119 @@
+{
+  "_meta": {
+    "locale": "gu",
+    "language_name": "Gujarati",
+    "version": "1.0.0",
+    "last_updated": "2026-11-24"
+  },
+
+  "server": {
+    "instructions": "Crow Memory — AI કોડિંગ એજન્ટો માટે બાહ્ય સિનેપ્ટિક મેમરી. તે તમારી કોડિંગ શૈલી, બગ અંગેની અંતર્જ્ઞાન અને આર્કિટેક્ચરલ પસંદગીઓને crow.bin માં સંકુચિત વેઇટ મેટ્રિસીસ તરીકે સંગ્રહિત કરે છે.",
+
+    "prompts": {
+      "crow_memory_bias": {
+        "description": "આપમેળે ઇન્જેક્ટ થતો Crow Memory બાયસ બ્લોક. તેમાં તમારી કોડિંગ શૈલી, પસંદગીઓ અને વિકસિત નિયમો સમાયેલા છે. હોસ્ટે તેને સેશનની શરૂઆતમાં લોડ કરવો જોઈએ.",
+        "body_template": "=== Crow Memory — આપમેળે ઇન્જેક્ટ થયેલ સંદર્ભ ===\n\n[કાયમી વિકસિત નિયમો]\n{rules}\n\n[તાજેતરના મેમરી સંકેતો]\n{bias}\n\nઉપરનો સંદર્ભ તમારી શીખેલી પસંદગીઓ અને શૈલી દર્શાવે છે. તેનો ઉપયોગ તમારા જવાબોને માર્ગદર્શન આપવા માટે કરો. વધુ જાણવા માટે, ચોક્કસ ક્વેરી અને register (style/bug/arch/context/life_pref/life_avoid/life_phil/life_context) સાથે crow_recall ને કૉલ કરો."
+      },
+      "crow_evolved_rules": {
+        "description": "Permanent evolved rules from Crow's system_prompt.md: permanent rules (human-promoted via CROW_ADMIN_TOKEN) plus unreviewed model suggestions.",
+        "body_template": "{prompt}"
+      }
+    }
+  },
+
+  "tools": {
+    "crow_recall": {
+      "description": "Crow સિનેપ્ટિક મેમરીમાંથી વપરાશકર્તાની વિશિષ્ટ કોડિંગ શૈલી, બગ અંગેની અંતર્જ્ઞાન, આર્કિટેક્ચરલ પસંદગી અથવા વ્યક્તિગત સંદર્ભ યાદ કરે છે. વપરાશકર્તાના પ્રેરક પક્ષપાત સાથે સુસંગત રહેવા માટે દરેક જવાબ પહેલાં આને કૉલ કરો. ડિફૉલ્ટ રૂપે (register=all અથવા છોડી દેવામાં આવે તો, domain=all), તે બધા 8 register ને ક્વેરી કરે છે અને અસરકારક સામ્યતા દ્વારા પરિણામોને વૈશ્વિક રીતે મર્જ કરે છે.",
+      "parameters": {
+        "query": "વર્તમાન કાર્યનું કુદરતી ભાષામાં વર્ણન.",
+        "register": "કયો register. પસંદ કરેલા ડોમેનમાંના દરેક register ને ક્વેરી કરવા માટે 'all' વાપરો (અથવા છોડી દો). Code: style/bug/arch/context. Life: life_pref/life_avoid/life_phil/life_context.",
+        "domain": "જ્યારે register 'all' હોય અથવા છોડી દેવામાં આવે ત્યારે વપરાતું ડોમેન ફિલ્ટર. 'code' = style/bug/arch/context, 'life' = life_pref/life_avoid/life_phil/life_context, 'all' = બધા 8 register (ડિફૉલ્ટ).",
+        "top_k": "સંકેતોની સંખ્યા (1-5).",
+        "format": "આઉટપુટ ફોર્મેટ. 'hint' JSON સંકેતો પરત કરે છે (ડિફૉલ્ટ); 'bias_block' સિસ્ટમ પ્રોમ્પ્ટ ઇન્જેક્શન માટે [User Bias] ટેક્સ્ટ બ્લોક પરત કરે છે.",
+        "project": "એક જ પ્રોજેક્ટના સંકેતોને વધારવા અને બીજા પ્રોજેક્ટના સંકેતોને ફિલ્ટર કરવા અથવા દંડવા માટે વપરાતો પ્રોજેક્ટ ટૅગ.",
+        "strict_project": "true હોય ત્યારે પરિણામોમાંથી બીજા પ્રોજેક્ટના સંકેતોને સંપૂર્ણપણે દૂર કરે છે."
+      }
+    },
+    "crow_ingest": {
+      "description": "Crow ની લાંબા ગાળાની સિનેપ્ટિક મેમરીમાં કોડિંગ અનુભવ સમાવે છે. બિલ્ડ/ટેસ્ટ પરિણામો અથવા વપરાશકર્તાના સ્પષ્ટ પ્રતિસાદ પછી આને કૉલ કરો. સ્વયં પોલારિટી મેપિંગ માટે સ્પષ્ટ polarity અથવા બિલ્ડ exit_code આપો. સામગ્રી પહેલાં સૅનિટાઇઝ થાય છે; શુદ્ધ ઘોંઘાટવાળું ઇનપુટ મેમરીને સ્પર્શ કર્યા વિના નકારી કાઢવામાં આવે છે.",
+      "parameters": {
+        "key": "પરિસ્થિતિનું અમૂર્ત વર્ણન.",
+        "value": "લાગુ કરાયેલ કોડ પેટર્ન અથવા નિર્ણય.",
+        "register": "સંગ્રહ કરવાનો register (style/bug/arch/context/life_pref/life_avoid/life_phil/life_context).",
+        "polarity": "મજબૂતીકરણની તાકાત [-2.0, 2.0]. exit_code આપવામાં આવે તો વૈકલ્પિક; બંને આપવામાં આવે ત્યારે સ્પષ્ટ polarity પ્રાધાન્ય પામે છે.",
+        "exit_code": "બિલ્ડ એક્ઝિટ કોડ (0 = સફળ). સ્પષ્ટ polarity ન આપવામાં આવે તો આપમેળે પોલારિટીમાં મેપ થાય છે (સફળતા પર +1.5/+0.5, નિષ્ફળતા પર -0.5/-1.0).",
+        "user_edited": "વપરાશકર્તાએ AI નું આઉટપુટ સંપાદિત કર્યું છે કે નહીં. exit_code થી મેળવેલી પોલારિટીને સમાયોજિત કરે છે.",
+        "project": "પછીના પ્રોજેક્ટ-જાગૃત રિકૉલ માટે મેમરી એન્ટ્રી સાથે સંગ્રહિત પ્રોજેક્ટ ટૅગ."
+      }
+    },
+    "crow_admin": {
+      "description": "એક જ ટૂલમાં Crow વહીવટી કામગીરી. ક્રિયાઓ: diagnostics (મેમરી આંકડા), drift (ડ્રિફ્ટ તપાસ), prompt (system_prompt.md વાંચો/ઉમેરો/આંકડા), backup (બનાવો/રોટેટ કરો/યાદી બનાવો/પુનઃપ્રાપ્ત કરો), evolve (પ્રોમ્પ્ટ મ્યુટેશન સૂચવો), project_info (પ્રોજેક્ટ ઇન્સ્ટન્સની યાદી બનાવો/બનાવો).",
+      "parameters": {
+        "action": "કઈ વહીવટી કામગીરી: diagnostics, drift, prompt, backup, evolve, અથવા project_info.",
+        "args": "પસંદ કરેલી કામગીરીને પસાર કરાતો ક્રિયા-વિશિષ્ટ આર્ગ્યુમેન્ટ ઑબ્જેક્ટ."
+      }
+    }
+  },
+
+  "errors": {
+    "unknown_tool": "અજાણ્યું ટૂલ: {name}",
+    "unknown_prompt": "અજાણ્યો પ્રોમ્પ્ટ: {name}",
+    "unknown_action": "અજાણી {context} ક્રિયા: {action}",
+    "project_name_required": "create ક્રિયા માટે project_name જરૂરી છે"
+  },
+
+  "recall_messages": {
+    "faint_bias": "Crow ને ઝાંખો {register} બાયસ યાદ આવે છે. હજી થોડી જ મેમરીઓ સંગ્રહિત છે.",
+    "unknown_register": "અજાણ્યો register: {register}"
+  },
+
+  "ingest_messages": {
+    "status_ingested": "સમાવેલ",
+    "unknown_register": "અજાણ્યો register: {register}"
+  },
+
+  "evolve_messages": {
+    "no_patterns": "હજી સુધી કોઈ આંકડાકીય રીતે નોંધપાત્ર પેટર્ન મળી નથી."
+  },
+
+  "drift_messages": {
+    "healthy": "મેમરીનો વિશ્વાસ સ્વસ્થ છે.",
+    "confused": "Crow મેમરી મૂંઝવણમાં લાગે છે. તાજેતરનાં કાર્યો ખૂબ નવાં હોઈ શકે છે અથવા મેમરી ભરાઈ ગઈ છે. સ્પેક્ટ્રલ રીસેટ અથવા આર્કાઇવિંગ ધ્યાનમાં લો."
+  },
+
+  "cli": {
+    "stdio_start": "Crow Memory MCP સર્વર stdio પર ચાલી રહ્યું છે",
+    "sse_start": "Crow Memory MCP SSE સર્વર http://{host}:{port}/sse પર સાંભળી રહ્યું છે",
+    "http_start": "Crow Memory MCP Streamable HTTP સર્વર http://{host}:{port}/ પર સાંભળી રહ્યું છે",
+    "dual_start_sse": "Crow Memory MCP SSE સર્વર http://{host}:{sse_port}/sse પર સાંભળી રહ્યું છે",
+    "dual_start_http": "Crow Memory MCP Streamable HTTP સર્વર http://{host}:{http_port}/ પર સાંભળી રહ્યું છે"
+  },
+
+  "installer": {
+    "banner_title": "Zoo Code માટે Crow Memory ઇન્સ્ટોલર",
+    "step_1_install_deps": "Python આધારિતતાઓ ઇન્સ્ટોલ કરી રહ્યાં છીએ",
+    "step_2_init_crow": "crow.bin ને ઇનિશિયલાઇઝ કરી રહ્યાં છીએ",
+    "step_3_vscode_tasks": ".vscode/tasks.json બનાવી રહ્યાં છીએ (ફોલ્ડર ખુલે ત્યારે SSE આપમેળે શરૂ થાય)",
+    "step_4_custom_mode": "Zoo Code આપમેળે સક્રિય થવાનો મોડ બનાવી રહ્યાં છીએ",
+    "step_5_start_server": "Crow SSE સર્વર શરૂ કરી રહ્યાં છીએ + આપમેળે શરૂ કરવાની ગોઠવણ",
+    "step_done": "થઈ ગયું.",
+    "complete_title": "Crow Memory ઇન્સ્ટોલેશન પૂર્ણ થયું!",
+    "sse_running": "SSE સર્વર http://127.0.0.1:9020/sse પર ચાલી રહ્યું છે",
+    "next_steps_label": "આગળના પગલાં:",
+    "next_step_1": "1. Zoo Code ફરીથી શરૂ કરો",
+    "next_step_2": "2. મોડને \"Orchestrator + Crow\" માં બદલો",
+    "next_step_3": "3. Crow આપમેળે સક્રિય થાય છે — મેન્યુઅલ સેટઅપની જરૂર નથી",
+    "next_step_4": "4. Task Scheduler દ્વારા Crow સર્વર Windows સાથે આપમેળે શરૂ થાય છે"
+  },
+
+  "system_prompt": {
+    "header": "# Crow Memory — સિસ્ટમ પ્રોમ્પ્ટ નિયમો",
+    "subtitle": "> આ નિયમો Crow દ્વારા વિકસિત અને વપરાશકર્તા દ્વારા મંજૂર કરાયા છે.\n> તે આંકડાકીય રીતે નોંધપાત્ર કોડિંગ પક્ષપાત દર્શાવે છે.\n> જાતે સંપાદિત કરશો નહીં — Crow MCP evolve ટૂલ્સ વાપરો.",
+    "managed_by": "<!-- આ ફાઇલ crow_mcp_server.py દ્વારા સંચાલિત છે -->",
+    "default_rules": [
+      "RULE: દરેક જવાબ પહેલાં, વપરાશકર્તાની કોડિંગ શૈલી, બગ અંગેની અંતર્જ્ઞાન, આર્કિટેક્ચરલ પસંદગીઓ, વ્યક્તિગત રુચિ, ફિલસૂફી અને વર્તમાન સંદર્ભ માટે બધા 8 register (style, bug, arch, context, life_pref, life_avoid, life_phil, life_context) ને ક્વેરી કરવા crow_recall(domain=\"all\") ને કૉલ કરો. પરત મળેલા સંકેતો તમારા જવાબમાં પ્રતિબિંબિત કરો.",
+      "RULE: દરેક જવાબ પછી, વપરાશકર્તાએ જે જાહેર કર્યું તે (પસંદગીઓ, ફિલસૂફી, સુધારા, સંદર્ભ) crow_ingest દ્વારા સમાવો. વપરાશકર્તા \"આ યાદ રાખો\" કહે તેની રાહ જોયા વિના યોગ્ય register અને polarity જાતે નક્કી કરો. કોડ કાર્ય પછી, crow_ingest_from_build દ્વારા બિલ્ડ પરિણામોનું આપમેળે મૂલ્યાંકન કરો.",
+      "RULE: ડોક્યુમેન્ટ સંપાદન, git કામગીરી અથવા રૂપરેખાંકન ફેરફારો જેવા કોડિંગ સિવાયના કાર્યો માટે પણ recall+ingest નિયમો છોડશો નહીં. તેમને હંમેશા ચલાવો."
+    ]
+  }
+}

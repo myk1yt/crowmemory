@@ -1,0 +1,119 @@
+{
+  "_meta": {
+    "locale": "mn",
+    "language_name": "Mongolian",
+    "version": "1.0.0",
+    "last_updated": "2026-11-24"
+  },
+
+  "server": {
+    "instructions": "Crow Memory — AI код бичих агентуудад зориулсан гадаад синапс санах ой. Таны кодын хэв маяг, алдааны зөн совин, архитектурын сонголтыг crow.bin файлд шахсан жингийн матриц хэлбэрээр хадгална.",
+
+    "prompts": {
+      "crow_memory_bias": {
+        "description": "Автоматаар оруулсан Crow Memory хэвийлтийн блок. Таны кодын хэв маяг, сонголт, хөгжсөн дүрмийг агуулна. Хост үүнийг сессийн эхэнд ачаалах ёстой.",
+        "body_template": "=== Crow Memory — автоматаар оруулсан контекст ===\n\n[Байнгын хөгжсөн дүрэм]\n{rules}\n\n[Сүүлийн санах ойн зөвлөмж]\n{bias}\n\nДээрх контекст нь таны сурсан сонголт, хэв маягийг илэрхийлнэ. Үүнийг хариултаа чиглүүлэхэд ашиглана уу. Илүү ихийг мэдэхийн тулд тодорхой query болон register-тэй crow_recall-ийг дуудна уу (style/bug/arch/context/life_pref/life_avoid/life_phil/life_context)."
+      },
+      "crow_evolved_rules": {
+        "description": "Permanent evolved rules from Crow's system_prompt.md: permanent rules (human-promoted via CROW_ADMIN_TOKEN) plus unreviewed model suggestions.",
+        "body_template": "{prompt}"
+      }
+    }
+  },
+
+  "tools": {
+    "crow_recall": {
+      "description": "Crow-ын синапс санах ойгоос хэрэглэгчийн кодын хэв маяг, алдааны зөн совин, архитектурын сонголт эсвэл хувийн контекстийг эргүүлэн татна. Хэрэглэгчийн индуктив хэвийлтэй нийцүүлэхийн тулд хариулах бүрийн ӨМНӨ үүнийг дуудна уу. Анхдагчаар (register=all эсвэл заагаагүй, domain=all) бүх 8 регистрийг асууж, үр дүнг үр дүнтэй ижил төстэй байдлаар нэгтгэнэ.",
+      "parameters": {
+        "query": "Одоогийн ажлын байгалийн хэлээрх тайлбар.",
+        "register": "Аль регистр. Сонгосон домэйн дахь бүх регистрийг асуухын тулд 'all' ашиглана уу (эсвэл орхино уу). Code: style/bug/arch/context. Life: life_pref/life_avoid/life_phil/life_context.",
+        "domain": "register нь 'all' байх үед эсвэл заагаагүй үед ашиглагдах домэйны шүүлтүүр. 'code' = style/bug/arch/context, 'life' = life_pref/life_avoid/life_phil/life_context, 'all' = бүх 8 регистр (анхдагч).",
+        "top_k": "Зөвлөмжийн тоо (1-5).",
+        "format": "Гаралтын формат. 'hint' нь JSON зөвлөмж буцаана (анхдагч); 'bias_block' нь системийн промптод оруулах [User Bias] текстийн блокийг буцаана.",
+        "project": "Нэг төслийн зөвлөмжийг дэмжих, бусад төслийн зөвлөмжийг шүүх эсвэл торгох зорилгоор ашиглагдах төслийн шошго.",
+        "strict_project": "true үед бусад төслийн зөвлөмжийг үр дүнгээс бүрэн хасна."
+      }
+    },
+    "crow_ingest": {
+      "description": "Код бичих туршлагыг Crow-ын урт хугацааны синапс санах ойд оруулна. Build эсвэл тестийн үр дүн, юмуу хэрэглэгчийн тодорхой санал хүсэлтийн ДАРАА дуудна уу. Полярыг автоматаар зураглахын тулд тодорхой polarity эсвэл build-ийн exit_code-ийг өгнө үү. Агуулгыг эхлээд цэвэрлэнэ; зөвхөн чимээ шуугиан болсон оролтыг санах ойд хүрэлгүйгээр татгалзана.",
+      "parameters": {
+        "key": "Нөхцөл байдлын хийсвэр тайлбар.",
+        "value": "Хэрэглэсэн кодын загвар эсвэл шийдвэр.",
+        "register": "Хадгалах регистр (style/bug/arch/context/life_pref/life_avoid/life_phil/life_context).",
+        "polarity": "Бэхжүүлэх хүч [-2.0, 2.0]. exit_code өгсөн бол заавал биш; хоёуланг нь өгвөл тодорхой polarity давамгайлна.",
+        "exit_code": "Build-ийн гаралтын код (0 = амжилт). Тодорхой polarity өгөөгүй бол полярт автоматаар зураглана (амжилттай үед +1.5/+0.5, амжилтгүй үед -0.5/-1.0).",
+        "user_edited": "Хэрэглэгч AI-ын гаралтыг зассан эсэх. exit_code-оос гарсан полярыг тохируулна.",
+        "project": "Дараа нь төсөлд мэдрэмжтэй эргүүлэн татахад зориулж санах ойн бичлэгтэй хамт хадгалагдах төслийн шошго."
+      }
+    },
+    "crow_admin": {
+      "description": "Crow-ын захиргааны үйлдлүүдийг нэг хэрэгсэлд нэгтгэв. Үйлдэл: diagnostics (санах ойн статистик), drift (дрифтийн шалгалт), prompt (system_prompt.md унших, нэмэх, статистик), backup (үүсгэх, эргэлдүүлэх, жагсаах, сэргээх), evolve (промптын мутаци санал болгох), project_info (төслийн инстанцыг жагсаах, үүсгэх).",
+      "parameters": {
+        "action": "Аль захиргааны үйлдэл: diagnostics, drift, prompt, backup, evolve эсвэл project_info.",
+        "args": "Сонгосон үйлдэл рүү дамжуулагдах, үйлдэлд тохирсон аргументын объект."
+      }
+    }
+  },
+
+  "errors": {
+    "unknown_tool": "Танигдаагүй хэрэгсэл: {name}",
+    "unknown_prompt": "Танигдаагүй промпт: {name}",
+    "unknown_action": "Танигдаагүй {context} үйлдэл: {action}",
+    "project_name_required": "create үйлдэлд project_name шаардлагатай"
+  },
+
+  "recall_messages": {
+    "faint_bias": "Crow {register} хэвийлтийг бүдэгхэн санаж байна. Одоогоор цөөн санах ой хадгалагдсан.",
+    "unknown_register": "Танигдаагүй регистр: {register}"
+  },
+
+  "ingest_messages": {
+    "status_ingested": "оруулсан",
+    "unknown_register": "Танигдаагүй регистр: {register}"
+  },
+
+  "evolve_messages": {
+    "no_patterns": "Одоогоор статистикийн хувьд ач холбогдолтой хэв шинж илрээгүй."
+  },
+
+  "drift_messages": {
+    "healthy": "Санах ойн итгэл найдвар эрүүл байна.",
+    "confused": "Crow-ын санах ой эргэлзээтэй байна. Сүүлийн ажлууд хэтэрхий шинэ эсвэл санах ой дүүрсэн байж болзошгүй. Спектрийн дахин тохируулга эсвэл архивлах талаар бодож үзнэ үү."
+  },
+
+  "cli": {
+    "stdio_start": "Crow Memory MCP сервер stdio дээр ажиллаж байна",
+    "sse_start": "Crow Memory MCP SSE сервер http://{host}:{port}/sse хаяг дээр сонсож байна",
+    "http_start": "Crow Memory MCP Streamable HTTP сервер http://{host}:{port}/ хаяг дээр сонсож байна",
+    "dual_start_sse": "Crow Memory MCP SSE сервер http://{host}:{sse_port}/sse хаяг дээр сонсож байна",
+    "dual_start_http": "Crow Memory MCP Streamable HTTP сервер http://{host}:{http_port}/ хаяг дээр сонсож байна"
+  },
+
+  "installer": {
+    "banner_title": "Zoo Code-д зориулсан Crow Memory суулгагч",
+    "step_1_install_deps": "Python хамаарлуудыг суулгаж байна",
+    "step_2_init_crow": "crow.bin-ийг эхлүүлж байна",
+    "step_3_vscode_tasks": ".vscode/tasks.json үүсгэж байна (фолдер нээгдэхэд SSE автоматаар эхэлнэ)",
+    "step_4_custom_mode": "Zoo Code-ийн автомат идэвхжүүлэх горим үүсгэж байна",
+    "step_5_start_server": "Crow SSE серверийг эхлүүлж байна, мөн автомат эхлүүлэлт",
+    "step_done": "Дууслаа.",
+    "complete_title": "Crow Memory суулгалт дууслаа!",
+    "sse_running": "SSE сервер http://127.0.0.1:9020/sse хаяг дээр ажиллаж байна",
+    "next_steps_label": "Дараагийн алхамууд:",
+    "next_step_1": "1. Zoo Code-ийг дахин эхлүүлнэ үү",
+    "next_step_2": "2. Горимыг \"Orchestrator + Crow\" руу сэлгэнэ үү",
+    "next_step_3": "3. Crow автоматаар идэвхжинэ, гараар тохируулах шаардлагагүй",
+    "next_step_4": "4. Crow сервер Windows-той хамт Task Scheduler-ээр автоматаар эхэлнэ"
+  },
+
+  "system_prompt": {
+    "header": "# Crow Memory — системийн промптын дүрэм",
+    "subtitle": "> Эдгээр дүрмийг Crow хөгжүүлж, хэрэглэгч баталсан.\n> Эдгээр нь статистикийн хувьд ач холбогдолтой код бичих хэвийлтийг илэрхийлнэ.\n> Гараар бүү засварла, Crow MCP-ийн evolve хэрэгслүүдийг ашиглана уу.",
+    "managed_by": "<!-- Энэ файлыг crow_mcp_server.py удирддаг -->",
+    "default_rules": [
+      "RULE: Хариулах бүрийн өмнө crow_recall(domain=\"all\")-ийг дуудаж, хэрэглэгчийн кодын хэв маяг, алдааны зөн совин, архитектурын сонголт, хувийн амт, философи, одоогийн контекстийн талаар бүх 8 регистрийг (style, bug, arch, context, life_pref, life_avoid, life_phil, life_context) асууна уу. Буцаж ирсэн зөвлөмжийг хариултдаа тусгана уу.",
+      "RULE: Хариулах бүрийн дараа хэрэглэгчийн илэрхийлсэн зүйлийг, тухайлбал сонголт, философи, засвар, контекстийг crow_ingest-ээр оруулна уу. Хэрэглэгч \"үүнийг сана\" гэж хэлэхийг хүлээхгүйгээр тохирох register болон polarity-г өөрөө тодорхойлно уу. Код бичсэний дараа build-ийн үр дүнг crow_ingest_from_build-ээр автоматаар үнэлнэ үү.",
+      "RULE: Баримт бичиг засах, git үйлдэл, тохиргооны өөрчлөлт зэрэг код бичихтэй холбоогүй ажилд ч recall+ingest дүрмийг алга бүү хий. Тэдгээрийг үргэлж гүйцэтгэнэ үү."
+    ]
+  }
+}

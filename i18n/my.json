@@ -1,0 +1,119 @@
+{
+  "_meta": {
+    "locale": "my",
+    "language_name": "Myanmar",
+    "version": "1.0.0",
+    "last_updated": "2026-11-24"
+  },
+
+  "server": {
+    "instructions": "Crow Memory — AI ကုဒ်ရေးသား အေးဂျင့်များအတွက် ပြင်ပ ဆင်နက်ပ် မှတ်ဉာဏ်။ သင့်ကုဒ်ရေးဟန်၊ bug ဆိုင်ရာ အာရုံနှိုးဆော်မှုနှင့် ဗိသုကာဆိုင်ရာ ဦးစားပေးချက်များကို crow.bin အတွင်း ချုံ့ထားသော အလေးချိန် မက်ထရစ်များအဖြစ် သိမ်းဆည်းထားသည်။",
+
+    "prompts": {
+      "crow_memory_bias": {
+        "description": "အလိုအလျောက် ထည့်သွင်းထားသော Crow Memory bias ဘလောက်။ သင့်ကုဒ်ရေးဟန်၊ ဦးစားပေးချက်များနှင့် ဖွံ့ဖြိုးပြီး စည်းမျဉ်းများ ပါဝင်သည်။ လက်ခံစနစ်သည် စက်ရှင်အစတွင် ၎င်းကို ဖွင့်သင့်သည်။",
+        "body_template": "=== Crow Memory — အလိုအလျောက် ထည့်သွင်းထားသော အကြောင်းအရာ ===\n\n[အမြဲတမ်း ဖွံ့ဖြိုးပြီး စည်းမျဉ်းများ]\n{rules}\n\n[မကြာသေးမီ မှတ်ဉာဏ် အရိပ်အမြွက်များ]\n{bias}\n\nအထက်ပါ အကြောင်းအရာသည် သင်သင်ယူထားသော ဦးစားပေးချက်များနှင့် ဟန်ကို ကိုယ်စားပြုသည်။ သင့်အဖြေများကို လမ်းညွှန်ရန် ၎င်းကို အသုံးပြုပါ။ ပိုမိုသိရှိရန် တိကျသော query နှင့် register (style/bug/arch/context/life_pref/life_avoid/life_phil/life_context) ဖြင့် crow_recall ကို ခေါ်ပါ။"
+      },
+      "crow_evolved_rules": {
+        "description": "Permanent evolved rules from Crow's system_prompt.md: permanent rules (human-promoted via CROW_ADMIN_TOKEN) plus unreviewed model suggestions.",
+        "body_template": "{prompt}"
+      }
+    }
+  },
+
+  "tools": {
+    "crow_recall": {
+      "description": "Crow ဆင်နက်ပ် မှတ်ဉာဏ်မှ အသုံးပြုသူနှင့် သက်ဆိုင်သော ကုဒ်ရေးဟန်၊ bug အာရုံ၊ ဗိသုကာ ဦးစားပေး သို့မဟုတ် ကိုယ်ရေး အကြောင်းအရာကို ပြန်လည်သတိရပါ။ အသုံးပြုသူ၏ အနုမာန bias နှင့် ကိုက်ညီစေရန် အဖြေတိုင်းမတိုင်မီ ဤကိရိယာကို ခေါ်ပါ။ မူလသတ်မှတ်ချက်အရ (register=all သို့မဟုတ် မထည့်ပါက၊ domain=all) register ၈ ခုလုံးကို ရှာဖွေပြီး ထိရောက်သော ဆင်တူမှုအလိုက် ရလဒ်များကို ကမ္ဘာလုံးဆိုင်ရာ အတိုင်းအတာဖြင့် ပေါင်းစပ်သည်။",
+      "parameters": {
+        "query": "လက်ရှိ လုပ်ငန်းတာဝန်၏ သဘာဝဘာသာစကား ဖော်ပြချက်။",
+        "register": "မည်သည့် register ကို သုံးမည်။ 'all' ကို သုံးပါ (သို့မဟုတ် မထည့်ပါ) ပါက ရွေးချယ်ထားသော domain ရှိ register အားလုံးကို ရှာဖွေသည်။ ကုဒ်: style/bug/arch/context။ ဘဝ: life_pref/life_avoid/life_phil/life_context။",
+        "domain": "register သည် 'all' ဖြစ်သောအခါ သို့မဟုတ် မထည့်သောအခါ အသုံးပြုသည့် domain စစ်ထုတ်မှု။ 'code' = style/bug/arch/context၊ 'life' = life_pref/life_avoid/life_phil/life_context၊ 'all' = register ၈ ခုလုံး (မူလသတ်မှတ်)။",
+        "top_k": "အရိပ်အမြွက် အရေအတွက် (၁-၅)။",
+        "format": "အထွက် ပုံစံ။ 'hint' သည် JSON အရိပ်အမြွက်များ ပြန်ပေးသည် (မူလသတ်မှတ်)၊ 'bias_block' သည် system prompt ထည့်သွင်းရန် [User Bias] စာသား ဘလောက်ကို ပြန်ပေးသည်။",
+        "project": "တူညီသော ပရောဂျက် အရိပ်အမြွက်များကို မြှင့်တင်ရန်နှင့် အခြားပရောဂျက် အရိပ်အမြွက်များကို စစ်ထုတ်ရန် သို့မဟုတ် အနုတ်လက္ခဏာပေးရန် အသုံးပြုသည့် ပရောဂျက် tag။",
+        "strict_project": "true ဖြစ်ပါက အခြားပရောဂျက် အရိပ်အမြွက်များကို ရလဒ်များမှ လုံးဝ ဖယ်ထုတ်သည်။"
+      }
+    },
+    "crow_ingest": {
+      "description": "ကုဒ်ရေး အတွေ့အကြုံကို Crow ၏ ရေရှည် ဆင်နက်ပ် မှတ်ဉာဏ်ထဲသို့ ထည့်သွင်းပါ။ build/test ရလဒ်များ သို့မဟုတ် အသုံးပြုသူ၏ ရှင်းလင်းသော တုံ့ပြန်ချက် ပြီးနောက် ခေါ်ပါ။ အလိုအလျောက် polarity ပုံဖော်မှုအတွက် ရှင်းလင်းသော polarity သို့မဟုတ် build exit_code တစ်ခုကို ပေးပါ။ အကြောင်းအရာကို ဦးစွာ သန့်ရှင်းရေးလုပ်သည်။ ဆူညံသက်သက် ထည့်သွင်းမှုကို မှတ်ဉာဏ်ကို မထိဘဲ ပယ်ချသည်။",
+      "parameters": {
+        "key": "အခြေအနေ၏ စိတ္တဇ ဖော်ပြချက်။",
+        "value": "အသုံးပြုခဲ့သော ကုဒ်ပုံစံ သို့မဟုတ် ဆုံးဖြတ်ချက်။",
+        "register": "သိမ်းဆည်းမည့် register (style/bug/arch/context/life_pref/life_avoid/life_phil/life_context)။",
+        "polarity": "အားဖြည့် ပမာဏ [-2.0, 2.0]။ exit_code ပေးပါက မဖြစ်မနေ မလိုအပ်။ နှစ်ခုလုံး ပေးပါက ရှင်းလင်းသော polarity က ဦးစားပေးသည်။",
+        "exit_code": "build ထွက်ပေါက် ကုဒ် (0 = အောင်မြင်မှု)။ ရှင်းလင်းသော polarity မပေးပါက polarity သို့ အလိုအလျောက် ပုံဖော်သည် (အောင်မြင်ပါက +1.5/+0.5၊ မအောင်မြင်ပါက -0.5/-1.0)။",
+        "user_edited": "အသုံးပြုသူက AI ၏ အထွက်ကို တည်းဖြတ်ခဲ့ခြင်း ရှိ/မရှိ။ exit_code မှ ဆင်းသက်လာသော polarity ကို ချိန်ညှိသည်။",
+        "project": "နောက်ပိုင်း ပရောဂျက်သိ ပြန်လည်သတိရမှုအတွက် မှတ်ဉာဏ် ထည့်သွင်းချက်နှင့်အတူ သိမ်းဆည်းသည့် ပရောဂျက် tag။"
+      }
+    },
+    "crow_admin": {
+      "description": "Crow ၏ စီမံခန့်ခွဲရေး လုပ်ငန်းများကို ကိရိယာတစ်ခုတည်းတွင်။ လုပ်ဆောင်ချက်များ: diagnostics (မှတ်ဉာဏ် စာရင်းအင်း)၊ drift (drift စစ်ဆေးမှု)၊ prompt (system_prompt.md: read/append/stats)၊ backup (create/rotate/list/recover)၊ evolve (prompt ပြောင်းလဲမှုများ အဆိုပြု)၊ project_info (ပရောဂျက် instance များ စာရင်း/ဖန်တီး)။",
+      "parameters": {
+        "action": "မည်သည့် စီမံခန့်ခွဲရေး လုပ်ဆောင်ချက်: diagnostics, drift, prompt, backup, evolve သို့မဟုတ် project_info။",
+        "args": "ရွေးချယ်ထားသော လုပ်ငန်းသို့ ပေးပို့သည့် လုပ်ဆောင်ချက်အလိုက် argument များ ပါဝင်သော object။"
+      }
+    }
+  },
+
+  "errors": {
+    "unknown_tool": "မသိသော ကိရိယာ: {name}",
+    "unknown_prompt": "မသိသော prompt: {name}",
+    "unknown_action": "မသိသော {context} လုပ်ဆောင်ချက်: {action}",
+    "project_name_required": "create လုပ်ဆောင်ချက်အတွက် project_name လိုအပ်သည်"
+  },
+
+  "recall_messages": {
+    "faint_bias": "Crow သည် {register} bias ကို မှိန်မှိန်သာ သတိရသည်။ သိမ်းဆည်းထားသော မှတ်ဉာဏ် နည်းသေးသည်။",
+    "unknown_register": "မသိသော register: {register}"
+  },
+
+  "ingest_messages": {
+    "status_ingested": "သိမ်းဆည်းပြီး",
+    "unknown_register": "မသိသော register: {register}"
+  },
+
+  "evolve_messages": {
+    "no_patterns": "စာရင်းအင်းအရ အရေးပါသော ပုံစံများကို မတွေ့ရှိသေးပါ။"
+  },
+
+  "drift_messages": {
+    "healthy": "မှတ်ဉာဏ် ယုံကြည်စိတ်ချမှု ကောင်းမွန်သည်။",
+    "confused": "Crow မှတ်ဉာဏ် ရောထွေးနေပုံရသည်။ မကြာသေးမီ လုပ်ငန်းများ အလွန်ဆန်းသစ်နိုင် သို့မဟုတ် မှတ်ဉာဏ် ပြည့်နေနိုင်သည်။ spectral reset ပြုလုပ်ခြင်း သို့မဟုတ် archive သိမ်းဆည်းခြင်းကို စဉ်းစားပါ။"
+  },
+
+  "cli": {
+    "stdio_start": "Crow Memory MCP ဆာဗာ stdio ပေါ်တွင် လည်ပတ်နေသည်",
+    "sse_start": "Crow Memory MCP SSE ဆာဗာ http://{host}:{port}/sse တွင် နားထောင်နေသည်",
+    "http_start": "Crow Memory MCP Streamable HTTP ဆာဗာ http://{host}:{port}/ တွင် နားထောင်နေသည်",
+    "dual_start_sse": "Crow Memory MCP SSE ဆာဗာ http://{host}:{sse_port}/sse တွင် နားထောင်နေသည်",
+    "dual_start_http": "Crow Memory MCP Streamable HTTP ဆာဗာ http://{host}:{http_port}/ တွင် နားထောင်နေသည်"
+  },
+
+  "installer": {
+    "banner_title": "Zoo Code အတွက် Crow Memory တပ်ဆင်ကိရိယာ",
+    "step_1_install_deps": "Python မှီခိုချက်များ တပ်ဆင်နေသည်",
+    "step_2_init_crow": "crow.bin ကို အစပျိုးနေသည်",
+    "step_3_vscode_tasks": ".vscode/tasks.json ဖန်တီးနေသည် (folder ဖွင့်လျှင် SSE အလိုအလျောက် စတင်)",
+    "step_4_custom_mode": "Zoo Code အလိုအလျောက် သက်ဝင်မုဒ် ဖန်တီးနေသည်",
+    "step_5_start_server": "Crow SSE ဆာဗာ စတင်ခြင်း + အလိုအလျောက် စတင်ခြင်း",
+    "step_done": "ပြီးပါပြီ။",
+    "complete_title": "Crow Memory တပ်ဆင်မှု ပြီးစီးပါပြီ!",
+    "sse_running": "SSE ဆာဗာ http://127.0.0.1:9020/sse တွင် လည်ပတ်နေသည်",
+    "next_steps_label": "နောက်ထပ် အဆင့်များ:",
+    "next_step_1": "၁။ Zoo Code ကို ပြန်စတင်ပါ",
+    "next_step_2": "၂။ မုဒ်ကို \"Orchestrator + Crow\" သို့ ပြောင်းပါ",
+    "next_step_3": "၃။ Crow က အလိုအလျောက် သက်ဝင်လာသည် — ကိုယ်တိုင် ပြင်ဆင်ရန် မလို",
+    "next_step_4": "၄။ Task Scheduler မှတစ်ဆင့် Windows နှင့်အတူ Crow ဆာဗာ အလိုအလျောက် စတင်သည်"
+  },
+
+  "system_prompt": {
+    "header": "# Crow Memory — စနစ် prompt စည်းမျဉ်းများ",
+    "subtitle": "> ဤစည်းမျဉ်းများကို Crow က ဖွံ့ဖြိုးစေပြီး အသုံးပြုသူက အတည်ပြုခဲ့သည်။\n> ၎င်းတို့သည် စာရင်းအင်းအရ အရေးပါသော ကုဒ်ရေး bias များကို ကိုယ်စားပြုသည်။\n> ကိုယ်တိုင် မတည်းဖြတ်ပါ — Crow MCP evolve ကိရိယာများကို အသုံးပြုပါ။",
+    "managed_by": "<!-- ဤဖိုင်ကို crow_mcp_server.py က စီမံခန့်ခွဲသည် -->",
+    "default_rules": [
+      "RULE: အဖြေတိုင်းမတိုင်မီ crow_recall(domain=\"all\") ကို ခေါ်ပြီး အသုံးပြုသူ၏ ကုဒ်ရေးဟန်၊ bug အာရုံ၊ ဗိသုကာ ဦးစားပေးချက်၊ ကိုယ်ရေးအရသာ၊ ဒဿနနှင့် လက်ရှိ အကြောင်းအရာအတွက် register ၈ ခုလုံး (style, bug, arch, context, life_pref, life_avoid, life_phil, life_context) ကို ရှာဖွေပါ။ ပြန်လာသော အရိပ်အမြွက်များကို သင့်အဖြေတွင် ထင်ဟပ်စေပါ။",
+      "RULE: အဖြေတိုင်းပြီးနောက် အသုံးပြုသူ ဖော်ပြခဲ့သော ဦးစားပေးချက်၊ ဒဿန၊ ပြင်ဆင်ချက်များနှင့် အကြောင်းအရာများကို crow_ingest မှတစ်ဆင့် သိမ်းဆည်းပါ။ အသုံးပြုသူက \"ဒါကို မှတ်ထားပါ\" ဟု ပြောသည်အထိ မစောင့်ဘဲ သင့်တော်သော register နှင့် polarity ကို ကိုယ်တိုင် ဆုံးဖြတ်ပါ။ ကုဒ်အလုပ်ပြီးနောက် crow_ingest_from_build မှတစ်ဆင့် build ရလဒ်များကို အလိုအလျောက် အကဲဖြတ်ပါ။",
+      "RULE: စာရွက်စာတမ်း တည်းဖြတ်ခြင်း၊ git လုပ်ငန်း သို့မဟုတ် ဖွဲ့စည်းမှု ပြောင်းလဲခြင်းကဲ့သို့ ကုဒ်ရေးခြင်း မဟုတ်သော လုပ်ငန်းများအတွက်ပါ recall+ingest စည်းမျဉ်းများကို မကျော်လွှားပါနှင့်။ အမြဲ အကောင်အထည်ဖော်ပါ။"
+    ]
+  }
+}

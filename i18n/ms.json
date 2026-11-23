@@ -3,153 +3,117 @@
     "locale": "ms",
     "language_name": "Melayu",
     "version": "1.0.0",
-    "last_updated": "2026-05-29"
+    "last_updated": "2026-11-24"
   },
+
   "server": {
-    "instructions": "Crow Memory — Memori sinaptik luaran untuk ejen pengekodan AI. Menyimpan gaya pengekodan, intuisi pepijat dan keutamaan seni bina dalam crow.bin.",
+    "instructions": "Crow Memory — Memori sinaptik luaran untuk ejen pengekodan AI. Menyimpan gaya pengekodan, intuisi pepijat dan keutamaan seni bina anda sebagai matriks pemberat termampat dalam crow.bin.",
+
     "prompts": {
       "crow_memory_bias": {
-        "description": "Blok bias Crow Memory yang disuntik secara automatik. Mengandungi gaya pengekodan, keutamaan dan peraturan yang berkembang.",
-        "body_template": "=== Crow Memory — Automaticky vložený kontext ===\n\n[Trvalá evoluovaná pravidla]\n{rules}\n\n[Nedávné paměťové tipy]\n{bias}\n\nVýše uvedený kontext představuje vaše naučené preference a styl. Použijte jej k vedení svých odpovědí."
+        "description": "Blok bias Crow Memory yang disuntik secara automatik. Mengandungi gaya pengekodan, keutamaan dan peraturan terkembang anda. Hos harus memuatkan ini pada permulaan sesi.",
+        "body_template": "=== Crow Memory — Konteks yang Disuntik Secara Automatik ===\n\n[Peraturan Terkembang Kekal]\n{rules}\n\n[Petua Memori Terkini]\n{bias}\n\nKonteks di atas mewakili keutamaan dan gaya yang anda pelajari. Gunakannya untuk membimbing respons anda. Untuk mengetahui lebih lanjut, panggil crow_recall dengan pertanyaan dan daftar khusus (style/bug/arch/context/life_pref/life_avoid/life_phil/life_context)."
       },
       "crow_evolved_rules": {
-        "description": "Trvalá evoluovaná pravidla z system_prompt.md Crow. Statisticky významné vzory schválené přes HITL.",
+        "description": "Permanent evolved rules from Crow's system_prompt.md: permanent rules (human-promoted via CROW_ADMIN_TOKEN) plus unreviewed model suggestions.",
         "body_template": "{prompt}"
       }
     }
   },
+
   "tools": {
     "crow_recall": {
-      "description": "Vyvolá uživatelský styl kódování, intuici chyb, architektonické preference nebo osobní kontext ze synaptické paměti Crow. Volejte PŘED každou odpovědí. Výchozí dotazuje všech 8 registrů.",
+      "description": "Panggil semula gaya pengekodan pengguna, intuisi pepijat, keutamaan seni bina atau konteks peribadi daripada memori sinaptik Crow. Panggil ini SEBELUM setiap respons untuk selari dengan kecenderungan induktif pengguna. Secara lalai (register=all atau diabaikan, domain=all), mempertanyakan kesemua 8 daftar dan menggabungkan hasil secara global mengikut persamaan berkesan.",
       "parameters": {
-        "query": "Popis aktuálního úkolu přirozeným jazykem.",
-        "register": "Vyberte registr. 'all' dotazuje všechny (stejné jako domain=all). Code: style/bug/arch/context. Život: life_pref/life_avoid/life_phil/life_context.",
-        "top_k": "Počet tipů (1-3).",
-        "domain": "Zkratka filtru domény. 'code' = style/bug/arch/context, 'life' = life_pref/life_avoid/life_phil/life_context, 'all' = všech 8 registrů (výchozí)."
+        "query": "Penerangan bahasa semulajadi tentang tugas semasa.",
+        "register": "Daftar mana. Gunakan 'all' (atau abaikan) untuk mempertanyakan setiap daftar dalam domain dipilih. Code: style/bug/arch/context. Life: life_pref/life_avoid/life_phil/life_context.",
+        "domain": "Penapis domain digunakan apabila register ialah 'all' atau diabaikan. 'code' = style/bug/arch/context, 'life' = life_pref/life_avoid/life_phil/life_context, 'all' = kesemua 8 daftar (lalai).",
+        "top_k": "Bilangan petua (1-5).",
+        "format": "Format output. 'hint' mengembalikan petua JSON (lalai); 'bias_block' mengembalikan blok teks [User Bias] untuk suntikan prompt sistem.",
+        "project": "Tag projek digunakan untuk menguatkan petua projek yang sama dan menapis/menghukum petua merentas projek.",
+        "strict_project": "Apabila benar, menapis petua merentas projek daripada hasil secara tegas."
       }
     },
     "crow_ingest": {
-      "description": "Vstřebá zkušenost s kódováním do dlouhodobé synaptické paměti Crow. Volejte PO výsledcích sestavení/testů nebo explicitní zpětné vazbě.",
+      "description": "Menyerap pengalaman pengekodan ke dalam memori sinaptik jangka panjang Crow. Panggil SELEPAS hasil binaan/ujian atau maklum balas eksplisit pengguna. Berikan sama ada polariti eksplisit atau exit_code binaan untuk pemetaan polariti automatik. Kandungan disanitasi dahulu; input bunyi tulen ditolak tanpa mengubah memori.",
       "parameters": {
-        "key": "Abstraktní popis situace.",
-        "value": "Použitý vzor kódu nebo rozhodnutí.",
-        "polarity": "Síla zesílení [-2.0, 2.0].",
-        "register": "Cílový registr (style/bug/arch/context/life_pref/life_avoid/life_phil/life_context)."
+        "key": "Penerangan abstrak tentang situasi.",
+        "value": "Corak kod atau keputusan yang digunakan.",
+        "register": "Daftar untuk disimpan (style/bug/arch/context/life_pref/life_avoid/life_phil/life_context).",
+        "polarity": "Kekuatan pengukuhan [-2.0, 2.0]. Pilihan jika exit_code diberikan; polariti eksplisit menang apabila kedua-duanya diberikan.",
+        "exit_code": "Kod keluar binaan (0 = berjaya). Memetakan secara automatik kepada polariti (+1.5/+0.5 pada kejayaan, -0.5/-1.0 pada kegagalan) melainkan polariti eksplisit diberikan.",
+        "user_edited": "Sama ada pengguna mengedit output AI. Melaraskan polariti yang diperoleh daripada exit_code.",
+        "project": "Tag projek disimpan bersama entri memori untuk panggilan semula berasaskan projek pada masa akan datang."
       }
     },
-    "crow_evolve_propose": {
-      "description": "Analyzuje nedávné vzory paměti a navrhuje trvalou mutaci systémového promptu. Vrací pouze návrh; k přijetí je nutné lidské schválení.",
+    "crow_admin": {
+      "description": "Operasi pentadbiran Crow dalam satu alat. Tindakan: diagnostics (statistik memori), drift (pemeriksaan drift), prompt (read/append/stats system_prompt.md), backup (create/rotate/list/recover), evolve (mencadangkan mutasi prompt), project_info (senarai/buat instance projek).",
       "parameters": {
-        "min_confidence": "Minimální práh spolehlivosti (výchozí: 0,85).",
-        "min_occurrences": "Minimální počet výskytů (výchozí: 3)."
-      }
-    },
-    "crow_diagnostics": {
-      "description": "Vrací diagnostiku stavu paměti Crow (normy registrů, řídkost, počet aktualizací, velikost banky hodnot, statistiky promptu).",
-      "parameters": {}
-    },
-    "crow_check_drift": {
-      "description": "Kontroluje, zda nedávná vyvolání vykazují známky paměťového driftu.",
-      "parameters": {
-        "threshold": "Práh spolehlivosti pro detekci nízké spolehlivosti (výchozí: 0,5).",
-        "min_low_confidence_count": "Min. počet záznamů s nízkou spolehlivostí pro spuštění driftu (výchozí: 5)."
-      }
-    },
-    "crow_ingest_from_build": {
-      "description": "Automaticky určí polaritu z kódu ukončení sestavení a stavu úprav uživatele, poté vstřebá zkušenost. Použijte po npm run build.",
-      "parameters": {
-        "key": "Abstraktní popis.",
-        "value": "Použitý vzor kódu.",
-        "exit_code": "Kód ukončení sestavení (0 = úspěch).",
-        "user_edited": "Zda uživatel upravil výstup AI.",
-        "register": "Cílový registr (style/bug/arch/context, výchozí: arch).",
-        "explicit_polarity": "Přepíše automatické určení polarity."
-      }
-    },
-    "crow_get_user_bias": {
-      "description": "Generuje blok [User Bias] pro vložení do systémového promptu. Dotazuje všechny registry a formátuje tipy pro přidání na začátek promptu.",
-      "parameters": {
-        "query": "Popis aktuálního úkolu.",
-        "registers": "Registry k dotazování (výchozí: all)."
-      }
-    },
-    "crow_manage_prompt": {
-      "description": "Čtení, přidávání nebo získávání statistik o souboru system_prompt.md. 'read' pro zobrazení, 'append' pro přijetí pravidla, 'stats' pro metriky.",
-      "parameters": {
-        "action": "Akce: read, append nebo stats.",
-        "rule": "Text pravidla (vyžadováno pro append).",
-        "auto_backup": "Automatické vytvoření zálohy před přidáním (výchozí: true)."
-      }
-    },
-    "crow_manage_backup": {
-      "description": "Spravuje zálohy paměti Crow. Vytváření, rotace, výpis nebo obnova z driftu.",
-      "parameters": {
-        "action": "Akce: create, rotate, list nebo recover.",
-        "tag": "Značka zálohy: daily, weekly nebo manual (výchozí: daily).",
-        "max_daily": "Max. denních záloh k uchování (výchozí: 7).",
-        "max_weekly": "Max. týdenních záloh k uchování (výchozí: 4)."
-      }
-    },
-    "crow_project_info": {
-      "description": "Zobrazí nebo vytvoří projektově izolované instance paměti Crow.",
-      "parameters": {
-        "action": "Akce: list nebo create.",
-        "project_name": "Název projektu (vyžadováno pro create)."
+        "action": "Operasi pentadbiran mana: diagnostics, drift, prompt, backup, evolve, atau project_info.",
+        "args": "Objek argumen khusus tindakan yang diluluskan kepada operasi terpilih."
       }
     }
   },
+
   "errors": {
-    "unknown_tool": "Neznámý nástroj: {name}",
-    "unknown_prompt": "Neznámý prompt: {name}",
-    "unknown_action": "Neznámá akce {context}: {action}",
-    "project_name_required": "project_name je vyžadováno pro akci create"
+    "unknown_tool": "Alat tidak diketahui: {name}",
+    "unknown_prompt": "Prompt tidak diketahui: {name}",
+    "unknown_action": "Tindakan {context} tidak diketahui: {action}",
+    "project_name_required": "project_name diperlukan untuk tindakan create"
   },
+
   "recall_messages": {
-    "faint_bias": "Crow si matně vybavuje zkreslení {register}. Zatím uloženo málo vzpomínek.",
-    "unknown_register": "Neznámý registr: {register}"
+    "faint_bias": "Crow mengingat semula bias {register} yang perlahan. Sedikit memori telah disimpan.",
+    "unknown_register": "Daftar tidak diketahui: {register}"
   },
+
   "ingest_messages": {
-    "status_ingested": "vstřebáno",
-    "unknown_register": "Neznámý registr: {register}"
+    "status_ingested": "diserap",
+    "unknown_register": "Daftar tidak diketahui: {register}"
   },
+
   "evolve_messages": {
-    "no_patterns": "Zatím nebyly detekovány žádné statisticky významné vzory."
+    "no_patterns": "Tiada corak bererti secara statistik dikesan lagi."
   },
+
   "drift_messages": {
-    "healthy": "Spolehlivost paměti je zdravá.",
-    "confused": "Paměť Crow vypadá zmateně. Nedávné úkoly mohou být příliš nové nebo paměť nasycená. Zvažte spektrální reset nebo archivaci."
+    "healthy": "Keyakinan memori adalah sihat.",
+    "confused": "Memori Crow kelihatan keliru. Tugas terkini mungkin terlalu baharu atau memori telah tepu. Pertimbangkan tetapan semula spektral atau pengarsipan."
   },
+
   "cli": {
-    "stdio_start": "Server MCP Crow Memory běží na stdio",
-    "sse_start": "Server MCP SSE Crow Memory naslouchá na http://{host}:{port}/sse",
-    "http_start": "Server MCP Streamable HTTP Crow Memory naslouchá na http://{host}:{port}/",
-    "dual_start_sse": "Server MCP SSE Crow Memory naslouchá na http://{host}:{sse_port}/sse",
-    "dual_start_http": "Server MCP Streamable HTTP Crow Memory naslouchá na http://{host}:{http_port}/"
+    "stdio_start": "Pelayan MCP Crow Memory berjalan pada stdio",
+    "sse_start": "Pelayan MCP SSE Crow Memory mendengar pada http://{host}:{port}/sse",
+    "http_start": "Pelayan MCP Streamable HTTP Crow Memory mendengar pada http://{host}:{port}/",
+    "dual_start_sse": "Pelayan MCP SSE Crow Memory mendengar pada http://{host}:{sse_port}/sse",
+    "dual_start_http": "Pelayan MCP Streamable HTTP Crow Memory mendengar pada http://{host}:{http_port}/"
   },
+
   "installer": {
-    "banner_title": "Crow Memory Melayu telepítő",
-    "step_1_install_deps": "Instalace Python závislostí",
-    "step_2_init_crow": "Inicializace crow.bin",
-    "step_4_custom_mode": "Vytváření režimu automatické aktivace Zoo Code",
-    "step_5_start_server": "Spouštění Crow SSE serveru + automatický start",
-    "step_done": "Hotovo.",
-    "complete_title": "Instalace Crow Memory dokončena!",
-    "sse_running": "SSE server běží na http://127.0.0.1:9020/sse",
-    "next_steps_label": "Další kroky:",
-    "next_step_1": "1. Restartujte Zoo Code",
-    "next_step_2": "2. Přepněte režim na \"Orchestrator + Crow\"",
-    "next_step_3": "3. Crow se aktivuje automaticky — není nutné ruční nastavení",
-    "next_step_4": "4. SSE server startuje s Windows (registrován ve spuštění)",
-    "step_3_vscode_tasks": "Vytváření .vscode/tasks.json (automatický start SSE při otevření složky)"
+    "banner_title": "Pemasang Crow Memory untuk Zoo Code",
+    "step_1_install_deps": "Memasang kebergantungan Python",
+    "step_2_init_crow": "Memulakan crow.bin",
+    "step_3_vscode_tasks": "Mencipta .vscode/tasks.json (auto-start SSE semasa folder dibuka)",
+    "step_4_custom_mode": "Mencipta mod pengaktifan automatik Zoo Code",
+    "step_5_start_server": "Memulakan pelayan SSE Crow + auto-start",
+    "step_done": "Selesai.",
+    "complete_title": "Pemasangan Crow Memory selesai!",
+    "sse_running": "Pelayan SSE berjalan pada http://127.0.0.1:9020/sse",
+    "next_steps_label": "Langkah seterusnya:",
+    "next_step_1": "1. Mulakan semula Zoo Code",
+    "next_step_2": "2. Tukar mod kepada \"Orchestrator + Crow\"",
+    "next_step_3": "3. Crow mengaktifkan secara automatik — tiada persediaan manual diperlukan",
+    "next_step_4": "4. Pelayan Crow bermula secara automatik dengan Windows melalui Pengurus Tugas"
   },
+
   "system_prompt": {
-    "header": "# Crow Memory — Pravidla systémového promptu",
-    "subtitle": "> Tato pravidla byla evoluována Crow a schválena uživatelem.\n> Představují statisticky významná zkreslení kódování.\n> Neupravujte ručně — používejte nástroje evoluce Crow MCP.",
-    "managed_by": "<!-- Tento soubor je spravován crow_mcp_server.py -->",
+    "header": "# Crow Memory — Peraturan Prompt Sistem",
+    "subtitle": "> Peraturan ini telah dikembangkan oleh Crow dan diluluskan oleh pengguna.\n> Ia mewakili kecenderungan pengekodan yang bererti secara statistik.\n> Jangan edit secara manual — gunakan alat evolve Crow MCP.",
+    "managed_by": "<!-- Fail ini diuruskan oleh crow_mcp_server.py -->",
     "default_rules": [
-      "RULE: Před každou odpovědí zavolejte crow_recall(domain=\"all\") pro dotaz na všech 8 registrů (style, bug, arch, context, life_pref, life_avoid, life_phil, life_context) ohledně stylu kódování, intuice chyb, architektonických preferencí, osobního vkusu, filozofie a aktuálního kontextu uživatele. Odražte vrácené tipy ve své odpovědi.",
-      "RULE: Po každé odpovědi vstřebejte, co uživatel odhalil — preference, filozofii, opravy, kontext — přes crow_ingest. Sami určete vhodný registr a polaritu, aniž byste čekali, až uživatel řekne \"zapamatuj si to\". Po práci s kódem automaticky vyhodnoťte výsledky sestavení přes crow_ingest_from_build.",
-      "RULE: Nepřeskakujte pravidla recall+ingest ani u úkolů nesouvisejících s kódováním, jako je úprava dokumentů, git operace nebo změny konfigurace. Vždy je provádějte."
+      "RULE: Sebelum setiap respons, panggil crow_recall(domain=\"all\") untuk mempertanyakan kesemua 8 daftar (style, bug, arch, context, life_pref, life_avoid, life_phil, life_context) tentang gaya pengekodan pengguna, intuisi pepijat, keutamaan seni bina, selera peribadi, falsafah dan konteks semasa. Pantulkan petua yang dikembalikan dalam respons anda.",
+      "RULE: Selepas setiap respons, serap apa yang pengguna dedahkan — keutamaan, falsafah, pembetulan, konteks — melalui crow_ingest. Tentukan daftar dan polariti yang sesuai sendiri tanpa menunggu pengguna berkata \"ingat ini.\" Selepas kerja kod, nilai hasil binaan secara automatik melalui crow_ingest_from_build.",
+      "RULE: Jangan langkau peraturan recall+ingest walaupun untuk tugas bukan pengekodan seperti penyuntingan dokumen, operasi git atau perubahan konfigurasi. Sentiasa laksanakannya."
     ]
   }
 }

@@ -1,0 +1,119 @@
+{
+  "_meta": {
+    "locale": "ps",
+    "language_name": "Pashto",
+    "version": "1.0.0",
+    "last_updated": "2026-11-24"
+  },
+
+  "server": {
+    "instructions": "Crow Memory — د AI کوډینګ اجنټونو لپاره بهرنۍ سیناپټیک یادښت. ستاسو د کوډینګ سټایل، د باګ اړوند الهام او معماري غوره توبونه په crow.bin کې د فشرده وزن میټریکونو په توګه ذخیره کوي.",
+
+    "prompts": {
+      "crow_memory_bias": {
+        "description": "په اتوماتیک ډول داخل شوی د Crow Memory تعصب بلاک. ستاسو د کوډینګ سټایل، غوره توبونه او پراختیا موندلي قواعد پکې شامل دي. کوربه باید دا د غونډې په پیل کې ولولي.",
+        "body_template": "=== Crow Memory — په اتوماتیک ډول داخل شوی متن ===\n\n[دایمي پراختیا موندلي قواعد]\n{rules}\n\n[وروستي د یادښت اشارې]\n{bias}\n\nپورتنی متن ستاسو زده شوي غوره توبونه او سټایل استازیتوب کوي. د خپلو ځوابونو د لارښوونې لپاره یې وکاروئ. د ډېرو معلوماتو لپاره، د ځانګړي query او register (style/bug/arch/context/life_pref/life_avoid/life_phil/life_context) سره crow_recall ته زنګ ووهئ."
+      },
+      "crow_evolved_rules": {
+        "description": "Permanent evolved rules from Crow's system_prompt.md: permanent rules (human-promoted via CROW_ADMIN_TOKEN) plus unreviewed model suggestions.",
+        "body_template": "{prompt}"
+      }
+    }
+  },
+
+  "tools": {
+    "crow_recall": {
+      "description": "د Crow سیناپټیک یادښت څخه د کاروونکي ځانګړی کوډینګ سټایل، د باګ الهام، معماري غوره توب یا شخصي متن یاد کړئ. د کاروونکي د استنباطي تعصب سره د سمون لپاره د هر ځواب څخه مخکې دا زنګ ووهئ. په ډیفالټ ډول (register=all یا پرېښودل شوی، domain=all)، ټول ۸ راجسترونه پوښتنه کوي او پایلې د اغیزمنې ورته والي له مخې په نړیوال ډول یوځای کوي.",
+      "parameters": {
+        "query": "د اوسني کار طبیعی ژبې توضیح.",
+        "register": "کوم راجستر. 'all' وکاروئ (یا پرېږدئ) ترڅو په ټاکل شوي ډومین کې ټول راجسترونه وپوښتل شي. کوډ: style/bug/arch/context. ژوند: life_pref/life_avoid/life_phil/life_context.",
+        "domain": "د ډومین فلټر چې کله register 'all' وي یا پرېښودل شي کارول کیږي. 'code' = style/bug/arch/context، 'life' = life_pref/life_avoid/life_phil/life_context، 'all' = ټول ۸ راجسترونه (ډیفالټ).",
+        "top_k": "د اشارو شمېر (۱-۵).",
+        "format": "د وتنې بڼه. 'hint' د JSON اشارې بیرته راګرځوي (ډیفالټ)؛ 'bias_block' د system prompt د داخلولو لپاره [User Bias] متني بلاک بیرته راګرځوي.",
+        "project": "د پروژې ټګ چې د ورته پروژې اشارو د پیاوړتیا او د نورو پروژو د اشارو د فلټر یا جریمې لپاره کارول کیږي.",
+        "strict_project": "کله چې true وي، د نورو پروژو اشارې په بشپړ ډول له پایلو څخه لرې کوي."
+      }
+    },
+    "crow_ingest": {
+      "description": "د کوډینګ تجربه د Crow اوږدمهاله سیناپټیک یادښت ته داخله کړئ. د build/test پایلو یا د کاروونکي روښانه نظر وروسته زنګ ووهئ. د اتوماتیک polarity نقشه کولو لپاره یا روښانه polarity یا د build exit_code یو ورکړئ. منځپانګه لومړی پاکیږي؛ خالص شور ورکړه پرته له دې چې یادښت ته لاس ورسیږي رد کیږي.",
+      "parameters": {
+        "key": "د وضعیت مجرد توضیح.",
+        "value": "پلي شوی کوډ نمونه یا پریکړه.",
+        "register": "د ذخیره کولو راجستر (style/bug/arch/context/life_pref/life_avoid/life_phil/life_context).",
+        "polarity": "د پیاوړتیا اندازه [-2.0, 2.0]. که exit_code ورکړل شي اختیاري دی؛ کله چې دواړه ورکړل شي روښانه polarity غالب وي.",
+        "exit_code": "د build د وتلو کوډ (0 = بریا). که روښانه polarity نه وي ورکړل شوې، په اتوماتیک ډول polarity ته نقشه کیږي (په بریا کې +1.5/+0.5، په ناکامۍ کې -0.5/-1.0).",
+        "user_edited": "ایا کاروونکي د AI وتنه سمه کړه. له exit_code څخه اخیستل شوې polarity تنظیموي.",
+        "project": "د پروژې ټګ چې د وروسته پروژه-پوهاوي یادولو لپاره د یادښت له ننوتلو سره ذخیره کیږي."
+      }
+    },
+    "crow_admin": {
+      "description": "د Crow اداري عملیات په یوه وسیله کې. کړنې: diagnostics (د یادښت احصایه)، drift (د drift معاینه)، prompt (system_prompt.md: read/append/stats)، backup (create/rotate/list/recover)، evolve (د prompt بدلونونو وړاندیز)، project_info (د پروژې انسټانسونو لړلیک/جوړول).",
+      "parameters": {
+        "action": "کوم اداري عملیات: diagnostics، drift، prompt، backup، evolve یا project_info.",
+        "args": "د ټاکل شوې کړنې ته لېږل شوی د کړنې ځانګړی arguments څیز."
+      }
+    }
+  },
+
+  "errors": {
+    "unknown_tool": "ناتلاسلی وسیله: {name}",
+    "unknown_prompt": "ناتلاسلی prompt: {name}",
+    "unknown_action": "ناتلاسلې {context} کړنه: {action}",
+    "project_name_required": "د create کړنې لپاره project_name ته اړتیا ده"
+  },
+
+  "recall_messages": {
+    "faint_bias": "Crow د {register} تعصب په مبهم ډول یادوي. لا تر اوسه لږ یادښتونه ذخیره شوي دي.",
+    "unknown_register": "ناتلاسلی راجستر: {register}"
+  },
+
+  "ingest_messages": {
+    "status_ingested": "ذخیره شو",
+    "unknown_register": "ناتلاسلی راجستر: {register}"
+  },
+
+  "evolve_messages": {
+    "no_patterns": "تر دې دمه د احصایې له پلوه مهمې نمونې نه دي موندل شوي."
+  },
+
+  "drift_messages": {
+    "healthy": "د یادښت باور روغ دی.",
+    "confused": "د Crow یادښت ګډوډ ښکاري. وروستي کارونه ممکن ډېر نوي وي یا یادښت ډک وي. سپکټرل ریسیټ یا ارشیف کول په پام کې ونیسئ."
+  },
+
+  "cli": {
+    "stdio_start": "د Crow Memory MCP سرور پر stdio روان دی",
+    "sse_start": "د Crow Memory MCP SSE سرور پر http://{host}:{port}/sse اوریدل کوي",
+    "http_start": "د Crow Memory MCP Streamable HTTP سرور پر http://{host}:{port}/ اوریدل کوي",
+    "dual_start_sse": "د Crow Memory MCP SSE سرور پر http://{host}:{sse_port}/sse اوریدل کوي",
+    "dual_start_http": "د Crow Memory MCP Streamable HTTP سرور پر http://{host}:{http_port}/ اوریدل کوي"
+  },
+
+  "installer": {
+    "banner_title": "د Zoo Code لپاره د Crow Memory نصبونکی",
+    "step_1_install_deps": "د Python انحصارونه نصب کیږي",
+    "step_2_init_crow": "crow.bin پیل کیږي",
+    "step_3_vscode_tasks": ".vscode/tasks.json جوړیږي (کله چې فولډر پرانیستل شي SSE په اتوماتیک پیل کیږي)",
+    "step_4_custom_mode": "د Zoo Code اتوماتیک فعالولو حالت جوړیږي",
+    "step_5_start_server": "د Crow SSE سرور پیلول + اتوماتیک پیل",
+    "step_done": "ترسره شو.",
+    "complete_title": "د Crow Memory نصب بشپړ شو!",
+    "sse_running": "SSE سرور پر http://127.0.0.1:9020/sse روان دی",
+    "next_steps_label": "بل ګامونه:",
+    "next_step_1": "۱. Zoo Code بیا پیل کړئ",
+    "next_step_2": "۲. حالت \"Orchestrator + Crow\" ته بدل کړئ",
+    "next_step_3": "۳. Crow په اتوماتیک فعالیږي — لاسي ترتیب ته اړتیا نشته",
+    "next_step_4": "۴. د Task Scheduler له لارې د Windows سره Crow سرور په اتوماتیک پیل کیږي"
+  },
+
+  "system_prompt": {
+    "header": "# Crow Memory — د system prompt قواعد",
+    "subtitle": "> دا قواعد د Crow لخوا پراختیا موندلي او د کاروونکي لخوا تصویب شوي.\n> دوی د احصایې له پلوه مهم د کوډینګ تعصبات استازیتوب کوي.\n> په لاسي ډول یې مه سمه کړئ — د Crow MCP evolve وسیلې وکاروئ.",
+    "managed_by": "<!-- دا فایل د crow_mcp_server.py لخوا مدیریت کیږي -->",
+    "default_rules": [
+      "RULE: د هر ځواب څخه مخکې crow_recall(domain=\"all\") زنګ ووهئ ترڅو د کاروونکي د کوډینګ سټایل، د باګ الهام، معماري غوره توب، شخصي خوښۍ، فلسفې او اوسني متن لپاره ټول ۸ راجسترونه (style, bug, arch, context, life_pref, life_avoid, life_phil, life_context) وپوښتل شي. بیرته راغلې اشارې په خپل ځواب کې منعکس کړئ.",
+      "RULE: د هر ځواب وروسته، هغه څه چې کاروونکي ښودلي دي — غوره توبونه، فلسفه، سمونې، متن — د crow_ingest له لارې ذخیره کړئ. د کاروونکي د \"دا یاد ساته\" ویلو ته له انتظار پرته، مناسب register او polarity پخپله وټاکئ. د کوډ له کار وروسته، د crow_ingest_from_build له لارې د build پایلې په اتوماتیک ډول ارزوئ.",
+      "RULE: د اسنادو سمون، git کارونه یا د کنفیګریشن بدلونونو په څېر غیر کوډینګ کارونو لپاره هم recall+ingest قواعد مه پریږدئ. تل یې پلي کوئ."
+    ]
+  }
+}

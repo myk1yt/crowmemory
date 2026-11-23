@@ -1,0 +1,119 @@
+{
+  "_meta": {
+    "locale": "haw",
+    "language_name": "Hawaiian",
+    "version": "1.0.0",
+    "last_updated": "2026-11-24"
+  },
+
+  "server": {
+    "instructions": "Crow Memory — He hoʻomanaʻo synaptic o waho no nā ʻākena coding AI. Mālama ʻo ia i kou ʻano coding, kou naʻauao no nā bug, a me kou mau makemake architecture ma ke ʻano he mau matrix weight i hoʻopaʻa ʻia ma crow.bin.",
+
+    "prompts": {
+      "crow_memory_bias": {
+        "description": "He poloka bias Crow Memory i hoʻokomo ʻakomi ʻia. Aia i loko kou ʻano coding, kou mau makemake, a me nā lula i ulu ʻia. Pono ka host e hoʻouka i kēia i ka hoʻomaka o ka session.",
+        "body_template": "=== Crow Memory — Ka pōʻaiapili i hoʻokomo ʻakomi ʻia ===\n\n[Nā lula paʻa i ulu ʻia]\n{rules}\n\n[Nā hōʻailona hoʻomanaʻo hou]\n{bias}\n\nHōʻike ka pōʻaiapili i luna i kou mau makemake a me kou ʻano i aʻo ʻia. E hoʻohana iā ia e alakaʻi i kāu mau pane. No ka ʻike hou aku, e kāhea iā crow_recall me kahi nīnau kikoʻī a me kahi register (style/bug/arch/context/life_pref/life_avoid/life_phil/life_context)."
+      },
+      "crow_evolved_rules": {
+        "description": "Permanent evolved rules from Crow's system_prompt.md: permanent rules (human-promoted via CROW_ADMIN_TOKEN) plus unreviewed model suggestions.",
+        "body_template": "{prompt}"
+      }
+    }
+  },
+
+  "tools": {
+    "crow_recall": {
+      "description": "E hoʻihoʻi mai i ke ʻano coding, ka naʻauao no nā bug, nā makemake architecture, a i ʻole ka pōʻaiapili pilikino o ka mea hoʻohana mai ka hoʻomanaʻo synaptic o Crow. E kāhea i kēia ma mua o kēlā me kēia pane e hoʻolikelike me ka bias inductive o ka mea hoʻohana. Ma ka paʻamau (register=all a i ʻole e waiho ʻia, domain=all), nīnau ʻo ia i nā register 8 a pau a hoʻohui i nā hualoaʻa me ka like ʻana i manaʻo ʻia.",
+      "parameters": {
+        "query": "Ka wehewehe ʻōlelo maʻamau o ka hana o kēia manawa.",
+        "register": "ʻO wai ka register. E hoʻohana iā 'all' (a i ʻole e waiho ʻia) e nīnau i nā register a pau ma ka domain i koho ʻia. Code: style/bug/arch/context. Life: life_pref/life_avoid/life_phil/life_context.",
+        "domain": "Ka kānana domain i hoʻohana ʻia ke 'all' ka register a i ʻole i waiho ʻia. 'code' = style/bug/arch/context, 'life' = life_pref/life_avoid/life_phil/life_context, 'all' = nā register 8 a pau (paʻamau).",
+        "top_k": "Ka helu o nā hōʻailona (1-5).",
+        "format": "Ke ʻano o ka hoʻopuka. Hoʻihoʻi ʻo 'hint' i nā hōʻailona JSON (paʻamau); hoʻihoʻi ʻo 'bias_block' i ka poloka kikokikona [User Bias] no ka hoʻokomo ʻana i ka system prompt.",
+        "project": "He hōʻailona papahana i hoʻohana ʻia e hoʻoikaika i nā hōʻailona o ka papahana hoʻokahi a e kānana a e hoʻopāhaʻi i nā mea o nā papahana ʻē aʻe.",
+        "strict_project": "Ke ʻoiaʻiʻo ia, wehe loa ʻo ia i nā hōʻailona o nā papahana ʻē aʻe mai nā hualoaʻa."
+      }
+    },
+    "crow_ingest": {
+      "description": "E hoʻokomo i kahi ʻike coding i loko o ka hoʻomanaʻo synaptic lōʻihi o Crow. E kāhea i kēia ma hope o nā hualoaʻa build/test a i ʻole ka manaʻo akaaka a ka mea hoʻohana. E hāʻawi i kahi polarity akaaka a i ʻole he exit_code build no ka hoʻololi polarity ʻakomi. Hoʻomaʻemaʻe mua ʻia ka ʻike; hōʻole ʻia ka ʻike i loaʻa wale nō ka leo me ka hoʻopā ʻole i ka hoʻomanaʻo.",
+      "parameters": {
+        "key": "Ka wehewehe abstract o ke kūlana.",
+        "value": "Ka ʻano code a i ʻole ka hoʻoholo i hoʻohana ʻia.",
+        "register": "Ka register e mālama ai (style/bug/arch/context/life_pref/life_avoid/life_phil/life_context).",
+        "polarity": "Ka ikaika hoʻoikaika [-2.0, 2.0]. He mea koho inā hāʻawi ʻia ka exit_code; lanakila ka polarity akaaka ke hāʻawi ʻia ʻelua.",
+        "exit_code": "Ka exit code o ka build (0 = kūleʻa). Hoʻololi ʻakomi ʻia i polarity (+1.5/+0.5 no ke kūleʻa, -0.5/-1.0 no ka hāʻule) ke hāʻawi ʻole ʻia ka polarity akaaka.",
+        "user_edited": "Inā ua hoʻololi ka mea hoʻohana i ka hoʻopuka a ka AI. Hoʻololi ʻo ia i ka polarity i loaʻa mai ka exit_code.",
+        "project": "He hōʻailona papahana i mālama ʻia me ka ʻike hoʻomanaʻo no ka hoʻihoʻi ʻike papahana ma hope."
+      }
+    },
+    "crow_admin": {
+      "description": "Nā hana hoʻoponopono Crow ma hoʻokahi mea hana. Nā hana: diagnostics (helu helu hoʻomanaʻo), drift (nānā drift), prompt (heluhelu/hoʻākea/helu helu system_prompt.md), backup (hana/sākāʻi/helu/haʻi hou), evolve (manaʻo hoʻololi prompt), project_info (helu/hana i nā instance papahana).",
+      "parameters": {
+        "action": "ʻO wai ka hana hoʻoponopono: diagnostics, drift, prompt, backup, evolve, a i ʻole project_info.",
+        "args": "He mea argumeni kikoʻī no ka hana i hāʻawi ʻia i ka hana i koho ʻia."
+      }
+    }
+  },
+
+  "errors": {
+    "unknown_tool": "Mea hana i ʻike ʻole ʻia: {name}",
+    "unknown_prompt": "Prompt i ʻike ʻole ʻia: {name}",
+    "unknown_action": "Hana i ʻike ʻole ʻia o {context}: {action}",
+    "project_name_required": "Pono ka project_name no ka hana create"
+  },
+
+  "recall_messages": {
+    "faint_bias": "Hoʻomanaʻo ʻo Crow i kahi bias {register} nāwaliwali. He liʻiliʻi wale nō nā hoʻomanaʻo i mālama ʻia.",
+    "unknown_register": "Register i ʻike ʻole ʻia: {register}"
+  },
+
+  "ingest_messages": {
+    "status_ingested": "ua hoʻokomo ʻia",
+    "unknown_register": "Register i ʻike ʻole ʻia: {register}"
+  },
+
+  "evolve_messages": {
+    "no_patterns": "ʻAʻole i ʻike ʻia he mau ʻano koʻikoʻi i ka helu helu i kēia manawa."
+  },
+
+  "drift_messages": {
+    "healthy": "Maikaʻi ka hilinaʻi o ka hoʻomanaʻo.",
+    "confused": "Me he mea pīhoihoi ka hoʻomanaʻo o Crow. He mea hou loa paha nā hana o kēia manawa a i ʻole piha ka hoʻomanaʻo. E noʻonoʻo i ka spectral reset a i ʻole ka hoʻopaʻa ʻana i waho."
+  },
+
+  "cli": {
+    "stdio_start": "Ke holo nei ka Crow Memory MCP server ma stdio",
+    "sse_start": "Ke hoʻolohe nei ka Crow Memory MCP SSE server ma http://{host}:{port}/sse",
+    "http_start": "Ke hoʻolohe nei ka Crow Memory MCP Streamable HTTP server ma http://{host}:{port}/",
+    "dual_start_sse": "Ke hoʻolohe nei ka Crow Memory MCP SSE server ma http://{host}:{sse_port}/sse",
+    "dual_start_http": "Ke hoʻolohe nei ka Crow Memory MCP Streamable HTTP server ma http://{host}:{http_port}/"
+  },
+
+  "installer": {
+    "banner_title": "Ka Mea Hoʻokomo Crow Memory no Zoo Code",
+    "step_1_install_deps": "Ke hoʻokomo nei i nā mea pili Python",
+    "step_2_init_crow": "Ke hoʻomaka nei iā crow.bin",
+    "step_3_vscode_tasks": "Ke hana nei iā .vscode/tasks.json (hoʻomaka ʻakomi iā SSE ke wehe ʻia ka waihona)",
+    "step_4_custom_mode": "Ke hana nei i ke ʻano hoʻāla ʻakomi o Zoo Code",
+    "step_5_start_server": "Ke hoʻomaka nei i ka Crow SSE server + hoʻomaka ʻakomi",
+    "step_done": "Pau.",
+    "complete_title": "Ua pau ka hoʻokomo ʻana iā Crow Memory!",
+    "sse_running": "Ke holo nei ka SSE server ma http://127.0.0.1:9020/sse",
+    "next_steps_label": "Nā hana aʻe:",
+    "next_step_1": "1. E hoʻomaka hou iā Zoo Code",
+    "next_step_2": "2. E hoʻololi i ke ʻano i \"Orchestrator + Crow\"",
+    "next_step_3": "3. Hoʻāla ʻakomi ʻo Crow — ʻaʻohe pono e hoʻonohonoho lima",
+    "next_step_4": "4. Hoʻomaka ʻakomi ka Crow server me Windows ma o Task Scheduler"
+  },
+
+  "system_prompt": {
+    "header": "# Crow Memory — Nā Lula o ka System Prompt",
+    "subtitle": "> Ua hoʻoulu ʻia kēia mau lula e Crow a ua ʻae ʻia e ka mea hoʻohana.\n> Hōʻike lākou i nā bias coding koʻikoʻi i ka helu helu.\n> Mai hoʻololi lima — e hoʻohana i nā mea hana evolve Crow MCP.",
+    "managed_by": "<!-- Hoʻoponopono ʻia kēia faila e crow_mcp_server.py -->",
+    "default_rules": [
+      "RULE: Ma mua o kēlā me kēia pane, e kāhea iā crow_recall(domain=\"all\") e nīnau i nā register 8 a pau (style, bug, arch, context, life_pref, life_avoid, life_phil, life_context) no ke ʻano coding, ka naʻauao no nā bug, nā makemake architecture, ka makemake pilikino, ke akeakamai, a me ka pōʻaiapili o kēia manawa o ka mea hoʻohana. E hōʻike i nā hōʻailona i hoʻihoʻi ʻia ma kāu pane.",
+      "RULE: Ma hope o kēlā me kēia pane, e hoʻokomo i nā mea a ka mea hoʻohana i hōʻike mai ai — nā makemake, ke akeakamai, nā hoʻoponopono, ka pōʻaiapili — ma o crow_ingest. E hoʻoholo iā ʻoe iho i ka register a me ka polarity kūpono me ka kali ʻole i ka mea hoʻohana e ʻōlelo \"e hoʻomanaʻo i kēia\". Ma hope o ka hana code, e loiloi ʻakomi i nā hualoaʻa build ma o crow_ingest_from_build.",
+      "RULE: Mai haʻalele i nā lula recall+ingest ʻoiai no nā hana ʻaʻole code e like me ka hoʻoponopono palapala, nā hana git, a i ʻole nā hoʻololi hoʻonohonoho. E hoʻokō mau iā lākou."
+    ]
+  }
+}

@@ -1,0 +1,119 @@
+{
+  "_meta": {
+    "locale": "gd",
+    "language_name": "Scots Gaelic",
+    "version": "1.0.0",
+    "last_updated": "2026-11-24"
+  },
+
+  "server": {
+    "instructions": "Crow Memory — Cuimhne synaptic a-muigh airson idsearan còdaidh AI. Bidh i a' stòradh do stoidhle còdaidh, do thuigse mu mhearachdan agus do roghainnean ailtireachd mar mhatrais cuideam teannaichte ann an crow.bin.",
+
+    "prompts": {
+      "crow_memory_bias": {
+        "description": "Bloc claonais Crow Memory a thèid a chur a-steach gu fèin-obrachail. Tha ann do stoidhle còdaidh, do roghainnean agus na riaghailtean a chaidh a leasachadh. Bu chòir don òstair seo a luchdachadh aig toiseach an t-seisein.",
+        "body_template": "=== Crow Memory — Co-theacsa air a chur a-steach gu fèin-obrachail ===\n\n[Riaghailtean maireannach a chaidh a leasachadh]\n{rules}\n\n[Molaidhean cuimhne o chionn ghoirid]\n{bias}\n\nTha an co-theacsa gu h-àrd a' riochdachadh nan roghainnean agus na stoidhle a dh'ionnsaich thu. Cleachd e airson do fhreagairtean a stiùireadh. Airson barrachd ionnsachadh, gairm crow_recall le ceist shònraichte agus register (style/bug/arch/context/life_pref/life_avoid/life_phil/life_context)."
+      },
+      "crow_evolved_rules": {
+        "description": "Permanent evolved rules from Crow's system_prompt.md: permanent rules (human-promoted via CROW_ADMIN_TOKEN) plus unreviewed model suggestions.",
+        "body_template": "{prompt}"
+      }
+    }
+  },
+
+  "tools": {
+    "crow_recall": {
+      "description": "Faigh air ais stoidhle còdaidh, tuigse mu mhearachdan, roghainnean ailtireachd no co-theacsa pearsanta an neach-cleachdaidh bho chuimhne synaptic Crow. Gairm seo ro gach freagairt gus co-thaobhadh ri claonadh inntrigeach an neach-cleachdaidh. Gu bunaiteach (register=all no air fhàgail às, domain=all), nì e ceasnachadh air na 8 register uile agus cuiridh e na builean còmhla air feadh an t-siostaim a rèir coltais èifeachdaich.",
+      "parameters": {
+        "query": "Tuairisgeul ann an cànan nàdarra air an obair a th' ann an-dràsta.",
+        "register": "Dè an register a chleachdar. Cleachd 'all' (no fàg às e) airson ceasnachadh a dhèanamh air gach register san raon a thagh thu. Code: style/bug/arch/context. Life: life_pref/life_avoid/life_phil/life_context.",
+        "domain": "Criathrag raoin a chleachdar nuair a tha register 'all' no air fhàgail às. 'code' = style/bug/arch/context, 'life' = life_pref/life_avoid/life_phil/life_context, 'all' = na 8 register uile (bunaiteach).",
+        "top_k": "An àireamh de mholaidhean (1-5).",
+        "format": "Cruth an toraidh. Bidh 'hint' a' tilleadh mholaidhean JSON (bunaiteach); bidh 'bias_block' a' tilleadh a' bhloc theacsa [User Bias] airson a chur a-steach don phrìomh phrompt.",
+        "project": "Taga pròiseict a chleachdar gus molaidhean den aon phròiseact a neartachadh agus molaidhean bho phròiseactan eile a chriathradh no a pheanaltachadh.",
+        "strict_project": "Nuair a tha e fìor, bheir e molaidhean phròiseactan eile a-mach às na builean gu tur."
+      }
+    },
+    "crow_ingest": {
+      "description": "Cuir eòlas còdaidh a-steach do chuimhne synaptic fad-ùine Crow. Gairm seo às dèidh toraidhean build/test no fìor fhreagairt bhon neach-cleachdaidh. Thoir seachad polarity a tha soilleir no exit_code build airson mapadh polarity fèin-obrachail. Bidh an t-susbaint air a glanadh an toiseach; thèid cur a-steach a tha dìreach na fhuaim a dhiùltadh gun a bhith a' beantainn ris a' chuimhne.",
+      "parameters": {
+        "key": "Tuairisgeul eas-chruthach air an t-suidheachadh.",
+        "value": "Am pàtran còid no an co-dhùnadh a chaidh a chur an sàs.",
+        "register": "An register anns an tèid a stòradh (style/bug/arch/context/life_pref/life_avoid/life_phil/life_context).",
+        "polarity": "Neart an daingneachaidh [-2.0, 2.0]. Roghainneil ma thèid exit_code a thoirt seachad; bidh polarity soilleir a' buannachadh nuair a thèid an dà chuid a thoirt seachad.",
+        "exit_code": "Còd fàgail a' build (0 = soirbheachadh). Tha e a' mapadh gu polarity gu fèin-obrachail (+1.5/+0.5 air soirbheachadh, -0.5/-1.0 air fàilligeadh) mura thèid polarity soilleir a thoirt seachad.",
+        "user_edited": "Am beachd a dheasaich an neach-cleachdaidh toradh na h-AI. Bidh e ag atharrachadh a' polarity a thàinig bhon exit_code.",
+        "project": "Taga pròiseict a thèid a stòradh leis an inntrig chuimhne airson cuimhneachadh a bheir feart den phròiseact nas fhaide air adhart."
+      }
+    },
+    "crow_admin": {
+      "description": "Gnìomhan rianachd Crow ann an aon inneal. Gnìomhan: diagnostics (staitistig cuimhne), drift (sgrùdadh drift), prompt (leughadh/cur ris/staitistig system_prompt.md), backup (cruthachadh/cuairteachadh/liostadh/aiseag), evolve (moladh mùthaidhean pròimh), project_info (liostadh/cruthachadh thaisgeach pròiseict).",
+      "parameters": {
+        "action": "Dè an gnìomh rianachd: diagnostics, drift, prompt, backup, evolve, no project_info.",
+        "args": "Oibseact argamaidean a tha sònraichte don ghnìomh a thèid a chur air adhart chun obrachadh a chaidh a thaghadh."
+      }
+    }
+  },
+
+  "errors": {
+    "unknown_tool": "Inneal neo-aithnichte: {name}",
+    "unknown_prompt": "Promp neo-aithnichte: {name}",
+    "unknown_action": "Gnìomh neo-aithnichte ann an {context}: {action}",
+    "project_name_required": "Feumar project_name airson a' ghnìomh create"
+  },
+
+  "recall_messages": {
+    "faint_bias": "Tha Crow a' cuimhneachadh claonadh {register} a tha fann. Chan eil mòran chuimhneachan air an stòradh fhathast.",
+    "unknown_register": "Register neo-aithnichte: {register}"
+  },
+
+  "ingest_messages": {
+    "status_ingested": "air a ghabhail a-steach",
+    "unknown_register": "Register neo-aithnichte: {register}"
+  },
+
+  "evolve_messages": {
+    "no_patterns": "Cha deach pàtran sam bith a tha cudromach gu staitistigeach a lorg fhathast."
+  },
+
+  "drift_messages": {
+    "healthy": "Tha misneachd na cuimhne fallain.",
+    "confused": "Tha coltas troimh-chèile air cuimhne Crow. Dh'fhaodadh gu bheil an obair o chionn ghoirid ro-nuadh no gu bheil a' chuimhne làn. Beachdaich air ath-shuidheachadh spectral no tasgadh."
+  },
+
+  "cli": {
+    "stdio_start": "Tha Crow Memory MCP server a' ruith air stdio",
+    "sse_start": "Tha Crow Memory MCP SSE server ag èisteachd air http://{host}:{port}/sse",
+    "http_start": "Tha Crow Memory MCP Streamable HTTP server ag èisteachd air http://{host}:{port}/",
+    "dual_start_sse": "Tha Crow Memory MCP SSE server ag èisteachd air http://{host}:{sse_port}/sse",
+    "dual_start_http": "Tha Crow Memory MCP Streamable HTTP server ag èisteachd air http://{host}:{http_port}/"
+  },
+
+  "installer": {
+    "banner_title": "Neach-stàlaidh Crow Memory airson Zoo Code",
+    "step_1_install_deps": "A' cur an sàs eisimeileachdan Python",
+    "step_2_init_crow": "A' tòiseachadh crow.bin",
+    "step_3_vscode_tasks": "A' cruthachadh .vscode/tasks.json (tòiseachadh fèin-obrachail air an SSE nuair a thèid am pasgan fhosgladh)",
+    "step_4_custom_mode": "A' cruthachadh modh fèin-ghnìomhachaidh Zoo Code",
+    "step_5_start_server": "A' tòiseachadh Crow SSE server + tòiseachadh fèin-obrachail",
+    "step_done": "Deiseil.",
+    "complete_title": "Tha stàladh Crow Memory deiseil!",
+    "sse_running": "Tha an SSE server a' ruith air http://127.0.0.1:9020/sse",
+    "next_steps_label": "Na h-ath cheuman:",
+    "next_step_1": "1. Ath-thòisich Zoo Code",
+    "next_step_2": "2. Atharraich am modh gu \"Orchestrator + Crow\"",
+    "next_step_3": "3. Bidh Crow a' fèin-ghnìomhachadh — chan eil feum air rèiteachadh làimhe sam bith",
+    "next_step_4": "4. Bidh Crow server a' tòiseachadh gu fèin-obrachail le Windows tro Task Scheduler"
+  },
+
+  "system_prompt": {
+    "header": "# Crow Memory — Riaghailtean a' phrìomh phrompt",
+    "subtitle": "> Chaidh na riaghailtean seo a leasachadh le Crow agus fhuair iad aonta an neach-cleachdaidh.\n> Tha iad a' riochdachadh claonadh còdaidh a tha cudromach gu staitistigeach.\n> Na deasaich gu làimhe — cleachd innealan evolve Crow MCP.",
+    "managed_by": "<!-- Tha am faidhle seo air a riaghladh le crow_mcp_server.py -->",
+    "default_rules": [
+      "RULE: Ro gach freagairt, gairm crow_recall(domain=\"all\") gus ceasnachadh a dhèanamh air na 8 register uile (style, bug, arch, context, life_pref, life_avoid, life_phil, life_context) airson stoidhle còdaidh, tuigse mu mhearachdan, roghainnean ailtireachd, blas pearsanta, feallsanachd agus co-theacsa làithreach an neach-cleachdaidh. Dearbhaich na molaidhean a thilleas anns do fhreagairt.",
+      "RULE: Às dèidh gach freagairt, cuir a-steach na dh'fhoillsich an neach-cleachdaidh — roghainnean, feallsanachd, ceartachaidhean, co-theacsa — tro crow_ingest. Breithnich am register agus am polarity iomchaidh thu fhèin gun a bhith a' feitheamh ris an neach-cleachdaidh a ràdh \"cuimhnich air seo\". Às dèidh obair còid, dèan measadh fèin-obrachail air toraidhean a' build tro crow_ingest_from_build.",
+      "RULE: Na leum thairis air na riaghailtean recall+ingest eadhon airson obair nach eil a' buntainn ri còd, leithid deasachadh sgrìobhainnean, obair git no atharrachaidhean rèiteachaidh. Cuir an gnìomh iad an-còmhnaidh."
+    ]
+  }
+}

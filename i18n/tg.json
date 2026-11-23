@@ -1,0 +1,119 @@
+{
+  "_meta": {
+    "locale": "tg",
+    "language_name": "Tajik",
+    "version": "1.0.0",
+    "last_updated": "2026-11-24"
+  },
+
+  "server": {
+    "instructions": "Crow Memory — хотираи берунии синаптикӣ барои агентҳои AI-и барномасозӣ. Услуби барномасозӣ, ҳисси хатоҳо ва афзалиятҳои меъмории шуморо ҳамчун матритсаҳои вазни фишурда дар crow.bin нигоҳ медорад.",
+
+    "prompts": {
+      "crow_memory_bias": {
+        "description": "Блоки ғаразнокии Crow Memory, ки ба таври худкор ворид карда мешавад. Услуби барномасозӣ, афзалиятҳо ва қоидаҳои такомулёфтаи шуморо дар бар мегирад. Мизбон бояд онро дар оғози ҷаласа бор кунад.",
+        "body_template": "=== Crow Memory — Матни худкор воридшуда ===\n\n[Қоидаҳои доимии такомулёфта]\n{rules}\n\n[Ишораҳои охирини хотира]\n{bias}\n\nМатни боло афзалиятҳо ва услуби омӯхтаи шуморо ифода мекунад. Барои роҳнамоии ҷавобҳоятон онро истифода баред. Барои маълумоти бештар crow_recall-ро бо савол ва register-и мушаххас (style/bug/arch/context/life_pref/life_avoid/life_phil/life_context) даъват кунед."
+      },
+      "crow_evolved_rules": {
+        "description": "Permanent evolved rules from Crow's system_prompt.md: permanent rules (human-promoted via CROW_ADMIN_TOKEN) plus unreviewed model suggestions.",
+        "body_template": "{prompt}"
+      }
+    }
+  },
+
+  "tools": {
+    "crow_recall": {
+      "description": "Услуби барномасозӣ, ҳисси хатоҳо, афзалияти меъморӣ ё матни шахсии корбарро аз хотираи синаптикии Crow барқарор кунед. Барои мутобиқ шудан бо ғаразнокии индуктивии корбар онро ПЕШ АЗ ҳар ҷавоб даъват кунед. Ба таври пешфарз (register=all ё холӣ, domain=all) ҳамаи 8 register-ро тафтиш карда, натиҷаҳоро аз рӯи монандии муассир ба таври умумӣ муттаҳид мекунад.",
+      "parameters": {
+        "query": "Тавсифи забони табиии вазифаи ҷорӣ.",
+        "register": "Кадом register. Барои тафтиши ҳар register дар domain-и интихобшуда 'all'-ро истифода баред (ё холӣ гузоред). Code: style/bug/arch/context. Life: life_pref/life_avoid/life_phil/life_context.",
+        "domain": "Филтри domain, ки ҳангоми register 'all' будан ё холӣ гузоштан истифода мешавад. 'code' = style/bug/arch/context, 'life' = life_pref/life_avoid/life_phil/life_context, 'all' = ҳамаи 8 register (пешфарз).",
+        "top_k": "Шумораи ишораҳо (1-5).",
+        "format": "Формати бароварда. 'hint' ишораҳои JSON-ро бармегардонад (пешфарз); 'bias_block' блоки матнии [User Bias]-ро барои ворид кардан ба prompt-и система бармегардонад.",
+        "project": "Барчаспи лоиҳа, ки барои пурзӯр кардани ишораҳои ҳамон лоиҳа ва филтр ё ҷарима кардани ишораҳои лоиҳаҳои дигар истифода мешавад.",
+        "strict_project": "Вақте ки true аст, ишораҳои лоиҳаҳои дигарро пурра аз натиҷаҳо хориҷ мекунад."
+      }
+    },
+    "crow_ingest": {
+      "description": "Таҷрибаи барномасозиро ба хотираи дарозмуддати синаптикии Crow ворид кунед. Баъд аз натиҷаҳои build/санҷиш ё фикру мулоҳизаи возеҳи корбар онро даъват кунед. Ё polarity-и возеҳ ё exit_code-и build-ро диҳед, то polarity ба таври худкор табдил дода шавад. Мундариҷа аввал тоза карда мешавад; вуруди беҳуда бе он ки ба хотира дарояд, рад карда мешавад.",
+      "parameters": {
+        "key": "Тавсифи умумии вазъият.",
+        "value": "Намунаи код ё қарори татбиқшуда.",
+        "register": "Register барои нигоҳдорӣ (style/bug/arch/context/life_pref/life_avoid/life_phil/life_context).",
+        "polarity": "Қувваи тақвият [-2.0, 2.0]. Агар exit_code дода шавад, ихтиёрӣ аст; агар ҳарду дода шаванд, polarity-и возеҳ афзалият дорад.",
+        "exit_code": "Рамзи баромади build (0 = муваффақият). Агар polarity-и возеҳ дода нашавад, ба таври худкор ба polarity табдил дода мешавад (муваффақият +1.5/+0.5, нокомӣ -0.5/-1.0).",
+        "user_edited": "Оё корбар баровардаи AI-ро таҳрир кард. Polarity-и аз exit_code баромадаро танзим мекунад.",
+        "project": "Барчаспи лоиҳа, ки бо сабти хотира барои барқароркунии минбаъдаи лоиҳашинос нигоҳ дошта мешавад."
+      }
+    },
+    "crow_admin": {
+      "description": "Амалиётҳои маъмурии Crow дар як абзор. Амалҳо: diagnostics (омори хотира), drift (санҷиши drift), prompt (хондан, илова кардан ва омори system_prompt.md), backup (сохтан, гардиш додан, рӯйхат ва барқарор кардан), evolve (пешниҳоди тағйироти prompt), project_info (рӯйхат ва сохтани нусхаҳои лоиҳа).",
+      "parameters": {
+        "action": "Кадом амалиёти маъмурӣ: diagnostics, drift, prompt, backup, evolve ё project_info.",
+        "args": "Объекти аргументҳои махсуси амал, ки ба амалиёти интихобшуда фиристода мешавад."
+      }
+    }
+  },
+
+  "errors": {
+    "unknown_tool": "Абзори номаълум: {name}",
+    "unknown_prompt": "Prompt-и номаълум: {name}",
+    "unknown_action": "Амали номаълуми {context}: {action}",
+    "project_name_required": "Барои амали create project_name лозим аст"
+  },
+
+  "recall_messages": {
+    "faint_bias": "Crow ғаразнокии сусти {register}-ро ба ёд меорад. То ҳол хотираҳои каме нигоҳ дошта шудаанд.",
+    "unknown_register": "Register-и номаълум: {register}"
+  },
+
+  "ingest_messages": {
+    "status_ingested": "ворид шуд",
+    "unknown_register": "Register-и номаълум: {register}"
+  },
+
+  "evolve_messages": {
+    "no_patterns": "То ҳол намунаҳои аз ҷиҳати оморӣ муҳим ошкор нашудаанд."
+  },
+
+  "drift_messages": {
+    "healthy": "Эътимоднокии хотира хуб аст.",
+    "confused": "Хотираи Crow ошуфта менамояд. Вазифаҳои охирин метавонанд хеле нав бошанд ё хотира пур шудааст. Бозоғозии спектрӣ ё бойгонӣ карданро баррасӣ кунед."
+  },
+
+  "cli": {
+    "stdio_start": "Сервери Crow Memory MCP дар stdio кор мекунад",
+    "sse_start": "Сервери Crow Memory MCP SSE дар http://{host}:{port}/sse гӯш мекунад",
+    "http_start": "Сервери Crow Memory MCP Streamable HTTP дар http://{host}:{port}/ гӯш мекунад",
+    "dual_start_sse": "Сервери Crow Memory MCP SSE дар http://{host}:{sse_port}/sse гӯш мекунад",
+    "dual_start_http": "Сервери Crow Memory MCP Streamable HTTP дар http://{host}:{http_port}/ гӯш мекунад"
+  },
+
+  "installer": {
+    "banner_title": "Барномаи насби Crow Memory барои Zoo Code",
+    "step_1_install_deps": "Насби вобастагиҳои Python",
+    "step_2_init_crow": "Оғоз кардани crow.bin",
+    "step_3_vscode_tasks": "Сохтани .vscode/tasks.json (оғози худкори SSE ҳангоми кушодани ҷузвдон)",
+    "step_4_custom_mode": "Сохтани ҳолати фаъолсозии худкори Zoo Code",
+    "step_5_start_server": "Оғоз кардани сервери Crow SSE + оғози худкор",
+    "step_done": "Иҷро шуд.",
+    "complete_title": "Насби Crow Memory ба анҷом расид!",
+    "sse_running": "Сервери SSE дар http://127.0.0.1:9020/sse кор мекунад",
+    "next_steps_label": "Қадамҳои навбатӣ:",
+    "next_step_1": "1. Zoo Code-ро аз нав оғоз кунед",
+    "next_step_2": "2. Ҳолатро ба \"Orchestrator + Crow\" иваз кунед",
+    "next_step_3": "3. Crow худкор фаъол мешавад — танзими дастӣ лозим нест",
+    "next_step_4": "4. Сервери Crow тавассути Task Scheduler ҳамроҳи Windows худкор оғоз мешавад"
+  },
+
+  "system_prompt": {
+    "header": "# Crow Memory — Қоидаҳои prompt-и система",
+    "subtitle": "> Ин қоидаҳо аз ҷониби Crow такомул ёфта, аз ҷониби корбар тасдиқ шудаанд.\n> Онҳо ғаразнокиҳои барномасозии аз ҷиҳати оморӣ муҳимро ифода мекунанд.\n> Дастӣ таҳрир накунед — абзорҳои evolve-и Crow MCP-ро истифода баред.",
+    "managed_by": "<!-- Ин файл аз ҷониби crow_mcp_server.py идора мешавад -->",
+    "default_rules": [
+      "RULE: Пеш аз ҳар ҷавоб crow_recall(domain=\"all\")-ро даъват кунед, то ҳамаи 8 register (style, bug, arch, context, life_pref, life_avoid, life_phil, life_context)-ро оид ба услуби барномасозӣ, ҳисси хатоҳо, афзалиятҳои меъморӣ, завқи шахсӣ, фалсафа ва матни ҷории корбар тафтиш кунед. Ишораҳои баргардонидашударо дар ҷавоби худ инъикос кунед.",
+      "RULE: Баъд аз ҳар ҷавоб, он чиро, ки корбар ошкор кард — афзалиятҳо, фалсафа, ислоҳҳо, матн — тавассути crow_ingest ворид кунед. Бе интизори он ки корбар гӯяд \"инро дар хотир нигоҳ дор\", register ва polarity-и мувофиқро худатон муайян кунед. Баъд аз кори код, натиҷаҳои build-ро тавассути crow_ingest_from_build худкор баҳо диҳед.",
+      "RULE: Қоидаҳои recall+ingest-ро ҳатто барои вазифаҳои ғайрибарномасозӣ, аз қабили таҳрири ҳуҷҷатҳо, амалиётҳои git ё тағйироти конфигуратсия, сарфи назар накунед. Онҳоро ҳамеша иҷро кунед."
+    ]
+  }
+}

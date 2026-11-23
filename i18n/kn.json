@@ -1,0 +1,119 @@
+{
+  "_meta": {
+    "locale": "kn",
+    "language_name": "Kannada",
+    "version": "1.0.0",
+    "last_updated": "2026-11-24"
+  },
+
+  "server": {
+    "instructions": "Crow Memory \u2014 AI ಕೋಡಿಂಗ್ ಏಜೆಂಟ್‌ಗಳಿಗಾಗಿ ಬಾಹ್ಯ ಸಿನಾಪ್ಟಿಕ್ ಮೆಮೊರಿ. ನಿಮ್ಮ ಕೋಡಿಂಗ್ ಶೈಲಿ, ಬಗ್ ಪ್ರಜ್ಞೆ ಮತ್ತು ಆರ್ಕಿಟೆಕ್ಚರ್ ಆದ್ಯತೆಗಳನ್ನು crow.bin ನಲ್ಲಿ ಸಂಕುಚಿತ ತೂಕ ಮ್ಯಾಟ್ರಿಕ್ಸ್‌ಗಳಾಗಿ ಸಂಗ್ರಹಿಸುತ್ತದೆ.",
+
+    "prompts": {
+      "crow_memory_bias": {
+        "description": "ಸ್ವಯಂಚಾಲಿತವಾಗಿ ಸೇರಿಸಲಾದ Crow Memory ಪಕ್ಷಪಾತ ಬ್ಲಾಕ್. ನಿಮ್ಮ ಕೋಡಿಂಗ್ ಶೈಲಿ, ಆದ್ಯತೆಗಳು ಮತ್ತು ವಿಕಸಿತ ನಿಯಮಗಳನ್ನು ಒಳಗೊಂಡಿದೆ. ಹೋಸ್ಟ್ ಇದನ್ನು ಸೆಶನ್ ಆರಂಭದಲ್ಲಿ ಲೋಡ್ ಮಾಡಬೇಕು.",
+        "body_template": "=== Crow Memory \u2014 ಸ್ವಯಂಚಾಲಿತವಾಗಿ ಸೇರಿಸಲಾದ ಸಂದರ್ಭ ===\n\n[ಶಾಶ್ವತ ವಿಕಸಿತ ನಿಯಮಗಳು]\n{rules}\n\n[ಇತ್ತೀಚಿನ ಮೆಮೊರಿ ಸುಳಿವುಗಳು]\n{bias}\n\nಮೇಲಿನ ಸಂದರ್ಭವು ನಿಮ್ಮ ಕಲಿತ ಆದ್ಯತೆಗಳು ಮತ್ತು ಶೈಲಿಯನ್ನು ಪ್ರತಿನಿಧಿಸುತ್ತದೆ. ನಿಮ್ಮ ಪ್ರತಿಕ್ರಿಯೆಗಳನ್ನು ಮಾರ್ಗದರ್ಶಿಸಲು ಇದನ್ನು ಬಳಸಿ. ಇನ್ನಷ್ಟು ತಿಳಿಯಲು, ನಿರ್ದಿಷ್ಟ ಪ್ರಶ್ನೆ ಮತ್ತು register (style/bug/arch/context/life_pref/life_avoid/life_phil/life_context) ಜೊತೆ crow_recall ಅನ್ನು ಕರೆಯಿರಿ."
+      },
+      "crow_evolved_rules": {
+        "description": "Permanent evolved rules from Crow's system_prompt.md: permanent rules (human-promoted via CROW_ADMIN_TOKEN) plus unreviewed model suggestions.",
+        "body_template": "{prompt}"
+      }
+    }
+  },
+
+  "tools": {
+    "crow_recall": {
+      "description": "Crow ಸಿನಾಪ್ಟಿಕ್ ಮೆಮೊರಿಯಿಂದ ಬಳಕೆದಾರ-ನಿರ್ದಿಷ್ಟ ಕೋಡಿಂಗ್ ಶೈಲಿ, ಬಗ್ ಪ್ರಜ್ಞೆ, ಆರ್ಕಿಟೆಕ್ಚರ್ ಆದ್ಯತೆ ಅಥವಾ ವೈಯಕ್ತಿಕ ಸಂದರ್ಭವನ್ನು ಮರುಸ್ಮರಿಸುತ್ತದೆ. ಬಳಕೆದಾರರ ಪ್ರೇರಕ ಪಕ್ಷಪಾತಕ್ಕೆ ಹೊಂದಿಸಲು ಪ್ರತಿ ಪ್ರತಿಕ್ರಿಯೆಯ ಮೊದಲು ಇದನ್ನು ಕರೆಯಿರಿ. ಡೀಫಾಲ್ಟ್ ಆಗಿ (register=all ಅಥವಾ ಬಿಟ್ಟುಬಿಟ್ಟರೆ, domain=all) ಎಲ್ಲಾ 8 register ಗಳನ್ನು ಪ್ರಶ್ನಿಸಿ, ಪರಿಣಾಮಕಾರಿ ಸಾಮ್ಯತೆಯಿಂದ ಜಾಗತಿಕವಾಗಿ ವಿಲೀನ ಮಾಡುತ್ತದೆ.",
+      "parameters": {
+        "query": "ಪ್ರಸ್ತುತ ಕಾರ್ಯದ ನೈಸರ್ಗಿಕ ಭಾಷಾ ವಿವರಣೆ.",
+        "register": "ಯಾವ register. ಆಯ್ದ ಡೊಮೇನ್‌ನ ಎಲ್ಲಾ register ಗಳನ್ನು ಪ್ರಶ್ನಿಸಲು 'all' ಬಳಸಿ (ಅಥವಾ ಬಿಟ್ಟುಬಿಡಿ). Code: style/bug/arch/context. Life: life_pref/life_avoid/life_phil/life_context.",
+        "domain": "register 'all' ಆಗಿರುವಾಗ ಅಥವಾ ಬಿಟ್ಟುಬಿಟ್ಟಾಗ ಬಳಸುವ ಡೊಮೇನ್ ಫಿಲ್ಟರ್. 'code' = style/bug/arch/context, 'life' = life_pref/life_avoid/life_phil/life_context, 'all' = ಎಲ್ಲಾ 8 register (ಡೀಫಾಲ್ಟ್).",
+        "top_k": "ಸುಳಿವುಗಳ ಸಂಖ್ಯೆ (1-5).",
+        "format": "ಔಟ್‌ಪುಟ್ ಸ್ವರೂಪ. 'hint' JSON ಸುಳಿವುಗಳನ್ನು ಹಿಂತಿರುಗಿಸುತ್ತದೆ (ಡೀಫಾಲ್ಟ್); 'bias_block' ಸಿಸ್ಟಮ್ ಪ್ರಾಂಪ್ಟ್ ಸೇರಿಸುವಿಕೆಗಾಗಿ [User Bias] ಪಠ್ಯ ಬ್ಲಾಕ್ ಹಿಂತಿರುಗಿಸುತ್ತದೆ.",
+        "project": "ಒಂದೇ ಪ್ರಾಜೆಕ್ಟ್‌ನ ಸುಳಿವುಗಳನ್ನು ಹೆಚ್ಚಿಸಲು ಮತ್ತು ಬೇರೆ ಪ್ರಾಜೆಕ್ಟ್‌ನ ಸುಳಿವುಗಳನ್ನು ಫಿಲ್ಟರ್/ದಂಡಿಸಲು ಬಳಸುವ ಪ್ರಾಜೆಕ್ಟ್ ಟ್ಯಾಗ್.",
+        "strict_project": "true ಆಗಿದ್ದರೆ, ಬೇರೆ ಪ್ರಾಜೆಕ್ಟ್‌ನ ಸುಳಿವುಗಳನ್ನು ಫಲಿತಾಂಶಗಳಿಂದ ಕಟ್ಟುನಿಟ್ಟಾಗಿ ಫಿಲ್ಟರ್ ಮಾಡುತ್ತದೆ."
+      }
+    },
+    "crow_ingest": {
+      "description": "ಕೋಡಿಂಗ್ ಅನುಭವವನ್ನು Crow ನ ದೀರ್ಘಕಾಲೀನ ಸಿನಾಪ್ಟಿಕ್ ಮೆಮೊರಿಗೆ ದಾಖಲಿಸುತ್ತದೆ. build/ಪರೀಕ್ಷಾ ಫಲಿತಾಂಶಗಳ ನಂತರ ಅಥವಾ ಬಳಕೆದಾರರ ಸ್ಪಷ್ಟ ಪ್ರತಿಕ್ರಿಯೆಯ ನಂತರ ಕರೆಯಿರಿ. ಸ್ವಯಂಚಾಲಿತ polarity ಮ್ಯಾಪಿಂಗ್‌ಗಾಗಿ ಸ್ಪಷ್ಟ polarity ಅಥವಾ build exit_code ಒದಗಿಸಿ. ವಿಷಯವು ಮೊದಲು ಶುದ್ಧೀಕರಿಸಲ್ಪಡುತ್ತದೆ; ಶುದ್ಧ ಶಬ್ದ ಇನ್‌ಪುಟ್ ಮೆಮೊರಿಯನ್ನು ಸ್ಪರ್ಶಿಸದೆ ತಿರಸ್ಕರಿಸಲ್ಪಡುತ್ತದೆ.",
+      "parameters": {
+        "key": "ಪರಿಸ್ಥಿತಿಯ ಅಮೂರ್ತ ವಿವರಣೆ.",
+        "value": "ಅನ್ವಯಿಸಿದ ಕೋಡ್ ಮಾದರಿ ಅಥವಾ ನಿರ್ಧಾರ.",
+        "register": "ಸಂಗ್ರಹಿಸಬೇಕಾದ register (style/bug/arch/context/life_pref/life_avoid/life_phil/life_context).",
+        "polarity": "ಬಲಪಡಿಸುವ ಶಕ್ತಿ [-2.0, 2.0]. exit_code ನೀಡಿದರೆ ಐಚ್ಛಿಕ; ಎರಡನ್ನೂ ನೀಡಿದರೆ ಸ್ಪಷ್ಟ polarity ಗೆದ್ದುಕೊಳ್ಳುತ್ತದೆ.",
+        "exit_code": "build ನಿರ್ಗಮನ ಕೋಡ್ (0 = ಯಶಸ್ಸು). ಸ್ಪಷ್ಟ polarity ನೀಡದಿದ್ದರೆ ಸ್ವಯಂಚಾಲಿತವಾಗಿ polarity ಗೆ ಮ್ಯಾಪ್ ಆಗುತ್ತದೆ (ಯಶಸ್ಸಿನಲ್ಲಿ +1.5/+0.5, ವೈಫಲ್ಯದಲ್ಲಿ -0.5/-1.0).",
+        "user_edited": "ಬಳಕೆದಾರರು AI ಯ ಔಟ್‌ಪುಟ್ ಸಂಪಾದಿಸಿದ್ದಾರೆಯೇ. exit_code ನಿಂದ ಪಡೆದ polarity ಅನ್ನು ಸರಿಹೊಂದಿಸುತ್ತದೆ.",
+        "project": "ನಂತರದ ಪ್ರಾಜೆಕ್ಟ್-ಅರಿವಿನ ಮರುಸ್ಮರಣೆಗಾಗಿ ಮೆಮೊರಿ ನಮೂದಿನೊಂದಿಗೆ ಸಂಗ್ರಹಿಸಲಾದ ಪ್ರಾಜೆಕ್ಟ್ ಟ್ಯಾಗ್."
+      }
+    },
+    "crow_admin": {
+      "description": "Crow ನ ಆಡಳಿತ ಕಾರ್ಯಾಚರಣೆಗಳು ಒಂದೇ ಉಪಕರಣದಲ್ಲಿ. ಕ್ರಿಯೆಗಳು: diagnostics (ಮೆಮೊರಿ ಅಂಕಿಅಂಶಗಳು), drift (drift ಪರಿಶೀಲನೆ), prompt (system_prompt.md ಓದು/ಸೇರಿಸು/ಅಂಕಿಅಂಶ), backup (ರಚಿಸು/ತಿರುಗಿಸು/ಪಟ್ಟಿ/ಮರುಪಡೆಯಿಸು), evolve (ಪ್ರಾಂಪ್ಟ್ ರೂಪಾಂತರಗಳನ್ನು ಪ್ರಸ್ತಾಪಿಸು), project_info (ಪ್ರಾಜೆಕ್ಟ್ ನಿದರ್ಶನಗಳನ್ನು ಪಟ್ಟಿ/ರಚಿಸು).",
+      "parameters": {
+        "action": "ಯಾವ ಆಡಳಿತ ಕಾರ್ಯಾಚರಣೆ: diagnostics, drift, prompt, backup, evolve, ಅಥವಾ project_info.",
+        "args": "ಆಯ್ದ ಕಾರ್ಯಾಚರಣೆಗೆ ರವಾನಿಸುವ ಕ್ರಿಯಾ-ನಿರ್ದಿಷ್ಟ ಆರ್ಗ್ಯುಮೆಂಟ್‌ಗಳ ವಸ್ತು."
+      }
+    }
+  },
+
+  "errors": {
+    "unknown_tool": "ಅಜ್ಞಾತ ಉಪಕರಣ: {name}",
+    "unknown_prompt": "ಅಜ್ಞಾತ ಪ್ರಾಂಪ್ಟ್: {name}",
+    "unknown_action": "ಅಜ್ಞಾತ {context} ಕ್ರಿಯೆ: {action}",
+    "project_name_required": "create ಕ್ರಿಯೆಗೆ project_name ಅಗತ್ಯವಿದೆ"
+  },
+
+  "recall_messages": {
+    "faint_bias": "Crow ಮಂದ {register} ಪಕ್ಷಪಾತವನ್ನು ಮರುಸ್ಮರಿಸುತ್ತದೆ. ಇನ್ನೂ ಕೆಲವೇ ಮೆಮೊರಿಗಳು ಸಂಗ್ರಹವಾಗಿವೆ.",
+    "unknown_register": "ಅಜ್ಞಾತ register: {register}"
+  },
+
+  "ingest_messages": {
+    "status_ingested": "ಸಂಗ್ರಹಿಸಲಾಗಿದೆ",
+    "unknown_register": "ಅಜ್ಞಾತ register: {register}"
+  },
+
+  "evolve_messages": {
+    "no_patterns": "ಇನ್ನೂ ಸಾಂಖ್ಯಿಕವಾಗಿ ಮಹತ್ವದ ಮಾದರಿಗಳು ಪತ್ತೆಯಾಗಿಲ್ಲ."
+  },
+
+  "drift_messages": {
+    "healthy": "ಮೆಮೊರಿ ವಿಶ್ವಾಸಾರ್ಹತೆ ಆರೋಗ್ಯಕರವಾಗಿದೆ.",
+    "confused": "Crow ಮೆಮೊರಿ ಗೊಂದಲಕ್ಕೊಳಗಾದಂತಿದೆ. ಇತ್ತೀಚಿನ ಕಾರ್ಯಗಳು ತುಂಬಾ ಹೊಸದಾಗಿರಬಹುದು ಅಥವಾ ಮೆಮೊರಿ ಸ್ಯಾಚುರೇಟ್ ಆಗಿರಬಹುದು. ಸ್ಪೆಕ್ಟ್ರಲ್ ಮರುಹೊಂದಿಕೆ ಅಥವಾ ಆರ್ಕೈವಿಂಗ್ ಪರಿಗಣಿಸಿ."
+  },
+
+  "cli": {
+    "stdio_start": "Crow Memory MCP ಸರ್ವರ್ stdio ನಲ್ಲಿ ಚಾಲನೆಯಲ್ಲಿದೆ",
+    "sse_start": "Crow Memory MCP SSE ಸರ್ವರ್ http://{host}:{port}/sse ನಲ್ಲಿ ಕೇಳುತ್ತಿದೆ",
+    "http_start": "Crow Memory MCP Streamable HTTP ಸರ್ವರ್ http://{host}:{port}/ ನಲ್ಲಿ ಕೇಳುತ್ತಿದೆ",
+    "dual_start_sse": "Crow Memory MCP SSE ಸರ್ವರ್ http://{host}:{sse_port}/sse ನಲ್ಲಿ ಕೇಳುತ್ತಿದೆ",
+    "dual_start_http": "Crow Memory MCP Streamable HTTP ಸರ್ವರ್ http://{host}:{http_port}/ ನಲ್ಲಿ ಕೇಳುತ್ತಿದೆ"
+  },
+
+  "installer": {
+    "banner_title": "Zoo Code ಗಾಗಿ Crow Memory ಇನ್‌ಸ್ಟಾಲರ್",
+    "step_1_install_deps": "Python ಅವಲಂಬನೆಗಳನ್ನು ಸ್ಥಾಪಿಸಲಾಗುತ್ತಿದೆ",
+    "step_2_init_crow": "crow.bin ಆರಂಭಿಸಲಾಗುತ್ತಿದೆ",
+    "step_3_vscode_tasks": ".vscode/tasks.json ರಚಿಸಲಾಗುತ್ತಿದೆ (ಫೋಲ್ಡರ್ ತೆರೆದಾಗ SSE ಸ್ವಯಂಪ್ರಾರಂಭ)",
+    "step_4_custom_mode": "Zoo Code ಸ್ವಯಂ-ಸಕ್ರಿಯಗೊಳಿಸುವ ಮೋಡ್ ರಚಿಸಲಾಗುತ್ತಿದೆ",
+    "step_5_start_server": "Crow SSE ಸರ್ವರ್ ಪ್ರಾರಂಭ ಮತ್ತು ಸ್ವಯಂಪ್ರಾರಂಭ",
+    "step_done": "ಮುಗಿಯಿತು.",
+    "complete_title": "Crow Memory ಸ್ಥಾಪನೆ ಪೂರ್ಣಗೊಂಡಿದೆ!",
+    "sse_running": "SSE ಸರ್ವರ್ http://127.0.0.1:9020/sse ನಲ್ಲಿ ಚಾಲನೆಯಲ್ಲಿದೆ",
+    "next_steps_label": "ಮುಂದಿನ ಹಂತಗಳು:",
+    "next_step_1": "1. Zoo Code ಮರುಪ್ರಾರಂಭಿಸಿ",
+    "next_step_2": "2. ಮೋಡ್ ಅನ್ನು \"Orchestrator + Crow\" ಗೆ ಬದಲಿಸಿ",
+    "next_step_3": "3. Crow ಸ್ವಯಂಚಾಲಿತವಾಗಿ ಸಕ್ರಿಯವಾಗುತ್ತದೆ \u2014 ಹಸ್ತಚಾಲಿತ ಸೆಟಪ್ ಅಗತ್ಯವಿಲ್ಲ",
+    "next_step_4": "4. Task Scheduler ಮೂಲಕ Windows ಜೊತೆ Crow ಸರ್ವರ್ ಸ್ವಯಂಚಾಲಿತವಾಗಿ ಪ್ರಾರಂಭವಾಗುತ್ತದೆ"
+  },
+
+  "system_prompt": {
+    "header": "# Crow Memory \u2014 ಸಿಸ್ಟಮ್ ಪ್ರಾಂಪ್ಟ್ ನಿಯಮಗಳು",
+    "subtitle": "> ಈ ನಿಯಮಗಳನ್ನು Crow ವಿಕಸಿಸಿದೆ ಮತ್ತು ಬಳಕೆದಾರರು ಅನುಮೋದಿಸಿದ್ದಾರೆ.\n> ಇವು ಸಾಂಖ್ಯಿಕವಾಗಿ ಮಹತ್ವದ ಕೋಡಿಂಗ್ ಪಕ್ಷಪಾತಗಳನ್ನು ಪ್ರತಿನಿಧಿಸುತ್ತವೆ.\n> ಹಸ್ತಚಾಲಿತವಾಗಿ ಸಂಪಾದಿಸಬೇಡಿ \u2014 Crow MCP evolve ಉಪಕರಣಗಳನ್ನು ಬಳಸಿ.",
+    "managed_by": "<!-- ಈ ಫೈಲ್ crow_mcp_server.py ನಿಂದ ನಿರ್ವಹಿಸಲ್ಪಡುತ್ತದೆ -->",
+    "default_rules": [
+      "RULE: ಪ್ರತಿ ಪ್ರತಿಕ್ರಿಯೆಯ ಮೊದಲು, ಬಳಕೆದಾರರ ಕೋಡಿಂಗ್ ಶೈಲಿ, ಬಗ್ ಪ್ರಜ್ಞೆ, ಆರ್ಕಿಟೆಕ್ಚರ್ ಆದ್ಯತೆಗಳು, ವೈಯಕ್ತಿಕ ಅಭಿರುಚಿ, ತತ್ವಶಾಸ್ತ್ರ ಮತ್ತು ಪ್ರಸ್ತುತ ಸಂದರ್ಭದ ಬಗ್ಗೆ ಎಲ್ಲಾ 8 register ಗಳನ್ನು (style, bug, arch, context, life_pref, life_avoid, life_phil, life_context) ಪ್ರಶ್ನಿಸಲು crow_recall(domain=\"all\") ಕರೆಯಿರಿ. ಹಿಂತಿರುಗಿದ ಸುಳಿವುಗಳನ್ನು ನಿಮ್ಮ ಪ್ರತಿಕ್ರಿಯೆಯಲ್ಲಿ ಪ್ರತಿಬಿಂಬಿಸಿ.",
+      "RULE: ಪ್ರತಿ ಪ್ರತಿಕ್ರಿಯೆಯ ನಂತರ, ಬಳಕೆದಾರರು ಬಹಿರಂಗಪಡಿಸಿದ್ದನ್ನು \u2014 ಆದ್ಯತೆಗಳು, ತತ್ವಶಾಸ್ತ್ರ, ತಿದ್ದುಪಡಿಗಳು, ಸಂದರ್ಭ \u2014 crow_ingest ಮೂಲಕ ದಾಖಲಿಸಿ. ಬಳಕೆದಾರರು \"ಇದನ್ನು ನೆನಪಿಡಿ\" ಎಂದು ಹೇಳುವವರೆಗೆ ಕಾಯದೆ ಸೂಕ್ತ register ಮತ್ತು polarity ಅನ್ನು ನೀವೇ ನಿರ್ಣಯಿಸಿ. ಕೋಡ್ ಕೆಲಸದ ನಂತರ, crow_ingest_from_build ಮೂಲಕ build ಫಲಿತಾಂಶಗಳನ್ನು ಸ್ವಯಂಚಾಲಿತವಾಗಿ ಮೌಲ್ಯಮಾಪನ ಮಾಡಿ.",
+      "RULE: ದಾಖಲೆ ಸಂಪಾದನೆ, git ಕಾರ್ಯಾಚರಣೆಗಳು ಅಥವಾ ಕಾನ್ಫಿಗರೇಶನ್ ಬದಲಾವಣೆಗಳಂತಹ ಕೋಡಿಂಗ್-ಅಲ್ಲದ ಕಾರ್ಯಗಳಿಗೂ recall+ingest ನಿಯಮಗಳನ್ನು ಬಿಟ್ಟುಬಿಡಬೇಡಿ. ಯಾವಾಗಲೂ ಅವನ್ನು ಕಾರ್ಯಗತಗೊಳಿಸಿ."
+    ]
+  }
+}

@@ -15,7 +15,7 @@
         "body_template": "=== Crow Memory — 자동 주입 컨텍스트 ===\n\n[영구 진화 규칙]\n{rules}\n\n[최근 메모리 힌트]\n{bias}\n\n위 컨텍스트는 학습된 선호도와 스타일을 나타냅니다. 응답을 안내하는 데 사용하세요. 더 자세히 알아보려면 특정 쿼리와 register(style/bug/arch/context/life_pref/life_avoid/life_phil/life_context)로 crow_recall을 호출하세요."
       },
       "crow_evolved_rules": {
-        "description": "Crow의 system_prompt.md에서 진화된 영구 규칙입니다. HITL을 통해 승인된 통계적으로 유의미한 패턴입니다.",
+        "description": "Permanent evolved rules from Crow's system_prompt.md: permanent rules (human-promoted via CROW_ADMIN_TOKEN) plus unreviewed model suggestions.",
         "body_template": "{prompt}"
       }
     }

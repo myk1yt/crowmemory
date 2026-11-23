@@ -1,0 +1,119 @@
+{
+  "_meta": {
+    "locale": "te",
+    "language_name": "Telugu",
+    "version": "1.0.0",
+    "last_updated": "2026-11-24"
+  },
+
+  "server": {
+    "instructions": "Crow Memory — AI కోడింగ్ ఏజెంట్ల కోసం బాహ్య సినాప్టిక్ మెమరీ. మీ కోడింగ్ శైలి, బగ్ అంతర్దృష్టి, మరియు ఆర్కిటెక్చర్ ప్రాధాన్యతలను crow.bin లో సంక్షిప్త బరువు మాత్రికలుగా నిల్వ చేస్తుంది.",
+
+    "prompts": {
+      "crow_memory_bias": {
+        "description": "స్వయంచాలకంగా ఇంజెక్ట్ చేయబడే Crow Memory బైయస్ బ్లాక్. మీ కోడింగ్ శైలి, ప్రాధాన్యతలు, మరియు పరిణామం చెందిన నియమాలను కలిగి ఉంటుంది. హోస్ట్ దీన్ని సెషన్ ప్రారంభంలో లోడ్ చేయాలి.",
+        "body_template": "=== Crow Memory — స్వయంచాలకంగా ఇంజెక్ట్ చేయబడిన సందర్భం ===\n\n[శాశ్వత పరిణామ నియమాలు]\n{rules}\n\n[ఇటీవలి మెమరీ సూచనలు]\n{bias}\n\nపై సందర్భం మీరు నేర్చుకున్న ప్రాధాన్యతలు మరియు శైలిని సూచిస్తుంది. మీ ప్రతిస్పందనలను మార్గనిర్దేశం చేయడానికి దీన్ని ఉపయోగించండి. మరింత తెలుసుకోవడానికి, నిర్దిష్ట ప్రశ్న మరియు register (style/bug/arch/context/life_pref/life_avoid/life_phil/life_context) తో crow_recall ను పిలవండి."
+      },
+      "crow_evolved_rules": {
+        "description": "Permanent evolved rules from Crow's system_prompt.md: permanent rules (human-promoted via CROW_ADMIN_TOKEN) plus unreviewed model suggestions.",
+        "body_template": "{prompt}"
+      }
+    }
+  },
+
+  "tools": {
+    "crow_recall": {
+      "description": "Crow సినాప్టిక్ మెమరీ నుండి వినియోగదారు-నిర్దిష్ట కోడింగ్ శైలి, బగ్ అంతర్దృష్టి, ఆర్కిటెక్చర్ ప్రాధాన్యత, లేదా వ్యక్తిగత సందర్భాన్ని గుర్తుచేసుకోండి. వినియోగదారు యొక్క ఇండక్టివ్ బైయస్ తో సమలేఖనం కావడానికి ప్రతి ప్రతిస్పందనకు ముందు దీన్ని పిలవండి. డిఫాల్ట్ గా (register=all లేదా తొలగించినట్లయితే, domain=all), మొత్తం 8 registerలను ప్రశ్నించి, ప్రభావవంతమైన సారూప్యత ఆధారంగా ఫలితాలను ప్రపంచవ్యాప్తంగా విలీనం చేస్తుంది.",
+      "parameters": {
+        "query": "ప్రస్తుత పని యొక్క సహజ భాషా వివరణ.",
+        "register": "ఏ register. ఎంచుకున్న domain లోని ప్రతి registerను ప్రశ్నించడానికి 'all' ఉపయోగించండి (లేదా తొలగించండి). Code: style/bug/arch/context. Life: life_pref/life_avoid/life_phil/life_context.",
+        "domain": "register 'all' గా ఉన్నప్పుడు లేదా తొలగించినప్పుడు ఉపయోగించే domain ఫిల్టర్. 'code' = style/bug/arch/context, 'life' = life_pref/life_avoid/life_phil/life_context, 'all' = మొత్తం 8 registerలు (డిఫాల్ట్).",
+        "top_k": "సూచనల సంఖ్య (1-5).",
+        "format": "అవుట్‌పుట్ ఫార్మాట్. 'hint' JSON సూచనలను అందిస్తుంది (డిఫాల్ట్); 'bias_block' సిస్టమ్ ప్రాంప్ట్ ఇంజెక్షన్ కోసం [User Bias] టెక్స్ట్ బ్లాక్‌ను అందిస్తుంది.",
+        "project": "ఒకే ప్రాజెక్ట్ సూచనలను బూస్ట్ చేయడానికి మరియు ఇతర ప్రాజెక్ట్ సూచనలను ఫిల్టర్ చేయడానికి/శిక్షించడానికి ఉపయోగించే ప్రాజెక్ట్ ట్యాగ్.",
+        "strict_project": "true అయినప్పుడు, ఇతర ప్రాజెక్ట్ సూచనలను ఫలితాల నుండి పూర్తిగా ఫిల్టర్ చేస్తుంది."
+      }
+    },
+    "crow_ingest": {
+      "description": "కోడింగ్ అనుభవాన్ని Crow యొక్క దీర్ఘకాలిక సినాప్టిక్ మెమరీలో ఇంజెస్ట్ చేయండి. build/పరీక్ష ఫలితాల తర్వాత లేదా వినియోగదారు స్పష్టమైన అభిప్రాయం తర్వాత పిలవండి. స్పష్టమైన polarity లేదా build exit_code ఏదైనా ఇవ్వండి; స్వయంచాలకంగా polarity మ్యాప్ అవుతుంది. కంటెంట్ మొదట శుద్ధి చేయబడుతుంది; స్వచ్ఛమైన శబ్దం ఇన్‌పుట్ మెమరీని తాకకుండా తిరస్కరించబడుతుంది.",
+      "parameters": {
+        "key": "పరిస్థితి యొక్క సంక్షిప్త వివరణ.",
+        "value": "వర్తించిన కోడ్ నమూనా లేదా నిర్ణయం.",
+        "register": "నిల్వ చేయవలసిన register (style/bug/arch/context/life_pref/life_avoid/life_phil/life_context).",
+        "polarity": "బలోపేత బలం [-2.0, 2.0]. exit_code ఇచ్చినట్లయితే ఐచ్ఛికం; రెండూ ఇచ్చినప్పుడు స్పష్టమైన polarity గెలుస్తుంది.",
+        "exit_code": "Build నిష్క్రమణ కోడ్ (0 = విజయం). స్పష్టమైన polarity ఇవ్వకపోతే స్వయంచాలకంగా polarity గా మ్యాప్ అవుతుంది (విజయం +1.5/+0.5, వైఫల్యం -0.5/-1.0).",
+        "user_edited": "వినియోగదారు AI అవుట్‌పుట్‌ను సవరించారా అనేది. exit_code నుండి పొందిన polarity ను సర్దుబాటు చేస్తుంది.",
+        "project": "తర్వాత ప్రాజెక్ట్-అవగాహన గుర్తుచేయడం కోసం మెమరీ ఎంట్రీతో నిల్వ చేయబడే ప్రాజెక్ట్ ట్యాగ్."
+      }
+    },
+    "crow_admin": {
+      "description": "Crow పరిపాలనా కార్యకలాపాలు ఒకే సాధనంలో. చర్యలు: diagnostics (మెమరీ గణాంకాలు), drift (డ్రిఫ్ట్ తనిఖీ), prompt (system_prompt.md చదవడం/జోడించడం/గణాంకాలు), backup (సృష్టించడం/రొటేట్ చేయడం/జాబితా/పునరుద్ధరణ), evolve (ప్రాంప్ట్ మ్యుటేషన్లను ప్రతిపాదించడం), project_info (ప్రాజెక్ట్ ఇన్‌స్టాన్సులను జాబితా చేయడం/సృష్టించడం).",
+      "parameters": {
+        "action": "ఏ పరిపాలనా కార్యకలాపం: diagnostics, drift, prompt, backup, evolve, లేదా project_info.",
+        "args": "ఎంచుకున్న కార్యకలాపానికి పంపబడే చర్య-నిర్దిష్ట ఆర్గ్యుమెంట్ ఆబ్జెక్ట్."
+      }
+    }
+  },
+
+  "errors": {
+    "unknown_tool": "తెలియని సాధనం: {name}",
+    "unknown_prompt": "తెలియని ప్రాంప్ట్: {name}",
+    "unknown_action": "తెలియని {context} చర్య: {action}",
+    "project_name_required": "create చర్యకు project_name అవసరం"
+  },
+
+  "recall_messages": {
+    "faint_bias": "Crow ఒక మసక {register} బైయస్ ను గుర్తుచేసుకుంటోంది. ఇంకా కొన్ని జ్ఞాపకాలు మాత్రమే నిల్వ చేయబడ్డాయి.",
+    "unknown_register": "తెలియని register: {register}"
+  },
+
+  "ingest_messages": {
+    "status_ingested": "ఇంజెస్ట్ చేయబడింది",
+    "unknown_register": "తెలియని register: {register}"
+  },
+
+  "evolve_messages": {
+    "no_patterns": "గణాంకపరంగా ముఖ్యమైన నమూనాలు ఇంకా గుర్తించబడలేదు."
+  },
+
+  "drift_messages": {
+    "healthy": "మెమరీ విశ్వసనీయత ఆరోగ్యంగా ఉంది.",
+    "confused": "Crow మెమరీ గందరగోళంగా కనిపిస్తోంది. ఇటీవలి పనులు చాలా కొత్తగా ఉండవచ్చు లేదా మెమరీ నిండిపోయి ఉండవచ్చు. స్పెక్ట్రల్ రీసెట్ లేదా ఆర్కైవింగ్ పరిగణించండి."
+  },
+
+  "cli": {
+    "stdio_start": "Crow Memory MCP సర్వర్ stdio పై నడుస్తోంది",
+    "sse_start": "Crow Memory MCP SSE సర్వర్ http://{host}:{port}/sse వద్ద వినిపిస్తోంది",
+    "http_start": "Crow Memory MCP Streamable HTTP సర్వర్ http://{host}:{port}/ వద్ద వినిపిస్తోంది",
+    "dual_start_sse": "Crow Memory MCP SSE సర్వర్ http://{host}:{sse_port}/sse వద్ద వినిపిస్తోంది",
+    "dual_start_http": "Crow Memory MCP Streamable HTTP సర్వర్ http://{host}:{http_port}/ వద్ద వినిపిస్తోంది"
+  },
+
+  "installer": {
+    "banner_title": "Zoo Code కోసం Crow Memory ఇన్‌స్టాలర్",
+    "step_1_install_deps": "Python డిపెండెన్సీలను ఇన్‌స్టాల్ చేస్తోంది",
+    "step_2_init_crow": "crow.bin ను ప్రారంభిస్తోంది",
+    "step_3_vscode_tasks": ".vscode/tasks.json సృష్టిస్తోంది (ఫోల్డర్ తెరిచినప్పుడు SSE స్వయంచాలక ప్రారంభం)",
+    "step_4_custom_mode": "Zoo Code స్వయంచాలక యాక్టివేషన్ మోడ్‌ను సృష్టిస్తోంది",
+    "step_5_start_server": "Crow SSE సర్వర్‌ను ప్రారంభిస్తోంది + స్వయంచాలక ప్రారంభం",
+    "step_done": "పూర్తయింది.",
+    "complete_title": "Crow Memory ఇన్‌స్టాలేషన్ పూర్తయింది!",
+    "sse_running": "SSE సర్వర్ http://127.0.0.1:9020/sse వద్ద నడుస్తోంది",
+    "next_steps_label": "తదుపరి దశలు:",
+    "next_step_1": "1. Zoo Code ను పునఃప్రారంభించండి",
+    "next_step_2": "2. మోడ్‌ను \"Orchestrator + Crow\" కు మార్చండి",
+    "next_step_3": "3. Crow స్వయంచాలకంగా యాక్టివేట్ అవుతుంది — మాన్యువల్ సెటప్ అవసరం లేదు",
+    "next_step_4": "4. Task Scheduler ద్వారా Windows తో పాటు Crow సర్వర్ స్వయంచాలకంగా ప్రారంభమవుతుంది"
+  },
+
+  "system_prompt": {
+    "header": "# Crow Memory — సిస్టమ్ ప్రాంప్ట్ నియమాలు",
+    "subtitle": "> ఈ నియమాలు Crow చే పరిణామం చెంది వినియోగదారు ఆమోదించారు.\n> అవి గణాంకపరంగా ముఖ్యమైన కోడింగ్ బైయస్‌లను సూచిస్తాయి.\n> మాన్యువల్‌గా సవరించవద్దు — Crow MCP evolve సాధనాలను ఉపయోగించండి.",
+    "managed_by": "<!-- ఈ ఫైల్ crow_mcp_server.py ద్వారా నిర్వహించబడుతుంది -->",
+    "default_rules": [
+      "RULE: ప్రతి ప్రతిస్పందనకు ముందు, వినియోగదారు కోడింగ్ శైలి, బగ్ అంతర్దృష్టి, ఆర్కిటెక్చర్ ప్రాధాన్యతలు, వ్యక్తిగత రుచి, తత్వశాస్త్రం, మరియు ప్రస్తుత సందర్భం కోసం మొత్తం 8 registerలను (style, bug, arch, context, life_pref, life_avoid, life_phil, life_context) ప్రశ్నించడానికి crow_recall(domain=\"all\") పిలవండి. తిరిగి వచ్చిన సూచనలను మీ ప్రతిస్పందనలో ప్రతిబింబించండి.",
+      "RULE: ప్రతి ప్రతిస్పందన తర్వాత, వినియోగదారు వెల్లడించినది — ప్రాధాన్యతలు, తత్వశాస్త్రం, సవరణలు, సందర్భం — crow_ingest ద్వారా ఇంజెస్ట్ చేయండి. వినియోగదారు \"దీన్ని గుర్తుంచుకో\" అని చెప్పే వరకు వేచి ఉండకుండా సరైన register మరియు polarity ను మీరే నిర్ణయించుకోండి. కోడ్ పని తర్వాత, crow_ingest_from_build ద్వారా build ఫలితాలను స్వయంచాలకంగా అంచనా వేయండి.",
+      "RULE: పత్రాల సవరణ, git కార్యకలాపాలు, లేదా కాన్ఫిగరేషన్ మార్పులు వంటి కోడింగ్-యేతర పనులకు కూడా recall+ingest నియమాలను దాటవేయవద్దు. ఎల్లప్పుడూ అమలు చేయండి."
+    ]
+  }
+}

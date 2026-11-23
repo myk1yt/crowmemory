@@ -1,0 +1,108 @@
+{
+  "_meta": {
+    "locale": "sn",
+    "language_name": "Shona",
+    "version": "1.0.0",
+    "last_updated": "2026-11-24"
+  },
+  "server": {
+    "instructions": "Crow Memory — Ndangariro dze-synaptic dzekunze dzema-agent eAI anonyora kodhi. Inochengeta maitiro ako ekunyora kodhi, kunzwa kwako kwezvikanganiso, uye zvaunoda pakuumbwa kwesisitimu, se-matrices ehuremu akadzvanywa mukati me crow.bin.",
+    "prompts": {
+      "crow_memory_bias": {
+        "description": "Chikamu chebias cheCrow Memory chinopinzwa otomatiki. Chine maitiro ako ekunyora kodhi, zvaunoda, uye mitemo yakashanduka. Iyo host inofanira kuitora pakutanga kwesession.",
+        "body_template": "=== Crow Memory — Ruzivo runopinzwa otomatiki ===\n\n[Mitemo isingachinji yakashanduka]\n{rules}\n\n[Mazano emangwariro echangobva]\n{bias}\n\nRuzivo rwuri pamusoro apa runomiririra zvaunoda nemaitiro ako awakadzidza. Shandisa kutungamira mhinduro dzako. Kuti uwane zvimwe, daidza crow_recall nemubvunzo chaiwo uye register (style/bug/arch/context/life_pref/life_avoid/life_phil/life_context)."
+      },
+      "crow_evolved_rules": {
+        "description": "Permanent evolved rules from Crow's system_prompt.md: permanent rules (human-promoted via CROW_ADMIN_TOKEN) plus unreviewed model suggestions.",
+        "body_template": "{prompt}"
+      }
+    }
+  },
+  "tools": {
+    "crow_recall": {
+      "description": "Dzosera maitiro ako ekunyora kodhi, kunzwa kwezvikanganiso, zvaunoda pakuumbwa, kana ruzivo rwako pachako kubva mundangariro dze-synaptic dzeCrow. Daidza izvi USATI wapindura mhinduro yega yega kuti uwirirane neinductive bias yemushandisi. Nekudzidza (register=all kana kusiyiwa, domain=all), inobvunza registers dzose 8 uye inobatanidza mhinduro pasi rose nehukuru hwekufanana.",
+      "parameters": {
+        "query": "Tsanangudzo yemutauro wakajairika webasa riripo.",
+        "register": "Register ipi. Shandisa 'all' (kana kusiya) kubvunza registers dzose mudomain yakasarudzwa. Code: style/bug/arch/context. Life: life_pref/life_avoid/life_phil/life_context.",
+        "domain": "Domain sefa inoshandiswa kana register iri 'all' kana kusiyiwa. 'code' = style/bug/arch/context, 'life' = life_pref/life_avoid/life_phil/life_context, 'all' = registers dzose 8 (nekudzidza).",
+        "top_k": "Huwandu hwemazano (1-5).",
+        "format": "Chimiro chekubudisa. 'hint' inodzosa mazano eJSON (nekudzidza); 'bias_block' inodzosa chikamu chemavara e[User Bias] chekupinza musystem prompt.",
+        "project": "Chikwangwani cheprojekti chinoshandiswa kusimudzira mazano eprojekti imwe chete uye kusefa kana kuranga mazano eprojekti dzakasiyana.",
+        "strict_project": "Kana chiri chokwadi (true), inosefa zvachose mazano eprojekti dzakasiyana kubva mumhinduro."
+      }
+    },
+    "crow_ingest": {
+      "description": "Pinza ruzivo rwekodhi mundangariro dze-synaptic dzenguva refu dzeCrow. Daidza PASHURE pemhinduro dzebuild kana miedzo, kana mhinduro dzakajeka dzemushandisi. Ipa polarity yakajeka kana exit_code yebuild kuti polarity ishandurwe otomatiki. Zviri mukati zvinotanga kucheneswa; ruzha chete runorambwa pasina kubata ndangariro.",
+      "parameters": {
+        "key": "Tsanangudzo yakapfava yemamiriro ezvinhu.",
+        "value": "Maitiro ekodhi kana sarudzo yakashandiswa.",
+        "register": "Register yekuchengeta (style/bug/arch/context/life_pref/life_avoid/life_phil/life_context).",
+        "polarity": "Simba rekusimbisa [-2.0, 2.0]. Hazvidiwi kana exit_code yapiwa; polarity yakajeka inokunda kana zvose zvikapiwa.",
+        "exit_code": "Exit code yebuild (0 = kubudirira). Inoshandurwa otomatiki kuita polarity (+1.5/+0.5 pakubudirira, -0.5/-1.0 pakukundikana) kunze kwekunge polarity yakajeka yapiwa.",
+        "user_edited": "Kuti mushandisi akagadzirisa here zvinobuda muAI. Inogadzirisa polarity inobva mu exit_code.",
+        "project": "Chikwangwani cheprojekti chinochengetwa nendangariro kuti gare gare ridzoke richiziva projekti."
+      }
+    },
+    "crow_admin": {
+      "description": "Mabasa ekutonga eCrow muchishandiso chimwe. Mabasa: diagnostics (nhamba dzendangariro), drift (ongororo yedrift), prompt (kuverenga/kuwedzera/nhamba dze system_prompt.md), backup (kugadzira/kutenderedza/rundarisiti/kudzorera), evolve (kupa pfungwa dzekushandura prompt), project_info (rundarisiti/kugadzira maprojekti).",
+      "parameters": {
+        "action": "Iri basa reipi rekutonga: diagnostics, drift, prompt, backup, evolve, kana project_info.",
+        "args": "Chinhu chemaargument echiito chakati, chinopfuudzwa kubasa rakasariudzwa."
+      }
+    }
+  },
+  "errors": {
+    "unknown_tool": "Chishandiso chisingazivikanwe: {name}",
+    "unknown_prompt": "Prompt isingazivikanwe: {name}",
+    "unknown_action": "Chiito {context} chisingazivikanwe: {action}",
+    "project_name_required": "project_name inodiwa pachiito che create"
+  },
+  "recall_messages": {
+    "faint_bias": "Crow inorangarira bias shoma ye {register}. Ndangariro shoma dzati dzachengetwa.",
+    "unknown_register": "Register isingazivikanwe: {register}"
+  },
+  "ingest_messages": {
+    "status_ingested": "zvapinzwa",
+    "unknown_register": "Register isingazivikanwe: {register}"
+  },
+  "evolve_messages": {
+    "no_patterns": "Hapana mienzaniso inokosha pane zvehuwandu yakaonekwa kusvika zvino."
+  },
+  "drift_messages": {
+    "healthy": "Chivimbo chendangariro chakasimba.",
+    "confused": "Ndangariro dzeCrow dzinoratidzika kunge dzakavhiringidzika. Mabasa echangobva anogona kunge akanyanya kutsva kana ndangariro dzazara. Funga nezve spectral reset kana kuisa muarchiving."
+  },
+  "cli": {
+    "stdio_start": "Crow Memory MCP server iri kushanda pa stdio",
+    "sse_start": "Crow Memory MCP SSE server iri kuteerera pa http://{host}:{port}/sse",
+    "http_start": "Crow Memory MCP Streamable HTTP server iri kuteerera pa http://{host}:{port}/",
+    "dual_start_sse": "Crow Memory MCP SSE server iri kuteerera pa http://{host}:{sse_port}/sse",
+    "dual_start_http": "Crow Memory MCP Streamable HTTP server iri kuteerera pa http://{host}:{http_port}/"
+  },
+  "installer": {
+    "banner_title": "Crow Memory Installer yeZoo Code",
+    "step_1_install_deps": "Kuisira zvinodikanwa zvePython",
+    "step_2_init_crow": "Kutanga crow.bin",
+    "step_3_vscode_tasks": "Kugadzira .vscode/tasks.json (kutanga SSE otomatiki pakuvhurwa kwefolda)",
+    "step_4_custom_mode": "Kugadzira maitiro eZoo Code ekuzvishandira otomatiki",
+    "step_5_start_server": "Kutanga Crow SSE server + kutanga otomatiki",
+    "step_done": "Zvaitwa.",
+    "complete_title": "Kuisirwa kweCrow Memory kwapera!",
+    "sse_running": "SSE server iri kushanda pa http://127.0.0.1:9020/sse",
+    "next_steps_label": "Matano anotevera:",
+    "next_step_1": "1. Tangazve Zoo Code",
+    "next_step_2": "2. Chinja maitiro kuva \"Orchestrator + Crow\"",
+    "next_step_3": "3. Crow inozvishandira otomatiki — hapana kugadzirisa nemaoko kunodiwa",
+    "next_step_4": "4. Crow server inotanga otomatiki neWindows kubudikidza neTask Scheduler"
+  },
+  "system_prompt": {
+    "header": "# Crow Memory — Mitemo yeSystem Prompt",
+    "subtitle": "> Mitemo iyi yakashandurwa neCrow uye yakabvumidzwa nemushandisi.\n> Inomiririra maitiro ekodhi anokosha pane zvehuwandu.\n> Usaigadzirise nemaoko — shandisa zvishandiso zve evolve zveCrow MCP.",
+    "managed_by": "<!-- Faira iri rinotungamirirwa ne crow_mcp_server.py -->",
+    "default_rules": [
+      "RULE: Usati wapindura mhinduro yega yega, daidza crow_recall(domain=\"all\") kubvunza registers dzose 8 (style, bug, arch, context, life_pref, life_avoid, life_phil, life_context) nezvemaitiro emushandisi ekunyora kodhi, kunzwa kwezvikanganiso, zvaanoda pakuumbwa, kuravira kwake, huzivi, uye ruzivo rwazvino. Ratidza mazano adzoserwa mumhinduro yako.",
+      "RULE: Pashure pemhinduro yega yega, pinza zvakazarurwa nemushandisi — zvaanoda, huzivi, kugadzirisa, ruzivo — kubudikidza ne crow_ingest. Sarudza wega register ne polarity zvakakodzera usina kumirira kuti mushandisi ataure \"rangarira izvi.\" Pashure pebasa rekodhi, ongorora otomatiki mhinduro dzebuild kubudikidza ne crow_ingest_from_build.",
+      "RULE: Usapfuure mitemo ye recall+ingest kunyange pamabasa asiri ekodhi akadai sekugadzirisa magwaro, mabasa egit, kana kushandura magadzirirwo. Iva unoaitevera nguva dzose."
+    ]
+  }
+}

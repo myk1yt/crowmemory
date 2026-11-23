@@ -1,0 +1,119 @@
+{
+  "_meta": {
+    "locale": "yo",
+    "language_name": "Yoruba",
+    "version": "1.0.0",
+    "last_updated": "2026-11-24"
+  },
+
+  "server": {
+    "instructions": "Crow Memory — Ìrántí synaptic ìta fún àwọn aṣojú AI tí ń kọ́ọ̀dù. Ó ń tọ́jú ọ̀nà kíkọ́ọ̀dù rẹ, ìmọ̀ àṣìṣe, àti àwọn ìfẹ́ àgbékalẹ̀ rẹ gẹ́gẹ́ bí àwọn matrix ìwúwo tí a fúnpọ̀ nínú crow.bin.",
+
+    "prompts": {
+      "crow_memory_bias": {
+        "description": "Àkójọpọ̀ ìdàmú Crow Memory tí a ń fi kúnra fúnra. Ó ní ọ̀nà kíkọ́ọ̀dù rẹ, àwọn ìfẹ́ rẹ, àti àwọn òfin tí ó ti dàgbà. Olùgbani yẹ kí ó kó rẹ̀ ní ìbẹ̀rẹ̀ ìpàdé.",
+        "body_template": "=== Crow Memory — Àyíká tí a fi kúnra ===\n\n[Àwọn òfin àìnípẹ̀kun tí ó ti dàgbà]\n{rules}\n\n[Àwọn àmì ìrántí àìpẹ́]\n{bias}\n\nÀyíká tí ó wà lókè dúró fún àwọn ìfẹ́ àti ọ̀nà tí o ti kọ́. Lo ó láti darí àwọn ìdáhùn rẹ. Láti kọ́ síi, pe crow_recall pẹ̀lú ìbéèrè pàtó àti register (style/bug/arch/context/life_pref/life_avoid/life_phil/life_context)."
+      },
+      "crow_evolved_rules": {
+        "description": "Permanent evolved rules from Crow's system_prompt.md: permanent rules (human-promoted via CROW_ADMIN_TOKEN) plus unreviewed model suggestions.",
+        "body_template": "{prompt}"
+      }
+    }
+  },
+
+  "tools": {
+    "crow_recall": {
+      "description": "Rántí ọ̀nà kíkọ́ọ̀dù, ìmọ̀ àṣìṣe, ìfẹ́ àgbékalẹ̀, tàbí àyíká ara ẹni ti olùmúlò láti inú ìrántí synaptic Crow. Pe èyí ṢÁÁJÚ gbogbo ìdáhùn láti bá ìdàmú inductive olùmúlò mu. Ní àkọ́kọ́ (register=all tàbí tí a fi sílẹ̀, domain=all), ó ń béèrè gbogbo register 8, ó sì ń so àwọn èsì pọ̀ kárí ayé nípa ìjọra tí ó wúlò.",
+      "parameters": {
+        "query": "Àpèjúwe ní èdè àdá ti iṣẹ́ tí ó wà lọ́wọ́.",
+        "register": "Register wo. Lo 'all' (tàbí fi sílẹ̀) láti béèrè gbogbo register nínú domain tí a yàn. Code: style/bug/arch/context. Life: life_pref/life_avoid/life_phil/life_context.",
+        "domain": "Àlẹ̀mọ́ domain tí a ń lò nígbà tí register jẹ́ 'all' tàbí tí a fi sílẹ̀. 'code' = style/bug/arch/context, 'life' = life_pref/life_avoid/life_phil/life_context, 'all' = gbogbo register 8 (àkọ́kọ́).",
+        "top_k": "Iye àwọn àmì (1-5).",
+        "format": "Ìlànà èsì. 'hint' ń dá àwọn àmì JSON padà (àkọ́kọ́); 'bias_block' ń dá àkójọpọ̀ ọ̀rọ̀ [User Bias] padà fún fífi kún prompt ẹ̀rọ.",
+        "project": "Àmì iṣẹ́-àpapọ̀ tí a ń lò láti gbé àwọn àmì iṣẹ́ kan ga àti láti ṣe àlẹ̀mọ́ tàbí ìjìyà àwọn ti iṣẹ́ mìíràn.",
+        "strict_project": "Nígbà tí ó jẹ́ true, ó ń yọ àwọn àmì iṣẹ́ mìíràn kúrò pátápátá nínú àwọn èsì."
+      }
+    },
+    "crow_ingest": {
+      "description": "Fi ìrírí kíkọ́ọ̀dù kún ìrántí synaptic ìgbà pípẹ́ ti Crow. Pe èyí LẸ́YÌN àwọn èsì build tàbí ìdánwò, tàbí èsì ọ̀rọ̀ olùmúlò. Pèsè polarity pàtó tàbí exit_code build fún ìyípadà polarity fúnra. A ń tọ́jú àkóónú kọ́kọ́; a ń kọ̀ input tí ó jẹ́ ariwo lásán láìfi ọwọ́ kan ìrántí.",
+      "parameters": {
+        "key": "Àpèjúwe àìdí ti ipò náà.",
+        "value": "Àpẹẹrẹ kóòdù tàbí ìpinnu tí a lò.",
+        "register": "Register láti tọ́jú sínú (style/bug/arch/context/life_pref/life_avoid/life_phil/life_context).",
+        "polarity": "Agbára ìmúláradá [-2.0, 2.0]. Kò pọn dandan bí a bá ti fún exit_code; polarity pàtó ń borí nígbà tí a bá fún méjèèjì.",
+        "exit_code": "Kóòdù ìjáde build (0 = àṣeyọrí). Ó ń yípadà fúnra sí polarity (+1.5/+0.5 ní àṣeyọrí, -0.5/-1.0 ní ìkùnà) àyàfi bí a bá fún polarity pàtó.",
+        "user_edited": "Bóyá olùmúlò ṣàtúnṣe èsì AI. Ó ń ṣàtúnṣe polarity tí ó ti exit_code wá.",
+        "project": "Àmì iṣẹ́-àpapọ̀ tí a tọ́jú pẹ̀lú àkọsílẹ̀ ìrántí fún ìrántí tí ó mọ iṣẹ́-àpapọ̀ ní ìgbà tí ó ń bọ̀."
+      }
+    },
+    "crow_admin": {
+      "description": "Àwọn iṣẹ́ ìṣàkóso Crow nínú irinṣẹ́ kan. Àwọn ìgbésẹ̀: diagnostics (ìṣirò ìrántí), drift (àyẹ̀wò drift), prompt (kíkà, àfikún àti ìṣirò system_prompt.md), backup (dídá, yíyí, àkójọ àti ìmúpadà), evolve (dídábàá àwọn ìyípadà prompt), project_info (àkójọ àti dídá àwọn ẹ̀yà iṣẹ́-àpapọ̀).",
+      "parameters": {
+        "action": "Ìgbésẹ̀ ìṣàkóso wo: diagnostics, drift, prompt, backup, evolve, tàbí project_info.",
+        "args": "Àkójọpọ̀ àwọn àríyànjiyàn pàtó ìgbésẹ̀ tí a ń fi ránṣẹ́ sí iṣẹ́ tí a yàn."
+      }
+    }
+  },
+
+  "errors": {
+    "unknown_tool": "Irinṣẹ́ àìmọ̀: {name}",
+    "unknown_prompt": "Prompt àìmọ̀: {name}",
+    "unknown_action": "Ìgbésẹ̀ {context} àìmọ̀: {action}",
+    "project_name_required": "project_name pọn dandan fún ìgbésẹ̀ create"
+  },
+
+  "recall_messages": {
+    "faint_bias": "Crow rántí ìdàmú {register} tí kò lágbára. Àwọn ìrántí díẹ̀ ni a ti tọ́jú.",
+    "unknown_register": "Register àìmọ̀: {register}"
+  },
+
+  "ingest_messages": {
+    "status_ingested": "a ti fi kún",
+    "unknown_register": "Register àìmọ̀: {register}"
+  },
+
+  "evolve_messages": {
+    "no_patterns": "A kò tíì rí àwọn àpẹẹrẹ tí ó ṣe pàtàkì ní ìṣirò."
+  },
+
+  "drift_messages": {
+    "healthy": "Ìgbẹ́kẹ̀lé ìrántí wà ní àlàáfíà.",
+    "confused": "Ìrántí Crow dàbí ẹni tí ó dàrú. Àwọn iṣẹ́ àìpẹ́ lè jẹ́ tuntun jù tàbí ìrántí kún. Ronú nípa spectral reset tàbí pípa mọ́ sínú àkójọ."
+  },
+
+  "cli": {
+    "stdio_start": "Ẹ̀rọ MCP Crow Memory ń ṣiṣẹ́ lórí stdio",
+    "sse_start": "Ẹ̀rọ MCP SSE Crow Memory ń gbọ́ ní http://{host}:{port}/sse",
+    "http_start": "Ẹ̀rọ MCP Streamable HTTP Crow Memory ń gbọ́ ní http://{host}:{port}/",
+    "dual_start_sse": "Ẹ̀rọ MCP SSE Crow Memory ń gbọ́ ní http://{host}:{sse_port}/sse",
+    "dual_start_http": "Ẹ̀rọ MCP Streamable HTTP Crow Memory ń gbọ́ ní http://{host}:{http_port}/"
+  },
+
+  "installer": {
+    "banner_title": "Ẹ̀rọ ìfiṣeétò Crow Memory fún Zoo Code",
+    "step_1_install_deps": "Ń fi àwọn ohun ìgbẹ́kẹ̀lé Python sílẹ̀",
+    "step_2_init_crow": "Ń bẹ̀rẹ̀ crow.bin",
+    "step_3_vscode_tasks": "Ń dá .vscode/tasks.json (SSE ìbẹ̀rẹ̀ fúnra nígbà tí a bá ṣí folda)",
+    "step_4_custom_mode": "Ń dá ipò ìmúṣiṣẹ́ fúnra ti Zoo Code",
+    "step_5_start_server": "Ń bẹ̀rẹ̀ ẹ̀rọ Crow SSE + ìbẹ̀rẹ̀ fúnra",
+    "step_done": "Ó ti parí.",
+    "complete_title": "Ìfiṣeétò Crow Memory ti parí!",
+    "sse_running": "Ẹ̀rọ SSE ń ṣiṣẹ́ ní http://127.0.0.1:9020/sse",
+    "next_steps_label": "Àwọn ìgbésẹ̀ tó ń bọ̀:",
+    "next_step_1": "1. Tún Zoo Code bẹ̀rẹ̀",
+    "next_step_2": "2. Yí ipò padà sí \"Orchestrator + Crow\"",
+    "next_step_3": "3. Crow ń mú ara rẹ̀ ṣiṣẹ́ — kò nílò ìṣètò ọwọ́",
+    "next_step_4": "4. Ẹ̀rọ Crow ń bẹ̀rẹ̀ pẹ̀lú Windows nípasẹ̀ Task Scheduler"
+  },
+
+  "system_prompt": {
+    "header": "# Crow Memory — Àwọn òfin Prompt Ẹ̀rọ",
+    "subtitle": "> Crow ló mú àwọn òfin wọ̀nyí dàgbà, olùmúlò sì fọwọ́ sí wọn.\n> Wọ́n dúró fún àwọn ìdàmú kíkọ́ọ̀dù tí ó ṣe pàtàkì ní ìṣirò.\n> Má ṣàtúnṣe wọn pẹ̀lú ọwọ́ — lo àwọn irinṣẹ́ evolve ti Crow MCP.",
+    "managed_by": "<!-- crow_mcp_server.py ń ṣàkóso fáìlì yìí -->",
+    "default_rules": [
+      "RULE: Ṣáájú gbogbo ìdáhùn, pe crow_recall(domain=\"all\") láti béèrè gbogbo register 8 (style, bug, arch, context, life_pref, life_avoid, life_phil, life_context) fún ọ̀nà kíkọ́ọ̀dù, ìmọ̀ àṣìṣe, àwọn ìfẹ́ àgbékalẹ̀, ìtẹ́lọ́rùn ara ẹni, ìmọ̀ ọgbọ́n, àti àyíká olùmúlò lọ́wọ́lọ́wọ́. Fi àwọn àmì tí ó padà hàn nínú ìdáhùn rẹ.",
+      "RULE: Lẹ́yìn gbogbo ìdáhùn, fi ohun tí olùmúlò ṣí payá kún — àwọn ìfẹ́, ìmọ̀ ọgbọ́n, àwọn àtúnṣe, àyíká — nípasẹ̀ crow_ingest. Ṣe ìdájọ́ register àti polarity tí ó yẹ fúnra rẹ láìdúró de olùmúlò láti sọ \"rántí èyí.\" Lẹ́yìn iṣẹ́ kóòdù, ṣe ìdíwọ̀n àwọn èsì build fúnra nípasẹ̀ crow_ingest_from_build.",
+      "RULE: Má ṣe forí àwọn òfin recall+ingest bọ̀ pàápàá fún àwọn iṣẹ́ tí kì í ṣe kíkọ́ọ̀dù bíi ṣíṣàtúnṣe ìwé, àwọn iṣẹ́ git, tàbí àwọn ìyípadà ìṣètò. Máa ṣe wọ́n nígbà gbogbo."
+    ]
+  }
+}

@@ -1,0 +1,119 @@
+{
+  "_meta": {
+    "locale": "ku",
+    "language_name": "Kurdish",
+    "version": "1.0.0",
+    "last_updated": "2026-11-24"
+  },
+
+  "server": {
+    "instructions": "Crow Memory \u2014 Bîra sînaptîk a derveyî ji bo ajanên kodkirina AI. Stîla kodkirina te, hestê xeletiyan û tercîhên mîmarî yên te wek matrîsên giraniyê yên pêçandî di crow.bin de tomar dike.",
+
+    "prompts": {
+      "crow_memory_bias": {
+        "description": "Bloka berbijariyê ya Crow Memory ku bixweber tê têxistin. Stîla kodkirina te, tercîh û rêzikên pêşketî dihewîne. Divê host wê di destpêka danişînê de bar bike.",
+        "body_template": "=== Crow Memory \u2014 Çarçoveya ku bixweber tê têxistin ===\n\n[Rêzikên pêşketî yên mayînde]\n{rules}\n\n[Îşaretên bîra nû]\n{bias}\n\nÇarçoveya li jor tercîh û stîla te ya fêrkirî nîşan dide. Wê bikar bîne da ku bersivên xwe birêve bibe. Ji bo bêtir fêr bibe, crow_recall bi pirsyarek diyar û register (style/bug/arch/context/life_pref/life_avoid/life_phil/life_context) re bang bike."
+      },
+      "crow_evolved_rules": {
+        "description": "Permanent evolved rules from Crow's system_prompt.md: permanent rules (human-promoted via CROW_ADMIN_TOKEN) plus unreviewed model suggestions.",
+        "body_template": "{prompt}"
+      }
+    }
+  },
+
+  "tools": {
+    "crow_recall": {
+      "description": "Stîla kodkirina taybet a bikarhêner, hestê xeletiyan, tercîha mîmarî an çarçoveya kesane ji bîra sînaptîk a Crow vedigerîne. Berî her bersivê vê bang bike da ku bi berbijariya înduktîf a bikarhêner re were hev. Bi awayê standard (register=all an nehatiye dayîn, domain=all) hemî 8 registeran dipirse û encaman li gorî wekheviya bi bandor bi awayek gerdûnî yek dike.",
+      "parameters": {
+        "query": "Danasîna bi zimanê xwezayî ya karê heyî.",
+        "register": "Kîjan register. 'all' bikar bîne (an jê derbas bike) da ku hemî registeran di domaina hilbijartî de bipirse. Code: style/bug/arch/context. Life: life_pref/life_avoid/life_phil/life_context.",
+        "domain": "Fîltreya domain a ku dema register 'all' e an nehatiye dayîn tê bikaranîn. 'code' = style/bug/arch/context, 'life' = life_pref/life_avoid/life_phil/life_context, 'all' = hemî 8 register (standard).",
+        "top_k": "Hejmara îşaretan (1-5).",
+        "format": "Formata derketinê. 'hint' îşaretên JSON vedigerîne (standard); 'bias_block' bloka nivîsê ya [User Bias] ji bo têxistina promta pergalê vedigerîne.",
+        "project": "Etîketa projeyê ku ji bo zêdekirina îşaretên heman projeyê û fîlterkirin/cezakirina yên projeyên din tê bikaranîn.",
+        "strict_project": "Dema true be, îşaretên projeyên din bi tundî ji encaman fîlter dike."
+      }
+    },
+    "crow_ingest": {
+      "description": "Tecrubeya kodkirinê di bîra sînaptîk a demdirêj a Crow de tomar dike. Piştî encamên build/test an bertekara eşkere ya bikarhêner bang bike. Ji bo nexşekirina bixweber a polarity, an polarity eşkere an exit_code ya build bidin. Naverok pêşî tê paqijkirin; têketina dengê safî bêyî destlêdanê li bîrê tê red kirin.",
+      "parameters": {
+        "key": "Danasîna razber a rewşê.",
+        "value": "Nimûneya kodê an biryara ku hate sepandin.",
+        "register": "Register ji bo tomarê (style/bug/arch/context/life_pref/life_avoid/life_phil/life_context).",
+        "polarity": "Hêza xurtkirinê [-2.0, 2.0]. Bijarte ye heke exit_code were dayîn; gava her du jî werin dayîn polarity eşkere serdikeve.",
+        "exit_code": "Koda derketina build (0 = serkeftin). Heke polarity eşkere neyê dayîn, bixweber bi polarity re tê nexşe kirin (di serkeftinê de +1.5/+0.5, di têkçûnê de -0.5/-1.0).",
+        "user_edited": "Ka bikarhêner derketina AI guherandiye an na. Polarity ya ji exit_code tê eyar dike.",
+        "project": "Etîketa projeyê ku bi tomara bîrê re tê tomarkirin ji bo bîranîna paşerojê ya projeya-nas."
+      }
+    },
+    "crow_admin": {
+      "description": "Emeliyatên îdarî yên Crow di yek amûrê de. Çalakî: diagnostics (statîstîkên bîrê), drift (kontrola drift), prompt (xwendin/zêdekirin/statîstîkên system_prompt.md), backup (çêkirin/serûber/salixdan/vegerandin), evolve (pêşniyara guhertinên promtê), project_info (salixdan/çêkirina daneyên projeyê).",
+      "parameters": {
+        "action": "Kîjan emeliyata îdarî: diagnostics, drift, prompt, backup, evolve, an project_info.",
+        "args": "Objeya argumanên taybet ên çalakiyê ku ji emeliyata hilbijartî re tê şandin."
+      }
+    }
+  },
+
+  "errors": {
+    "unknown_tool": "Amûra nenas: {name}",
+    "unknown_prompt": "Promta nenas: {name}",
+    "unknown_action": "Çalakiya {context} ya nenas: {action}",
+    "project_name_required": "ji bo çalakiya create project_name pêwîst e"
+  },
+
+  "recall_messages": {
+    "faint_bias": "Crow berbijariyeke {register} ya lawaz bi bîr tîne. Hîn hindik bîr hatine tomarkirin.",
+    "unknown_register": "Register nenas: {register}"
+  },
+
+  "ingest_messages": {
+    "status_ingested": "hat tomarkirin",
+    "unknown_register": "Register nenas: {register}"
+  },
+
+  "evolve_messages": {
+    "no_patterns": "Hîn nimûneyên ji hêla statîstîkî girîng nehatine dîtin."
+  },
+
+  "drift_messages": {
+    "healthy": "Baweriya bîrê saxlem e.",
+    "confused": "Bîra Crow tevlihev dixuye. Dibe ku karên nû zêde nû bin an bîr tijî be. Li ser nûkirina spektral an arşîvkirinê bifikire."
+  },
+
+  "cli": {
+    "stdio_start": "Servera Crow Memory MCP li ser stdio dixebite",
+    "sse_start": "Servera Crow Memory MCP SSE li http://{host}:{port}/sse guhdarî dike",
+    "http_start": "Servera Crow Memory MCP Streamable HTTP li http://{host}:{port}/ guhdarî dike",
+    "dual_start_sse": "Servera Crow Memory MCP SSE li http://{host}:{sse_port}/sse guhdarî dike",
+    "dual_start_http": "Servera Crow Memory MCP Streamable HTTP li http://{host}:{http_port}/ guhdarî dike"
+  },
+
+  "installer": {
+    "banner_title": "Sazkerê Crow Memory ji bo Zoo Code",
+    "step_1_install_deps": "Girêdanên Python têne sazkirin",
+    "step_2_init_crow": "crow.bin tê destpêkirin",
+    "step_3_vscode_tasks": ".vscode/tasks.json tê çêkirin (dema peldank were vekirin SSE bixweber dest pê dike)",
+    "step_4_custom_mode": "Moda xweser-çalakbûnê ya Zoo Code tê çêkirin",
+    "step_5_start_server": "Servera Crow SSE tê destpêkirin û destpêka bixweber tê danîn",
+    "step_done": "Qediya.",
+    "complete_title": "Sazkirina Crow Memory qediya!",
+    "sse_running": "Servera SSE li http://127.0.0.1:9020/sse dixebite",
+    "next_steps_label": "Gavên pêş:",
+    "next_step_1": "1. Zoo Code ji nû ve dest pê bike",
+    "next_step_2": "2. Modê biguherîne bo \"Orchestrator + Crow\"",
+    "next_step_3": "3. Crow bixweber çalak dibe \u2014 sazkirina bi destan pêwîst nîne",
+    "next_step_4": "4. Servera Crow bi Task Scheduler re ligel Windows bixweber dest pê dike"
+  },
+
+  "system_prompt": {
+    "header": "# Crow Memory \u2014 Rêzikên promta pergalê",
+    "subtitle": "> Ev rêzik ji hêla Crow ve hatin pêşxistin û ji hêla bikarhêner ve hatin pejirandin.\n> Ew berbijariyên kodkirinê yên ji hêla statîstîkî girîng nîşan didin.\n> Bi destan sererast neke \u2014 amûrên Crow MCP evolve bikar bîne.",
+    "managed_by": "<!-- Ev pel ji hêla crow_mcp_server.py ve tê birêvebirin -->",
+    "default_rules": [
+      "RULE: Berî her bersivê, crow_recall(domain=\"all\") bang bike da ku hemî 8 registeran (style, bug, arch, context, life_pref, life_avoid, life_phil, life_context) li ser stîla kodkirina bikarhêner, hestê xeletiyan, tercîhên mîmarî, tama kesane, felsefe û çarçoveya heyî bipirse. Îşaretên vegeriyayî di bersiva xwe de nîşan bide.",
+      "RULE: Piştî her bersivê, tiştê ku bikarhêner eşkere kiriye \u2014 tercîh, felsefe, rastkirin, çarçove \u2014 bi crow_ingest tomar bike. Register û polarity ya guncav bixwe dadbar bike bêyî ku li benda gotina bikarhêner \"vê bîne bîra min\" bimîne. Piştî xebata kodê, encamên build bi crow_ingest_from_build bixweber binirxîne.",
+      "RULE: Rêzikên recall+ingest ji bo karên ne-kodê jî, wek sererastkirina belgeyan, emeliyatên git an guhertinên veavakirinê, derbas neke. Her tim wan pêk bîne."
+    ]
+  }
+}

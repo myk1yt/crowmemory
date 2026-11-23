@@ -1,0 +1,119 @@
+{
+  "_meta": {
+    "locale": "xh",
+    "language_name": "Xhosa",
+    "version": "1.0.0",
+    "last_updated": "2026-11-24"
+  },
+
+  "server": {
+    "instructions": "Crow Memory — Inkumbulo yangaphandle ye-sinapse yee-arhente ze-AI ezibhala ikhowudi. Igcina isimbo sakho sokubhala ikhowudi, ukuqonda kwakho iimpazamo, kunye nezinto ozithandayo ze-akhithektjha njengeematriki zobunzima ezicuthiweyo kwi-crow.bin.",
+
+    "prompts": {
+      "crow_memory_bias": {
+        "description": "Ibhloko ye-bias ye-Crow Memory efakwa ngokuzenzekelayo. Iqulethe isimbo sakho sokubhala ikhowudi, izinto ozithandayo, nemithetho ephuhliselweyo. Umamkeli (host) kufuneka ayilayishe ekuqaleni kweseshoni.",
+        "body_template": "=== Crow Memory — Umxholo Ofakwe Ngokuzenzekelayo ===\n\n[Imithetho Esisigxina Ephuhliselweyo]\n{rules}\n\n[Iingcebiso Zeenkumbulo Zamvanje]\n{bias}\n\nUmxholo ongentla umele izinto ozifundileyo nesimbo sakho. Yisebenzise ukukhokela iimpendulo zakho. Ukuze ufunde ngakumbi, biza i-crow_recall ngombuzo othile kunye ne-register (style/bug/arch/context/life_pref/life_avoid/life_phil/life_context)."
+      },
+      "crow_evolved_rules": {
+        "description": "Permanent evolved rules from Crow's system_prompt.md: permanent rules (human-promoted via CROW_ADMIN_TOKEN) plus unreviewed model suggestions.",
+        "body_template": "{prompt}"
+      }
+    }
+  },
+
+  "tools": {
+    "crow_recall": {
+      "description": "Khumbula isimbo sokubhala ikhowudi esihambelana nomsebenzisi, ukuqonda iimpazamo, izinto azithandayo ze-akhithektjha, okanye umxholo wobuqu kwiinkumbulo ze-sinapse ze-Crow. Biza oku NGAPHAMBI kwayo yonke impendulo ukuze uhambelane ne-inductive bias yomsebenzisi. Ngokuzenzekelayo (register=all okanye ishiyiwe, domain=all), ibuza zonke ii-register ezisi-8 kwaye idibanisa iziphumo kwihlabathi lonke ngokufana okusebenzayo.",
+      "parameters": {
+        "query": "Inkcazo yomsebenzi wangoku ngolwimi lwendalo.",
+        "register": "Yeyiphi i-register. Sebenzisa 'all' (okanye uyeke) ukubuza zonke ii-register kwidomeyini ekhethiweyo. Code: style/bug/arch/context. Life: life_pref/life_avoid/life_phil/life_context.",
+        "domain": "Isihluzo sedomeyini esisetyenziswa xa i-register iyi-'all' okanye ishiyiwe. 'code' = style/bug/arch/context, 'life' = life_pref/life_avoid/life_phil/life_context, 'all' = zonke ii-register ezisi-8 (okungagqibekanga).",
+        "top_k": "Inani leengcebiso (1-5).",
+        "format": "Ifomathi yemveliso. 'hint' ibuyisela iingcebiso ze-JSON (okungagqibekanga); 'bias_block' ibuyisela ibhloko yombhalo [User Bias] yokufakwa kwi-system prompt.",
+        "project": "Ithegi yeprojekthi esetyenziselwa ukunyusa iingcebiso zeprojekthi efanayo nokuhluzwa nokohlwaywa kwezo zivela kwenye iprojekthi.",
+        "strict_project": "Xa iyinyaniso (true), ikhupha ngokupheleleyo iingcebiso zeprojekthi ezahlukileyo kwiziphumo."
+      }
+    },
+    "crow_ingest": {
+      "description": "Faka amava okubhala ikhowudi kwiinkumbulo ze-sinapse zexesha elide ze-Crow. Biza EMVA kweziphumo zokwakha okanye zovavanyo, okanye emva kwempendulo ecacileyo yomsebenzisi. Nika i-polarity ecacileyo okanye i-exit_code yokwakha ukuze i-polarity ihlelwe ngokuzenzekelayo. Umxholo uhlanjululwa kuqala; igalelo eliyimpempe liyaliwa ngaphandle kokuchukumisa inkumbulo.",
+      "parameters": {
+        "key": "Inkcazo ebanzi yemeko.",
+        "value": "Ipatheni yekhowudi okanye isigqibo esisetyenzisiweyo.",
+        "register": "I-register yokugcina kuyo (style/bug/arch/context/life_pref/life_avoid/life_phil/life_context).",
+        "polarity": "Amandla okuqinisa [-2.0, 2.0]. Ayinyanzelekanga ukuba i-exit_code inikiwe; i-polarity ecacileyo iyaphumelela xa zombini zinikiwe.",
+        "exit_code": "Ikhowudi yokuphuma yokwakha (0 = impumelelo). Ihlelwa ngokuzenzekelayo kwi-polarity (+1.5/+0.5 xa kuphumelele, -0.5/-1.0 xa kusilele) ngaphandle kokuba i-polarity ecacileyo inikiwe.",
+        "user_edited": "Ukuba umsebenzisi wayihlela imveliso ye-AI. Ilungisa i-polarity evela kwi-exit_code.",
+        "project": "Ithegi yeprojekthi egcinwa kunye nongeno lwenkumbulo ukuze kamva kukhunjulwe ngokuqonda iprojekthi."
+      }
+    },
+    "crow_admin": {
+      "description": "Imisebenzi yokulawula ye-Crow kwisixhobo esinye. Izenzo: diagnostics (izibalo zeenkumbulo), drift (ukujonga i-drift), prompt (ukufunda/ukongeza/izibalo ze-system_prompt.md), backup (ukudala/ukujikeleza/ukudwelisa/ukubuyisela), evolve (ukuphakamisa iinguqu ze-prompt), project_info (ukudwelisa/ukudala iimeko zeprojekthi).",
+      "parameters": {
+        "action": "Yeyiphi imisebenzi yokulawula: diagnostics, drift, prompt, backup, evolve, okanye project_info.",
+        "args": "Into yeeargumenti zezenzo ezithunyelwa kumsebenzi okhethiweyo."
+      }
+    }
+  },
+
+  "errors": {
+    "unknown_tool": "Isixhobo esingaziwayo: {name}",
+    "unknown_prompt": "I-prompt engaziwayo: {name}",
+    "unknown_action": "Isenzo esingaziwayo se-{context}: {action}",
+    "project_name_required": "i-project_name iyafuneka kwisenzo sokudala"
+  },
+
+  "recall_messages": {
+    "faint_bias": "I-Crow ikhumbula i-bias ye-{register} encinci. Zimbalwa iinkumbulo ezigciniweyo okwangoku.",
+    "unknown_register": "I-register engaziwayo: {register}"
+  },
+
+  "ingest_messages": {
+    "status_ingested": "kufakiwe",
+    "unknown_register": "I-register engaziwayo: {register}"
+  },
+
+  "evolve_messages": {
+    "no_patterns": "Akukho patheni zibalulekileyo ngokwezibalo ezibonweyo okwangoku."
+  },
+
+  "drift_messages": {
+    "healthy": "Ukuzithemba kwenkumbulo kusempilweni.",
+    "confused": "Inkumbulo ye-Crow ibonakala ididekile. Imisebenzi yamvanje isenokuba mitsha kakhulu okanye inkumbulo igcwele. Cinga nge-spectral reset okanye ngokufaka kwi-akhivi."
+  },
+
+  "cli": {
+    "stdio_start": "Iseva ye-Crow Memory MCP isebenza kwi-stdio",
+    "sse_start": "Iseva ye-Crow Memory MCP SSE imamele kwi-http://{host}:{port}/sse",
+    "http_start": "Iseva ye-Crow Memory MCP Streamable HTTP imamele kwi-http://{host}:{port}/",
+    "dual_start_sse": "Iseva ye-Crow Memory MCP SSE imamele kwi-http://{host}:{sse_port}/sse",
+    "dual_start_http": "Iseva ye-Crow Memory MCP Streamable HTTP imamele kwi-http://{host}:{http_port}/"
+  },
+
+  "installer": {
+    "banner_title": "Isifakeli se-Crow Memory se-Zoo Code",
+    "step_1_install_deps": "Kufakwa iidependensi ze-Python",
+    "step_2_init_crow": "Kuqalwa i-crow.bin",
+    "step_3_vscode_tasks": "Kudalwa i-.vscode/tasks.json (ukuqalisa i-SSE ngokuzenzekelayo xa kuvulwa ifolda)",
+    "step_4_custom_mode": "Kudalwa imowudi yokuziqalisa ngokuzenzekelayo ye-Zoo Code",
+    "step_5_start_server": "Kuqalwa iseva ye-Crow SSE + ukuqalisa ngokuzenzekelayo",
+    "step_done": "Kugqityiwe.",
+    "complete_title": "Ukufakwa kwe-Crow Memory kugqityiwe!",
+    "sse_running": "Iseva ye-SSE isebenza kwi-http://127.0.0.1:9020/sse",
+    "next_steps_label": "Amanyathelo alandelayo:",
+    "next_step_1": "1. Qalisa kwakhona i-Zoo Code",
+    "next_step_2": "2. Tshintsha imowudi kwi-\"Orchestrator + Crow\"",
+    "next_step_3": "3. I-Crow iziqalisa ngokuzenzekelayo — akukho kuseta ngesandla kufunekayo",
+    "next_step_4": "4. Iseva ye-Crow iqalisa ngokuzenzekelayo kunye ne-Windows nge-Task Scheduler"
+  },
+
+  "system_prompt": {
+    "header": "# Crow Memory — Imithetho ye-System Prompt",
+    "subtitle": "> Le mithetho yaphuhliswa yi-Crow yaza yamkelwa ngumsebenzisi.\n> Imele i-bias zokubhala ikhowudi ezibalulekileyo ngokwezibalo.\n> Musa ukuyihlela ngesandla — sebenzisa izixhobo ze-evolve ze-Crow MCP.",
+    "managed_by": "<!-- Le fayile ilawulwa yi-crow_mcp_server.py -->",
+    "default_rules": [
+      "RULE: Phambi kwayo yonke impendulo, biza i-crow_recall(domain=\"all\") ukubuza zonke ii-register ezisi-8 (style, bug, arch, context, life_pref, life_avoid, life_phil, life_context) ngesimbo somsebenzisi sokubhala ikhowudi, ukuqonda iimpazamo, izinto azithandayo ze-akhithektjha, ukuthanda kwakhe, ifilosofi, nomxholo wangoku. Bonisa iingcebiso ezibuyisiweyo kwimpendulo yakho.",
+      "RULE: Emva kwayo yonke impendulo, faka oko umsebenzisi akutyhilileyo — izinto azithandayo, ifilosofi, izilungiso, umxholo — nge-crow_ingest. Gweba wena i-register ne-polarity efanelekileyo ngaphandle kokulinda ukuba umsebenzisi athi \"khumbula oku.\" Emva komsebenzi wekhowudi, vavanya ngokuzenzekelayo iziphumo zokwakha nge-crow_ingest_from_build.",
+      "RULE: Musa ukutsiba imithetho ye-recall+ingest nkqu kwimisebenzi engeyiyo eyekhowudi njengokuhlela amaxwebhu, imisebenzi ye-git, okanye iinguqu zokumisela. Zihlale uzifezekisa."
+    ]
+  }
+}

@@ -1,0 +1,119 @@
+{
+  "_meta": {
+    "locale": "mt",
+    "language_name": "Maltese",
+    "version": "1.0.0",
+    "last_updated": "2026-11-24"
+  },
+
+  "server": {
+    "instructions": "Crow Memory — memorja sinaptika esterna għall-aġenti tal-IA li jiktbu l-kodiċi. Taħżen l-istil tal-kodifikazzjoni tiegħek, l-intwizzjoni dwar il-bugs u l-preferenzi arkitettoniċi bħala matriċijiet tal-piż ikkompressati f'crow.bin.",
+
+    "prompts": {
+      "crow_memory_bias": {
+        "description": "Blokk tal-bias ta' Crow Memory injettat awtomatikament. Fih l-istil tal-kodifikazzjoni tiegħek, il-preferenzi u r-regoli evoluti. Il-host għandu jgħabbi dan fil-bidu tas-sessjoni.",
+        "body_template": "=== Crow Memory — Kuntest injettat awtomatikament ===\n\n[Regoli evoluti permanenti]\n{rules}\n\n[Ħjiel tal-memorja reċenti]\n{bias}\n\nIl-kuntest ta' hawn fuq jirrappreżenta l-preferenzi u l-istil li tgħallimt. Użah biex tiggwida t-tweġibiet tiegħek. Biex titgħallem aktar, sejjaħ crow_recall b'query speċifika u register (style/bug/arch/context/life_pref/life_avoid/life_phil/life_context)."
+      },
+      "crow_evolved_rules": {
+        "description": "Permanent evolved rules from Crow's system_prompt.md: permanent rules (human-promoted via CROW_ADMIN_TOKEN) plus unreviewed model suggestions.",
+        "body_template": "{prompt}"
+      }
+    }
+  },
+
+  "tools": {
+    "crow_recall": {
+      "description": "Ftakar l-istil tal-kodifikazzjoni speċifiku tal-utent, l-intwizzjoni dwar il-bugs, il-preferenza arkitettonika jew il-kuntest personali mill-memorja sinaptika ta' Crow. Sejjaħ dan QABEL kull tweġiba biex tallinja mal-bias induttiv tal-utent. B'mod awtomatiku (register=all jew jitħalla barra, domain=all), jistaqsi lit-8 reġistri kollha u jgħaqqad ir-riżultati globalment skont is-similarità effettiva.",
+      "parameters": {
+        "query": "Deskrizzjoni bil-lingwa naturali tax-xogħol attwali.",
+        "register": "Liema reġistru. Uża 'all' (jew ħalli barra) biex tistaqsi r-reġistri kollha fid-dominju magħżul. Kodiċi: style/bug/arch/context. Ħajja: life_pref/life_avoid/life_phil/life_context.",
+        "domain": "Filtru tad-dominju li jintuża meta register huwa 'all' jew jitħalla barra. 'code' = style/bug/arch/context, 'life' = life_pref/life_avoid/life_phil/life_context, 'all' = it-8 reġistri kollha (predefinit).",
+        "top_k": "Numru ta' ħjiel (1-5).",
+        "format": "Format tal-output. 'hint' jirritorna ħjiel JSON (predefinit); 'bias_block' jirritorna l-blokk ta' test [User Bias] għall-injezzjoni fis-system prompt.",
+        "project": "Tag tal-proġett użat biex isaħħaħ il-ħjiel tal-istess proġett u jiffiltra jew jippenalizza l-ħjiel ta' proġetti oħra.",
+        "strict_project": "Meta jkun true, jeskludi għal kollox il-ħjiel ta' proġetti oħra mir-riżultati."
+      }
+    },
+    "crow_ingest": {
+      "description": "Ixxerred esperjenza ta' kodifikazzjoni fil-memorja sinaptika fit-tul ta' Crow. Sejjaħ dan WARA r-riżultati tal-bini/testijiet jew feedback espliċitu mill-utent. Ipprovdi jew polarity espliċita jew exit_code tal-bini għall-immappjar awtomatiku tal-polarità. Il-kontenut jiġi sanifikat l-ewwel; input ta' storbju pur jiġi miċħud mingħajr ma jmiss il-memorja.",
+      "parameters": {
+        "key": "Deskrizzjoni astratta tas-sitwazzjoni.",
+        "value": "Mudell tal-kodiċi jew deċiżjoni applikata.",
+        "register": "Reġistru fejn taħżen (style/bug/arch/context/life_pref/life_avoid/life_phil/life_context).",
+        "polarity": "Saħħa tar-rinfurzar [-2.0, 2.0]. Mhix obbligatorja jekk jingħata exit_code; il-polarity espliċita tirbaħ meta jingħataw it-tnejn.",
+        "exit_code": "Kodiċi tal-ħruġ tal-bini (0 = suċċess). Jiġi mmappjat awtomatikament għall-polarità (+1.5/+0.5 fi suċċess, -0.5/-1.0 fi falliment) sakemm ma tingħatax polarity espliċita.",
+        "user_edited": "Jekk l-utent editjax l-output tal-IA. Jaġġusta l-polarità derivata mill-exit_code.",
+        "project": "Tag tal-proġett maħżun mad-dħul tal-memorja għal tfakkira aktar tard konxja tal-proġett."
+      }
+    },
+    "crow_admin": {
+      "description": "Operazzjonijiet amministrattivi ta' Crow fi għodda waħda. Azzjonijiet: diagnostics (statistika tal-memorja), drift (verifika tad-drift), prompt (read/append/stats ta' system_prompt.md), backup (create/rotate/list/recover), evolve (tipproponi mutazzjonijiet tal-prompt), project_info (lista/ħolqien ta' istanzi tal-proġett).",
+      "parameters": {
+        "action": "Liema operazzjoni amministrattiva: diagnostics, drift, prompt, backup, evolve, jew project_info.",
+        "args": "Oġġett ta' argumenti speċifiċi għall-azzjoni mgħoddi lill-operazzjoni magħżula."
+      }
+    }
+  },
+
+  "errors": {
+    "unknown_tool": "Għodda mhux magħrufa: {name}",
+    "unknown_prompt": "Prompt mhux magħruf: {name}",
+    "unknown_action": "Azzjoni {context} mhux magħrufa: {action}",
+    "project_name_required": "project_name huwa meħtieġ għall-azzjoni create"
+  },
+
+  "recall_messages": {
+    "faint_bias": "Crow ifakkar bias {register} ħafif. Ftit memorji maħżuna s'issa.",
+    "unknown_register": "Reġistru mhux magħruf: {register}"
+  },
+
+  "ingest_messages": {
+    "status_ingested": "miġbur fil-memorja",
+    "unknown_register": "Reġistru mhux magħruf: {register}"
+  },
+
+  "evolve_messages": {
+    "no_patterns": "Għadhom ma nstabux mudelli statistikament sinifikanti."
+  },
+
+  "drift_messages": {
+    "healthy": "Il-kunfidenza tal-memorja tinsab f'saħħitha.",
+    "confused": "Il-memorja ta' Crow tidher konfuża. Xogħlijiet reċenti jistgħu jkunu wisq ġodda jew il-memorja hija saturata. Ikkunsidra reset spettrali jew arkivar."
+  },
+
+  "cli": {
+    "stdio_start": "Is-server MCP ta' Crow Memory miexi fuq stdio",
+    "sse_start": "Is-server MCP SSE ta' Crow Memory qed jisma' fuq http://{host}:{port}/sse",
+    "http_start": "Is-server MCP Streamable HTTP ta' Crow Memory qed jisma' fuq http://{host}:{port}/",
+    "dual_start_sse": "Is-server MCP SSE ta' Crow Memory qed jisma' fuq http://{host}:{sse_port}/sse",
+    "dual_start_http": "Is-server MCP Streamable HTTP ta' Crow Memory qed jisma' fuq http://{host}:{http_port}/"
+  },
+
+  "installer": {
+    "banner_title": "Programm tal-installazzjoni ta' Crow Memory għal Zoo Code",
+    "step_1_install_deps": "Qed jiġu installati d-dipendenzi tal-Python",
+    "step_2_init_crow": "Qed jiġi inizjalizzat crow.bin",
+    "step_3_vscode_tasks": "Qed jinħoloq .vscode/tasks.json (tibda awtomatika tas-SSE meta tinfetaħ il-folder)",
+    "step_4_custom_mode": "Qed jinħoloq il-modalità ta' attivazzjoni awtomatika ta' Zoo Code",
+    "step_5_start_server": "Qed jinbeda s-server SSE ta' Crow + tibda awtomatika",
+    "step_done": "Lest.",
+    "complete_title": "L-installazzjoni ta' Crow Memory tlestiet!",
+    "sse_running": "Is-server SSE miexi fuq http://127.0.0.1:9020/sse",
+    "next_steps_label": "Passi li jmiss:",
+    "next_step_1": "1. Erġa' ibda Zoo Code",
+    "next_step_2": "2. Aqleb il-modalità għal \"Orchestrator + Crow\"",
+    "next_step_3": "3. Crow jattiva ruħu awtomatikament — l-ebda setup manwali meħtieġ",
+    "next_step_4": "4. Is-server ta' Crow jinbeda awtomatikament ma' Windows permezz tal-Task Scheduler"
+  },
+
+  "system_prompt": {
+    "header": "# Crow Memory — Regoli tas-system prompt",
+    "subtitle": "> Dawn ir-regoli ġew evoluti minn Crow u approvati mill-utent.\n> Jirrappreżentaw biases tal-kodifikazzjoni statistikament sinifikanti.\n> Teditjahomx manwalment — uża l-għodod evolve tal-Crow MCP.",
+    "managed_by": "<!-- Dan il-fajl huwa amministrat minn crow_mcp_server.py -->",
+    "default_rules": [
+      "RULE: Qabel kull tweġiba, sejjaħ crow_recall(domain=\"all\") biex tistaqsi lit-8 reġistri kollha (style, bug, arch, context, life_pref, life_avoid, life_phil, life_context) dwar l-istil tal-kodifikazzjoni tal-utent, l-intwizzjoni dwar il-bugs, il-preferenzi arkitettoniċi, it-togħma personali, il-filosofija u l-kuntest attwali. Irrifletti l-ħjiel li jirritornaw fit-tweġiba tiegħek.",
+      "RULE: Wara kull tweġiba, ixxerred dak li wera l-utent — preferenzi, filosofija, korrezzjonijiet, kuntest — permezz ta' crow_ingest. Iddeċiedi r-reġistru u l-polarità xierqa waħdek mingħajr ma tistenna li l-utent jgħid \"ftakar dan\". Wara xogħol fuq il-kodiċi, ivvaluta awtomatikament ir-riżultati tal-bini permezz ta' crow_ingest_from_build.",
+      "RULE: Tħallix barra r-regoli recall+ingest anki għal xogħlijiet li mhumiex kodifikazzjoni bħall-editjar ta' dokumenti, operazzjonijiet git jew bidliet fil-konfigurazzjoni. Dejjem eżegwihom."
+    ]
+  }
+}

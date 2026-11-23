@@ -1,0 +1,108 @@
+{
+  "_meta": {
+    "locale": "so",
+    "language_name": "Somali",
+    "version": "1.0.0",
+    "last_updated": "2026-11-24"
+  },
+  "server": {
+    "instructions": "Crow Memory — Xusuus synaptic dibadda ah oo loogu talagalay wakiillada AI ee qora koodka. Waxay ku kaydisaa qaabkaaga qorista koodka, dareenkaaga khaladaadka, iyo doorbidkaaga dhismaha, sida matriks miisaan la isku duubay gudaha crow.bin.",
+    "prompts": {
+      "crow_memory_bias": {
+        "description": "Qaybta bias ee Crow Memory oo si otomaatig ah loo geliyo. Waxay ka kooban tahay qaabkaaga qorista koodka, doorbidkaaga, iyo xeerar horumarsan. Martigeliyaha (host) waa inuu tan soo raro bilowga fadhiga.",
+        "body_template": "=== Crow Memory — Macluumaad si otomaatig ah loo geliyay ===\n\n[Xeerar joogto ah oo horumarsan]\n{rules}\n\n[Talooyin xusuuseed dhawaan]\n{bias}\n\nMacluumaadka kore wuxuu matalayaa doorbidkaaga iyo qaabkaaga la bartay. Isticmaal si aad u hagto jawaabahaaga. Si aad wax dheeraad ah u ogaato, wac crow_recall iyadoo leh su'aal gaar ah iyo register (style/bug/arch/context/life_pref/life_avoid/life_phil/life_context)."
+      },
+      "crow_evolved_rules": {
+        "description": "Permanent evolved rules from Crow's system_prompt.md: permanent rules (human-promoted via CROW_ADMIN_TOKEN) plus unreviewed model suggestions.",
+        "body_template": "{prompt}"
+      }
+    }
+  },
+  "tools": {
+    "crow_recall": {
+      "description": "Soo celi qaabkaaga qorista koodka, dareenkaaga khaladaadka, doorbidkaaga dhismaha, ama macluumaadkaaga shaqsiyeed oo ka yimid xusuusta synaptic ee Crow. Wac tan KA HOR jawaab kasta si aad ula jaanqaado inductive bias ee isticmaalaha. Sida caadiga ah (register=all ama la dhaafo, domain=all), waxay weydiisaa dhammaan 8-da register waxayna isku daraysaa natiijooyinka caalamka iyadoo lagu salaynayo isku ekaanshaha waxtarka leh.",
+      "parameters": {
+        "query": "Sharaxaad luqad caadi ah oo hawsha hadda socota.",
+        "register": "Register kee. Isticmaal 'all' (ama ka dhaaf) si aad u weydiiso dhammaan register-yada domain la doortay. Code: style/bug/arch/context. Life: life_pref/life_avoid/life_phil/life_context.",
+        "domain": "Shaandhaynta domain ee la isticmaalo marka register uu yahay 'all' ama la dhaafo. 'code' = style/bug/arch/context, 'life' = life_pref/life_avoid/life_phil/life_context, 'all' = dhammaan 8-da register (caadi).",
+        "top_k": "Tirada talooyinka (1-5).",
+        "format": "Qaabka wax-soo-saarka. 'hint' wuxuu soo celiyaa talooyin JSON (caadi); 'bias_block' wuxuu soo celiyaa qaybta qoraalka [User Bias] ee loogu talagalay gelinta system prompt.",
+        "project": "Calaamadda mashruuca ee loo isticmaalo kordhinta talooyinka isla mashruuca iyo shaandhaynta ama ciqaabta kuwa mashruucyada kale.",
+        "strict_project": "Marka ay tahay run (true), waxay si adag uga shaandhaynaysaa talooyinka mashruucyada kale natiijooyinka."
+      }
+    },
+    "crow_ingest": {
+      "description": "Geli waayo-aragnimo koodka xusuusta synaptic muddada dheer ee Crow. Wac KA DIB natiijooyinka build ama test, ama jawaabta cad ee isticmaalaha. Bixi polarity cad ama exit_code build si polarity si otomaatig ah loo beddelo. Waxa ku jira marka hore la nadiifiyaa; gelinta buuq kaliya waa la diidaa iyada oo aan xusuusta la taaban.",
+      "parameters": {
+        "key": "Sharaxaad aan qoraal ahayn oo xaaladda.",
+        "value": "Qaabka koodka ama go'aanka la adeegsaday.",
+        "register": "Register-ka lagu kaydiyo (style/bug/arch/context/life_pref/life_avoid/life_phil/life_context).",
+        "polarity": "Awoodda xoojinta [-2.0, 2.0]. Ikhtiyaari ah haddii exit_code la bixiyo; polarity cad ayaa guulaysata marka labadaba la bixiyo.",
+        "exit_code": "Koodhka bixidda build (0 = guul). Si otomaatig ah ayuu ugu beddelmaa polarity (+1.5/+0.5 guusha, -0.5/-1.0 guuldarada) ilaa polarity cad la bixiyo.",
+        "user_edited": "In isticmaalaha wax ka beddelay wax-soo-saarka AI. Waxay hagaajisaa polarity-ga ka timid exit_code.",
+        "project": "Calaamadda mashruuca oo lala kaydiyo xusuusta si mar dambe loogu soo celiyo iyadoo mashruuca la tixgalinayo."
+      }
+    },
+    "crow_admin": {
+      "description": "Hawlaha maamulka Crow hal qalab. Hawlaha: diagnostics (tirokoobka xusuusta), drift (hubinta drift), prompt (akhrinta/kudaridda/tirokoobka system_prompt.md), backup (abuurista/wareejinta/liis-ka/soo-celinta), evolve (soo jeedinta isbeddellada prompt), project_info (liis-ka/abuurista mashruucyada).",
+      "parameters": {
+        "action": "Hawsha maamulkee: diagnostics, drift, prompt, backup, evolve, ama project_info.",
+        "args": "Shayga doodaha u gaar ah hawsha, oo loo gudbiyo hawsha la doortay."
+      }
+    }
+  },
+  "errors": {
+    "unknown_tool": "Qalab aan la aqoon: {name}",
+    "unknown_prompt": "Prompt aan la aqoon: {name}",
+    "unknown_action": "Hawl {context} aan la aqoon: {action}",
+    "project_name_required": "project_name waa loo baahan yahay hawsha create"
+  },
+  "recall_messages": {
+    "faint_bias": "Crow waxay xusuusataa bias {register} oo daciif ah. Weli xusuus yar ayaa la kaydiyay.",
+    "unknown_register": "Register aan la aqoon: {register}"
+  },
+  "ingest_messages": {
+    "status_ingested": "la geliyay",
+    "unknown_register": "Register aan la aqoon: {register}"
+  },
+  "evolve_messages": {
+    "no_patterns": "Weli lama ogaan qaabab tirakoob ahaan muhiim ah."
+  },
+  "drift_messages": {
+    "healthy": "Kalsoonida xusuustu waa caafimaad qabta.",
+    "confused": "Xusuusta Crow waxay u muuqataa mid jahawareersan. Hawlaha dhawaan laga yaabaa inay aad u cusub yihiin ama xusuustu buux dhaafay. Tixgeli spectral reset ama kaydinta archiving."
+  },
+  "cli": {
+    "stdio_start": "Crow Memory MCP server wuxuu ku shaqaynayaa stdio",
+    "sse_start": "Crow Memory MCP SSE server wuxuu dhagaysanayaa http://{host}:{port}/sse",
+    "http_start": "Crow Memory MCP Streamable HTTP server wuxuu dhagaysanayaa http://{host}:{port}/",
+    "dual_start_sse": "Crow Memory MCP SSE server wuxuu dhagaysanayaa http://{host}:{sse_port}/sse",
+    "dual_start_http": "Crow Memory MCP Streamable HTTP server wuxuu dhagaysanayaa http://{host}:{http_port}/"
+  },
+  "installer": {
+    "banner_title": "Crow Memory Installer ee Zoo Code",
+    "step_1_install_deps": "Ku rakibaya ku-tiirsanaanta Python",
+    "step_2_init_crow": "Bilaabaya crow.bin",
+    "step_3_vscode_tasks": "Abuuraya .vscode/tasks.json (si otomaatig ah u bilaaba SSE marka faylka la furo)",
+    "step_4_custom_mode": "Abuuraya habka otomaatigga ah ee Zoo Code",
+    "step_5_start_server": "Bilaabaya Crow SSE server + bilaabista otomaatigga ah",
+    "step_done": "Dhammaad.",
+    "complete_title": "Rakibka Crow Memory waa dhammaaday!",
+    "sse_running": "SSE server wuxuu ku shaqaynayaa http://127.0.0.1:9020/sse",
+    "next_steps_label": "Tallaabooyinka xiga:",
+    "next_step_1": "1. Dib u bilaab Zoo Code",
+    "next_step_2": "2. U beddel habka \"Orchestrator + Crow\"",
+    "next_step_3": "3. Crow si otomaatig ah ayuu u shaqeeyaa — ma u baahnid isku-dubarid gacan ah",
+    "next_step_4": "4. Crow server si otomaatig ah ayuu ula bilaabmaa Windows iyada oo loo marayo Task Scheduler"
+  },
+  "system_prompt": {
+    "header": "# Crow Memory — Xeerarka System Prompt",
+    "subtitle": "> Xeerarkan waxaa horumariyay Crow waxaana ansixiyay isticmaalaha.\n> Waxay matalaan doorbidyo kood oo tirakoob ahaan muhiim ah.\n> Ha wax ka beddelin gacan — isticmaal qalabka evolve ee Crow MCP.",
+    "managed_by": "<!-- Faylkan waxaa maamula crow_mcp_server.py -->",
+    "default_rules": [
+      "RULE: Ka hor jawaab kasta, wac crow_recall(domain=\"all\") si aad u weydiiso dhammaan 8-da register (style, bug, arch, context, life_pref, life_avoid, life_phil, life_context) qaabka qorista koodka, dareenka khaladaadka, doorbidka dhismaha, dhadhanka shaqsiga, falsafada, iyo macluumaadka hadda ee isticmaalaha. Muuji talooyinka la soo celiyay jawaabtaada.",
+      "RULE: Ka dib jawaab kasta, geli wixii isticmaalaha muujiyay — doorbidyo, falsafad, sixid, macluumaad — iyada oo loo marayo crow_ingest. Adigu go'aanso register iyo polarity ku habboon adigoon sugayn in isticmaalaha yiraahdo \"xusuuso tan.\" Ka dib shaqada koodka, si otomaatig ah u qiimee natiijooyinka build iyada oo loo marayo crow_ingest_from_build.",
+      "RULE: Ha dhaafin xeerarka recall+ingest xitaa hawlo aan kood ahayn sida tafatirka dukumeentiyada, hawlgallada git, ama isbeddellada habaynta. Had iyo jeer fuli."
+    ]
+  }
+}

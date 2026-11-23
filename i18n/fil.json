@@ -1,0 +1,119 @@
+{
+  "_meta": {
+    "locale": "fil",
+    "language_name": "Filipino",
+    "version": "1.0.0",
+    "last_updated": "2026-11-24"
+  },
+
+  "server": {
+    "instructions": "Crow Memory — Panlabas na synaptic memory para sa mga AI coding agent. Iniimbak ang iyong coding style, bug intuition, at mga architectural preference bilang mga compressed weight matrix sa crow.bin.",
+
+    "prompts": {
+      "crow_memory_bias": {
+        "description": "Awtomatikong ini-inject na Crow Memory bias block. Naglalaman ng iyong coding style, mga preference, at mga evolved na tuntunin. Dapat itong i-load ng host sa simula ng session.",
+        "body_template": "=== Crow Memory — Awtomatikong Ini-inject na Konteksto ===\n\n[Mga Permanenteng Evolved na Tuntunin]\n{rules}\n\n[Mga Kamakailang Hint sa Memory]\n{bias}\n\nAng konteksto sa itaas ay kumakatawan sa iyong mga natutuhang preference at estilo. Gamitin ito upang gabayan ang iyong mga sagot. Upang matuto nang higit pa, tawagin ang crow_recall na may partikular na query at register (style/bug/arch/context/life_pref/life_avoid/life_phil/life_context)."
+      },
+      "crow_evolved_rules": {
+        "description": "Permanent evolved rules from Crow's system_prompt.md: permanent rules (human-promoted via CROW_ADMIN_TOKEN) plus unreviewed model suggestions.",
+        "body_template": "{prompt}"
+      }
+    }
+  },
+
+  "tools": {
+    "crow_recall": {
+      "description": "Inaalala ang coding style, bug intuition, architectural preference, o personal na konteksto na partikular sa user mula sa Crow synaptic memory. Tawagin ito BAGO ang bawat sagot upang umayon sa inductive bias ng user. Sa default (register=all o walang ibinigay, domain=all), kinukuha ang lahat ng 8 register at pinagsasama ang mga resulta nang pandaigdigan batay sa epektibong similarity.",
+      "parameters": {
+        "query": "Paglalarawan sa natural na wika ng kasalukuyang gawain.",
+        "register": "Aling register. Gamitin ang 'all' (o huwag ibigay) upang i-query ang lahat ng register sa napiling domain. Code: style/bug/arch/context. Life: life_pref/life_avoid/life_phil/life_context.",
+        "domain": "Filter ng domain na ginagamit kapag ang register ay 'all' o walang ibinigay. 'code' = style/bug/arch/context, 'life' = life_pref/life_avoid/life_phil/life_context, 'all' = lahat ng 8 register (default).",
+        "top_k": "Bilang ng mga hint (1-5).",
+        "format": "Format ng output. Ang 'hint' ay nagbabalik ng JSON hints (default); ang 'bias_block' ay nagbabalik ng [User Bias] na text block para sa injection sa system prompt.",
+        "project": "Project tag na ginagamit upang palakasin ang mga hint sa parehong proyekto at i-filter o i-penalize ang mga mula sa ibang proyekto.",
+        "strict_project": "Kapag true, mahigpit na tinatanggal ang mga hint mula sa ibang proyekto sa mga resulta."
+      }
+    },
+    "crow_ingest": {
+      "description": "Ini-ingest ang isang karanasan sa coding sa long-term synaptic memory ng Crow. Tawagin ito PAGKATAPOS ng mga resulta ng build o test, o ng malinaw na feedback ng user. Magbigay ng malinaw na polarity o build exit_code para sa awtomatikong pag-map ng polarity. Ang nilalaman ay nililinis muna; ang puro ingay na input ay tinatanggihan nang hindi hinahawakan ang memory.",
+      "parameters": {
+        "key": "Abstract na paglalarawan ng sitwasyon.",
+        "value": "Code pattern o desisyong inilapat.",
+        "register": "Register na pag-iimbakan (style/bug/arch/context/life_pref/life_avoid/life_phil/life_context).",
+        "polarity": "Lakas ng reinforcement [-2.0, 2.0]. Opsyonal kung may exit_code; ang malinaw na polarity ang mananaig kapag pareho ang ibinigay.",
+        "exit_code": "Exit code ng build (0 = tagumpay). Awtomatikong nagma-map sa polarity (+1.5/+0.5 kapag tagumpay, -0.5/-1.0 kapag bigo) maliban kung may malinaw na polarity na ibinigay.",
+        "user_edited": "Kung na-edit ng user ang output ng AI. Inaayos ang polarity na nagmula sa exit_code.",
+        "project": "Project tag na iniimbak kasama ng memory entry para sa pag-alala mamaya na may kamalayan sa proyekto."
+      }
+    },
+    "crow_admin": {
+      "description": "Mga administratibong operasyon ng Crow sa isang tool. Mga aksyon: diagnostics (estadistika ng memory), drift (pagsusuri ng drift), prompt (pagbasa/pagdagdag/estadistika ng system_prompt.md), backup (paglikha/pag-rotate/paglista/pag-recover), evolve (pagmungkahi ng mga mutation sa prompt), project_info (paglista/paglikha ng mga instance ng proyekto).",
+      "parameters": {
+        "action": "Aling admin operation: diagnostics, drift, prompt, backup, evolve, o project_info.",
+        "args": "Object ng mga argumento na partikular sa aksyon na ipinapasa sa napiling operasyon."
+      }
+    }
+  },
+
+  "errors": {
+    "unknown_tool": "Hindi kilalang tool: {name}",
+    "unknown_prompt": "Hindi kilalang prompt: {name}",
+    "unknown_action": "Hindi kilalang {context} na aksyon: {action}",
+    "project_name_required": "Kinakailangan ang project_name para sa create na aksyon"
+  },
+
+  "recall_messages": {
+    "faint_bias": "Naalala ng Crow ang mahinang {register} bias. Kakaunti pa lang ang naka-imbak na memory.",
+    "unknown_register": "Hindi kilalang register: {register}"
+  },
+
+  "ingest_messages": {
+    "status_ingested": "na-ingest",
+    "unknown_register": "Hindi kilalang register: {register}"
+  },
+
+  "evolve_messages": {
+    "no_patterns": "Wala pang natukoy na pattern na makabuluhan sa estadistika."
+  },
+
+  "drift_messages": {
+    "healthy": "Malusog ang kumpiyansa sa memory.",
+    "confused": "Mukhang nalilito ang Crow memory. Maaaring masyadong bago ang mga kamakailang gawain o puno na ang memory. Isaalang-alang ang spectral reset o pag-archive."
+  },
+
+  "cli": {
+    "stdio_start": "Tumatakbo ang Crow Memory MCP server sa stdio",
+    "sse_start": "Nakikinig ang Crow Memory MCP SSE server sa http://{host}:{port}/sse",
+    "http_start": "Nakikinig ang Crow Memory MCP Streamable HTTP server sa http://{host}:{port}/",
+    "dual_start_sse": "Nakikinig ang Crow Memory MCP SSE server sa http://{host}:{sse_port}/sse",
+    "dual_start_http": "Nakikinig ang Crow Memory MCP Streamable HTTP server sa http://{host}:{http_port}/"
+  },
+
+  "installer": {
+    "banner_title": "Crow Memory Installer para sa Zoo Code",
+    "step_1_install_deps": "Ini-install ang mga dependency ng Python",
+    "step_2_init_crow": "Ini-initialize ang crow.bin",
+    "step_3_vscode_tasks": "Ginagawa ang .vscode/tasks.json (awtomatikong pagsisimula ng SSE kapag binuksan ang folder)",
+    "step_4_custom_mode": "Ginagawa ang auto-activation mode ng Zoo Code",
+    "step_5_start_server": "Sinisimulan ang Crow SSE server + awtomatikong pagsisimula",
+    "step_done": "Tapos na.",
+    "complete_title": "Kumpleto na ang pag-install ng Crow Memory!",
+    "sse_running": "Tumatakbo ang SSE server sa http://127.0.0.1:9020/sse",
+    "next_steps_label": "Mga susunod na hakbang:",
+    "next_step_1": "1. I-restart ang Zoo Code",
+    "next_step_2": "2. Palitan ang mode sa \"Orchestrator + Crow\"",
+    "next_step_3": "3. Awtomatikong nag-aactivate ang Crow — walang manual na setup na kailangan",
+    "next_step_4": "4. Awtomatikong nagsisimula ang Crow server kasama ng Windows sa pamamagitan ng Task Scheduler"
+  },
+
+  "system_prompt": {
+    "header": "# Crow Memory — Mga Tuntunin ng System Prompt",
+    "subtitle": "> Ang mga tuntuning ito ay pinino ng Crow at inaprubahan ng user.\n> Kinakatawan nila ang mga coding bias na makabuluhan sa estadistika.\n> Huwag i-edit nang manu-mano — gamitin ang Crow MCP evolve tools.",
+    "managed_by": "<!-- Ang file na ito ay pinamamahalaan ng crow_mcp_server.py -->",
+    "default_rules": [
+      "RULE: Bago ang bawat sagot, tawagin ang crow_recall(domain=\"all\") upang i-query ang lahat ng 8 register (style, bug, arch, context, life_pref, life_avoid, life_phil, life_context) para sa coding style, bug intuition, architectural preference, personal na panlasa, pilosopiya, at kasalukuyang konteksto ng user. Ipakita ang mga ibinalik na hint sa iyong sagot.",
+      "RULE: Pagkatapos ng bawat sagot, i-ingest ang isinisiwalat ng user — mga preference, pilosopiya, pagwawasto, konteksto — sa pamamagitan ng crow_ingest. Ikaw mismo ang humatol sa angkop na register at polarity nang hindi naghihintay na sabihin ng user ang \"tandaan ito.\" Pagkatapos ng trabaho sa code, awtomatikong suriin ang mga resulta ng build sa pamamagitan ng crow_ingest_from_build.",
+      "RULE: Huwag laktawan ang recall+ingest na mga tuntunin kahit para sa mga gawaing hindi coding tulad ng pag-edit ng dokumento, git operations, o pagbabago ng configuration. Palaging isagawa ang mga ito."
+    ]
+  }
+}

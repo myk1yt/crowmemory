@@ -3,122 +3,84 @@
     "locale": "ru",
     "language_name": "Русский",
     "version": "1.0.0",
-    "last_updated": "2026-05-29"
+    "last_updated": "2026-11-24"
   },
+
   "server": {
-    "instructions": "Crow Memory — Внешняя синаптическая память для ИИ-агентов кодирования. Сохраняет стиль кодирования, интуицию ошибок и архитектурные предпочтения в crow.bin.",
+    "instructions": "Crow Memory — Внешняя синаптическая память для ИИ-агентов кодирования. Сохраняет стиль кодирования, интуицию ошибок и архитектурные предпочтения в виде сжатых матриц весов в crow.bin.",
+
     "prompts": {
       "crow_memory_bias": {
-        "description": "Автоматически внедряемый блок смещения Crow Memory. Содержит стиль кодирования, предпочтения и эволюционировавшие правила.",
-        "body_template": "=== Crow Memory — Автоматически внедрённый контекст ===\n\n[Постоянные эволюционировавшие правила]\n{rules}\n\n[Недавние подсказки памяти]\n{bias}\n\nКонтекст представляет изученные предпочтения и стиль."
+        "description": "Автоматически внедряемый блок смещения Crow Memory. Содержит стиль кодирования, предпочтения и эволюционировавшие правила. Хост должен загружать его при старте сессии.",
+        "body_template": "=== Crow Memory — Автоматически внедрённый контекст ===\n\n[Постоянные эволюционировавшие правила]\n{rules}\n\n[Недавние подсказки памяти]\n{bias}\n\nКонтекст представляет изученные предпочтения и стиль. Используйте его для направления ответов. Чтобы узнать больше, вызовите crow_recall с конкретным запросом и регистром (style/bug/arch/context/life_pref/life_avoid/life_phil/life_context)."
       },
       "crow_evolved_rules": {
-        "description": "Постоянные эволюционировавшие правила из system_prompt.md Crow. Статистически значимые паттерны, одобренные через HITL.",
+        "description": "Permanent evolved rules from Crow's system_prompt.md: permanent rules (human-promoted via CROW_ADMIN_TOKEN) plus unreviewed model suggestions.",
         "body_template": "{prompt}"
       }
     }
   },
+
   "tools": {
     "crow_recall": {
-      "description": "Извлеките стиль кодирования, интуицию ошибок, архитектурные предпочтения или личный контекст из памяти Crow. Вызывайте ПЕРЕД каждым ответом. По умолчанию опрашивает все 8 регистров.",
+      "description": "Извлекает стиль кодирования, интуицию ошибок, архитектурные предпочтения или личный контекст из памяти Crow. Вызывайте ПЕРЕД каждым ответом, чтобы соответствовать индуктивному смещению пользователя. По умолчанию (register=all или опущен, domain=all) опрашивает все 8 регистров и объединяет результаты глобально по эффективному сходству.",
       "parameters": {
         "query": "Описание текущей задачи на естественном языке.",
-        "register": "Выберите регистр. 'all' опрашивает все. Code: style/bug/arch/context. Life: life_pref/life_avoid/life_phil/life_context.",
-        "top_k": "Количество подсказок (1-3).",
-        "domain": "Ярлык фильтра. 'code' = style/bug/arch/context, 'life' = life_pref/life_avoid/life_phil/life_context, 'all' = все 8 регистров."
+        "register": "Какой регистр. Используйте 'all' (или опустите), чтобы опросить все регистры выбранного домена. Code: style/bug/arch/context. Life: life_pref/life_avoid/life_phil/life_context.",
+        "domain": "Фильтр домена, используемый когда register равен 'all' или опущен. 'code' = style/bug/arch/context, 'life' = life_pref/life_avoid/life_phil/life_context, 'all' = все 8 регистров (по умолчанию).",
+        "top_k": "Количество подсказок (1-5).",
+        "format": "Формат вывода. 'hint' возвращает подсказки в JSON (по умолчанию); 'bias_block' возвращает текстовый блок [User Bias] для внедрения в системный промпт.",
+        "project": "Тег проекта, усиливающий подсказки того же проекта и фильтрующий/штрафующий чужие проекты.",
+        "strict_project": "Если true, жёстко отфильтровывает подсказки других проектов из результатов."
       }
     },
     "crow_ingest": {
-      "description": "Поглотите опыт кодирования в долговременную память Crow. Вызывайте ПОСЛЕ сборки/тестов или явного отзыва.",
+      "description": "Поглощает опыт кодирования в долговременную синаптическую память Crow. Вызывайте ПОСЛЕ результатов сборки/тестов или явного отзыва пользователя. Укажите либо явную полярность, либо exit_code сборки для автоматического сопоставления полярности. Содержимое сначала очищается; чистый шум отклоняется без изменения памяти.",
       "parameters": {
         "key": "Абстрактное описание ситуации.",
         "value": "Применённый паттерн кода или решение.",
-        "polarity": "Сила подкрепления [-2.0, 2.0].",
-        "register": "Целевой регистр (style/bug/arch/context/life_pref/life_avoid/life_phil/life_context)."
+        "register": "Целевой регистр (style/bug/arch/context/life_pref/life_avoid/life_phil/life_context).",
+        "polarity": "Сила подкрепления [-2.0, 2.0]. Необязательна, если задан exit_code; при задании обоих явная полярность имеет приоритет.",
+        "exit_code": "Код выхода сборки (0 = успех). Автоматически сопоставляется с полярностью (+1.5/+0.5 при успехе, -0.5/-1.0 при неудаче), если не задана явная полярность.",
+        "user_edited": "Редактировал ли пользователь вывод ИИ. Корректирует полярность, полученную из exit_code.",
+        "project": "Тег проекта, сохраняемый с записью памяти для последующего поиска с учётом проекта."
       }
     },
-    "crow_evolve_propose": {
-      "description": "Анализирует недавние паттерны и предлагает постоянную мутацию системного промпта.",
+    "crow_admin": {
+      "description": "Административные операции Crow в одном инструменте. Действия: diagnostics (статистика памяти), drift (проверка дрейфа), prompt (чтение/добавление/статистика system_prompt.md), backup (создание/ротация/список/восстановление), evolve (предложение мутаций промпта), project_info (список/создание экземпляров проектов).",
       "parameters": {
-        "min_confidence": "Мин. порог уверенности (по умолч: 0,85).",
-        "min_occurrences": "Мин. количество вхождений (по умолч: 3)."
-      }
-    },
-    "crow_diagnostics": {
-      "description": "Возвращает диагностику состояния памяти Crow (нормы, разреженность, обновления, размер, статистика).",
-      "parameters": {}
-    },
-    "crow_check_drift": {
-      "description": "Проверяет признаки дрейфа памяти в недавних извлечениях.",
-      "parameters": {
-        "threshold": "Порог для обнаружения низкой уверенности (по умолч: 0,5).",
-        "min_low_confidence_count": "Мин. записей с низкой уверенностью для дрейфа (по умолч: 5)."
-      }
-    },
-    "crow_ingest_from_build": {
-      "description": "Автоопределяет полярность из кода выхода сборки и статуса редактирования, затем поглощает опыт.",
-      "parameters": {
-        "key": "Абстрактное описание.",
-        "value": "Применённый паттерн кода.",
-        "exit_code": "Код выхода (0 = успех).",
-        "user_edited": "Редактировал ли пользователь вывод ИИ.",
-        "register": "Целевой регистр (style/bug/arch/context, по умолч: arch).",
-        "explicit_polarity": "Переопределяет автоопределение полярности."
-      }
-    },
-    "crow_get_user_bias": {
-      "description": "Генерирует блок [User Bias] для внедрения в системный промпт.",
-      "parameters": {
-        "query": "Описание текущей задачи.",
-        "registers": "Регистры для опроса (по умолч: all)."
-      }
-    },
-    "crow_manage_prompt": {
-      "description": "Читать, добавлять или получать статистику system_prompt.md.",
-      "parameters": {
-        "action": "Действие: read, append или stats.",
-        "rule": "Текст правила (обязательно для append).",
-        "auto_backup": "Авторезервное копирование перед добавлением (по умолч: true)."
-      }
-    },
-    "crow_manage_backup": {
-      "description": "Управляет резервными копиями памяти Crow. Создавать, ротировать, список, восстановление.",
-      "parameters": {
-        "action": "Действие: create, rotate, list или recover.",
-        "tag": "Тег: daily, weekly или manual (по умолч: daily).",
-        "max_daily": "Макс. ежедневных копий (по умолч: 7).",
-        "max_weekly": "Макс. еженедельных копий (по умолч: 4)."
-      }
-    },
-    "crow_project_info": {
-      "description": "Список или создание изолированных экземпляров памяти Crow.",
-      "parameters": {
-        "action": "Действие: list или create.",
-        "project_name": "Имя проекта (обязательно для create)."
+        "action": "Какая административная операция: diagnostics, drift, prompt, backup, evolve или project_info.",
+        "args": "Объект аргументов, специфичных для действия, передаётся выбранной операции."
       }
     }
   },
+
   "errors": {
     "unknown_tool": "Неизвестный инструмент: {name}",
     "unknown_prompt": "Неизвестный промпт: {name}",
     "unknown_action": "Неизвестное действие {context}: {action}",
-    "project_name_required": "project_name обязателен для create"
+    "project_name_required": "project_name обязателен для действия create"
   },
+
   "recall_messages": {
     "faint_bias": "Crow смутно припоминает смещение {register}. Мало воспоминаний сохранено.",
     "unknown_register": "Неизвестный регистр: {register}"
   },
+
   "ingest_messages": {
     "status_ingested": "поглощено",
     "unknown_register": "Неизвестный регистр: {register}"
   },
+
   "evolve_messages": {
     "no_patterns": "Статистически значимых паттернов пока не обнаружено."
   },
+
   "drift_messages": {
     "healthy": "Уверенность памяти в норме.",
-    "confused": "Память Crow сбита с толку. Задачи слишком новы или память насыщена. Рассмотрите спектральный сброс."
+    "confused": "Память Crow сбита с толку. Задачи слишком новы или память насыщена. Рассмотрите спектральный сброс или архивирование."
   },
+
   "cli": {
     "stdio_start": "Сервер MCP Crow Memory работает на stdio",
     "sse_start": "Сервер MCP SSE слушает http://{host}:{port}/sse",
@@ -126,10 +88,12 @@
     "dual_start_sse": "Сервер MCP SSE слушает http://{host}:{sse_port}/sse",
     "dual_start_http": "Сервер MCP Streamable HTTP слушает http://{host}:{http_port}/"
   },
+
   "installer": {
     "banner_title": "Установщик Crow Memory для Zoo Code",
     "step_1_install_deps": "Установка зависимостей Python",
     "step_2_init_crow": "Инициализация crow.bin",
+    "step_3_vscode_tasks": "Создание .vscode/tasks.json (автозапуск SSE при открытии папки)",
     "step_4_custom_mode": "Создание режима автозапуска Zoo Code",
     "step_5_start_server": "Запуск SSE сервера Crow + автозапуск",
     "step_done": "Готово.",
@@ -138,13 +102,13 @@
     "next_steps_label": "Следующие шаги:",
     "next_step_1": "1. Перезапустите Zoo Code",
     "next_step_2": "2. Переключитесь в режим \"Orchestrator + Crow\"",
-    "next_step_3": "3. Crow активируется автоматически",
-    "next_step_4": "4. SSE сервер запускается с Windows (в автозагрузке)",
-    "step_3_vscode_tasks": "Создание .vscode/tasks.json (автозапуск SSE)"
+    "next_step_3": "3. Crow активируется автоматически — ручная настройка не нужна",
+    "next_step_4": "4. SSE сервер запускается с Windows через Планировщик заданий"
   },
+
   "system_prompt": {
     "header": "# Crow Memory — Правила системного промпта",
-    "subtitle": "> Правила эволюционированы Crow и одобрены пользователем.\n> Статистически значимые смещения кодирования.\n> Не редактируйте вручную.",
+    "subtitle": "> Правила эволюционированы Crow и одобрены пользователем.\n> Статистически значимые смещения кодирования.\n> Не редактируйте вручную — используйте инструменты эволюции Crow MCP.",
     "managed_by": "<!-- Файл управляется crow_mcp_server.py -->",
     "default_rules": [
       "RULE: Before every response, call crow_recall(domain=\"all\") to query all 8 registers (style, bug, arch, context, life_pref, life_avoid, life_phil, life_context) for the user's coding style, bug intuition, architectural preferences, personal taste, philosophy, and current context. Reflect the returned hints in your response.",

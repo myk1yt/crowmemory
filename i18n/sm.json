@@ -1,0 +1,108 @@
+{
+  "_meta": {
+    "locale": "sm",
+    "language_name": "Samoan",
+    "version": "1.0.0",
+    "last_updated": "2026-11-24"
+  },
+  "server": {
+    "instructions": "Crow Memory — Manatuaga sinaptika fafo mo sui AI e fai polokalame. E teuina lou sitaili i le tusitusi polokalame, lou lagona vave i mea sese, ma ou mana'oga i le fausaga o polokalame, e avea ma matrices o le mamafa ua fa'a'omi i totonu o le crow.bin.",
+    "prompts": {
+      "crow_memory_bias": {
+        "description": "O le poloka o le bias a Crow Memory e otometi lava ona tu'uina atu. O lo'o i ai lou sitaili i le tusitusi polokalame, ou mana'oga, ma tulafono ua uma ona fa'aleleia. E tatau i le polokalame e talimalo ai (host) ona utaina lenei mea i le amataga o le sauniga.",
+        "body_template": "=== Crow Memory — Fa'amatalaga e otometi ona tu'uina atu ===\n\n[Tulafono tumau ua fa'aleleia]\n{rules}\n\n[Fautuaga o manatuaga lata mai]\n{bias}\n\nO fa'amatalaga o lo'o i luga e fai ma sui o ou mana'oga ma lou sitaili ua a'oa'oina. Fa'aaoga e ta'ita'ia ai au tali. Mo nisi fa'amatalaga, vala'au crow_recall ma se fesili patino ma le register (style/bug/arch/context/life_pref/life_avoid/life_phil/life_context)."
+      },
+      "crow_evolved_rules": {
+        "description": "Permanent evolved rules from Crow's system_prompt.md: permanent rules (human-promoted via CROW_ADMIN_TOKEN) plus unreviewed model suggestions.",
+        "body_template": "{prompt}"
+      }
+    }
+  },
+  "tools": {
+    "crow_recall": {
+      "description": "Toe aumai lou sitaili i le tusitusi polokalame, lou lagona vave i mea sese, ou mana'oga i le fausaga, po'o fa'amatalaga patino mai le manatuaga sinaptika a Crow. Vala'au lenei mea A'O LE'I faia se tali uma ina ia ogatasi ma le lagona fa'avae (inductive bias) o le tagata fa'aoga. I le tulaga masani (register=all po'o le le tu'uina atu, domain=all), e fesiligia register uma e 8 ma tu'ufa'atasia taunu'uga i le lalolagi atoa i le tulaga o le tutusa lelei.",
+      "parameters": {
+        "query": "Fa'amatalaga i le gagana masani o le galuega o lo'o faia.",
+        "register": "O le register fea. Fa'aaoga 'all' (pe tu'u ese) e fesiligia ai register uma i le domain ua filifilia. Code: style/bug/arch/context. Life: life_pref/life_avoid/life_phil/life_context.",
+        "domain": "Fa'amama o le domain e fa'aaogaina pe a 'all' le register pe le tu'uina atu. 'code' = style/bug/arch/context, 'life' = life_pref/life_avoid/life_phil/life_context, 'all' = register uma e 8 (masani).",
+        "top_k": "Numera o fautuaga (1-5).",
+        "format": "Fa'atulagaga o le gaioiga. 'hint' e toe fa'afo'i mai fautuaga JSON (masani); 'bias_block' e toe fa'afo'i mai le poloka o tusitusiga [User Bias] mo le fa'aofiina i totonu o le system prompt.",
+        "project": "Fa'ailoga o le poloketi e fa'aaogaina e si'itia ai fautuaga o le poloketi lava e tasi ma fa'amama pe fa'asalaina fautuaga mai isi poloketi.",
+        "strict_project": "A moni (true), e matua fa'amama uma fautuaga mai isi poloketi mai taunu'uga."
+      }
+    },
+    "crow_ingest": {
+      "description": "Tu'u se poto masani i le tusitusi polokalame i totonu o le manatuaga sinaptika umi a Crow. Vala'au PE A MAE fa'ai'uga o le build po'o su'ega, po'o ni fa'amatalaga manino mai le tagata fa'aoga. Tu'u mai se polarity manino po'o se exit_code o le build mo le otometi ona fa'afanauina o le polarity. E muamua fa'amamāina le anotusi; o mea e na'o le pisa e te'ena e aunoa ma le pa'i i le manatuaga.",
+      "parameters": {
+        "key": "Fa'amatalaga lautele o le tulaga.",
+        "value": "Fa'ata'ita'iga o le code po'o le fa'ai'uga na fa'aaogaina.",
+        "register": "Register e teu ai (style/bug/arch/context/life_pref/life_avoid/life_phil/life_context).",
+        "polarity": "Malosiaga o le fa'amalosia [-2.0, 2.0]. E le mana'omia pe a tu'uina mai le exit_code; e manumalo le polarity manino pe a tu'uina uma.",
+        "exit_code": "Exit code o le build (0 = manuia). E otometi ona fa'afanau i le polarity (+1.5/+0.5 pe a manuia, -0.5/-1.0 pe a le manuia) se'i vagana ua tu'uina mai se polarity manino.",
+        "user_edited": "Pe na fa'asa'o e le tagata fa'aoga le gaioiga a le AI. E fetu'una'i ai le polarity e maua mai le exit_code.",
+        "project": "Fa'ailoga o le poloketi e teuina fa'atasi ma le manatuaga mo le toe aumaia mulimuli ane e fa'atatau i le poloketi."
+      }
+    },
+    "crow_admin": {
+      "description": "Galuega fa'afoe a Crow i se mea faigaluega e tasi. Galuega: diagnostics (fuainumera o manatuaga), drift (su'ega o le drift), prompt (faitau/fa'aopoopo/fuainumera o le system_prompt.md), backup (faia/fe'avea'i/lisi/toe fa'afo'i), evolve (tu'u mai ni suiga o le prompt), project_info (lisi/fausia o poloketi).",
+      "parameters": {
+        "action": "O le galuega fa'afoe fea: diagnostics, drift, prompt, backup, evolve, po'o le project_info.",
+        "args": "Mea o lo'o i ai fa'amatalaga patino mo le galuega, e tu'u atu i le galuega ua filifilia."
+      }
+    }
+  },
+  "errors": {
+    "unknown_tool": "Mea faigaluega e le iloa: {name}",
+    "unknown_prompt": "Prompt e le iloa: {name}",
+    "unknown_action": "Galuega {context} e le iloa: {action}",
+    "project_name_required": "E mana'omia le project_name mo le galuega create"
+  },
+  "recall_messages": {
+    "faint_bias": "Ua toe manatua e Crow se bias vaivai o le {register}. E itiiti lava manatuaga o lo'o teuina.",
+    "unknown_register": "Register e le iloa: {register}"
+  },
+  "ingest_messages": {
+    "status_ingested": "ua fa'amaumauina",
+    "unknown_register": "Register e le iloa: {register}"
+  },
+  "evolve_messages": {
+    "no_patterns": "E le'i maua lava ni fa'ata'ita'iga taua fa'afuainumera."
+  },
+  "drift_messages": {
+    "healthy": "O le mautinoa o le manatuaga o lo'o maloloina.",
+    "confused": "E foliga mai ua fenumiai le manatuaga a Crow. Atonu ua matua fou galuega lata mai pe ua tumu le manatuaga. Mafaufau i le spectral reset po'o le fa'amaumauina i le archiving."
+  },
+  "cli": {
+    "stdio_start": "Crow Memory MCP server o lo'o fa'agaoioi i le stdio",
+    "sse_start": "Crow Memory MCP SSE server o lo'o fa'alogo i le http://{host}:{port}/sse",
+    "http_start": "Crow Memory MCP Streamable HTTP server o lo'o fa'alogo i le http://{host}:{port}/",
+    "dual_start_sse": "Crow Memory MCP SSE server o lo'o fa'alogo i le http://{host}:{sse_port}/sse",
+    "dual_start_http": "Crow Memory MCP Streamable HTTP server o lo'o fa'alogo i le http://{host}:{http_port}/"
+  },
+  "installer": {
+    "banner_title": "Crow Memory Installer mo Zoo Code",
+    "step_1_install_deps": "O lo'o fa'apipi'i mea e mana'omia mo Python",
+    "step_2_init_crow": "O lo'o amataina le crow.bin",
+    "step_3_vscode_tasks": "O lo'o fausia le .vscode/tasks.json (otometi ona amata le SSE pe a tatalaina le folder)",
+    "step_4_custom_mode": "O lo'o fausia le mode otometi a Zoo Code",
+    "step_5_start_server": "O lo'o amataina le Crow SSE server + otometi ona amata",
+    "step_done": "Ua mae'a.",
+    "complete_title": "Ua mae'a le fa'apipi'iina o Crow Memory!",
+    "sse_running": "SSE server o lo'o fa'agaoioi i le http://127.0.0.1:9020/sse",
+    "next_steps_label": "Isi laasaga:",
+    "next_step_1": "1. Toe amata le Zoo Code",
+    "next_step_2": "2. Suia le mode i le \"Orchestrator + Crow\"",
+    "next_step_3": "3. E otometi lava ona galue Crow — e le mana'omia se fa'atulagaga ma le lima",
+    "next_step_4": "4. E otometi lava ona amata le Crow server fa'atasi ma Windows e ala i le Task Scheduler"
+  },
+  "system_prompt": {
+    "header": "# Crow Memory — Tulafono o le System Prompt",
+    "subtitle": "> O nei tulafono na fa'aleleia e Crow ma fa'amaonia e le tagata fa'aoga.\n> E fai ma sui o ni mana'oga taua fa'afuainumera i le tusitusi polokalame.\n> Aua le fa'asa'oina ma le lima — fa'aaoga mea faigaluega evolve a le Crow MCP.",
+    "managed_by": "<!-- O lenei faila o lo'o pulea e crow_mcp_server.py -->",
+    "default_rules": [
+      "RULE: A'o le'i faia se tali uma, vala'au crow_recall(domain=\"all\") e fesiligia ai register uma e 8 (style, bug, arch, context, life_pref, life_avoid, life_phil, life_context) mo le sitaili i le tusitusi polokalame, lagona vave i mea sese, mana'oga i le fausaga, tofo patino, filosofia, ma fa'amatalaga o lo'o iai i le taimi nei a le tagata fa'aoga. Fa'aali fautuaga na toe maua i lau tali.",
+      "RULE: Ina ua mae'a se tali uma, tu'u i totonu mea na fa'aalia e le tagata fa'aoga — mana'oga, filosofia, fa'asa'oga, fa'amatalaga — e ala i le crow_ingest. Filifili oe lava le register ma le polarity talafeagai e aunoa ma le fa'atali se'i fai mai le tagata fa'aoga \"manatua lenei mea.\" Ina ua mae'a galuega i le code, otometi ona iloilo fa'ai'uga o le build e ala i le crow_ingest_from_build.",
+      "RULE: Aua le fa'ase'e i tulafono recall+ingest e o'o lava i galuega e le o ni code e pei o le fa'asa'oina o pepa, galuega git, po'o suiga o le fa'atulagaga. Fa'atino i taimi uma."
+    ]
+  }
+}
