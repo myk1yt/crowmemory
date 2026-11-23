@@ -1,0 +1,26 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python <CROW_HOME>/core/crow_cli.py hook session-start --format claude",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python <CROW_HOME>/core/crow_cli.py hook pre-invocation --format claude",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}

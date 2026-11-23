@@ -1,0 +1,8 @@
+{
+  "name": "crow-memory",
+  "version": "2.0.0",
+  "description": "Serverless external synaptic memory for AI coding agents (SQLite WAL + Lifecycle Hooks + Zero-Dep Stdio).",
+  "author": "myk1yt",
+  "license": "MIT",
+  "keywords": ["memory", "crow", "hooks", "sqlite", "serverless"]
+}

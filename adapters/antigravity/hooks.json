@@ -1,0 +1,34 @@
+{
+  "crow-session-bias": {
+    "SessionStart": [
+      {
+        "type": "command",
+        "command": "python <CROW_HOME>/core/crow_cli.py hook session-start --format agy",
+        "timeout": 10
+      }
+    ]
+  },
+  "crow-turn-recall": {
+    "PreInvocation": [
+      {
+        "type": "command",
+        "command": "python <CROW_HOME>/core/crow_cli.py hook pre-invocation --format agy",
+        "timeout": 10
+      }
+    ]
+  },
+  "crow-auto-build-ingest": {
+    "PostToolUse": [
+      {
+        "matcher": "run_command",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python <CROW_HOME>/core/crow_cli.py hook post-tool --format agy",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}

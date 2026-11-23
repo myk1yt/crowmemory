@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "hooks": {
+    "sessionStart": [
+      { "command": "python <CROW_HOME>/bin/crow_cli.py hook session-start --format cursor" }
+    ],
+    "beforeSubmitPrompt": [
+      { "command": "python <CROW_HOME>/bin/crow_cli.py hook pre-invocation --format cursor" }
+    ],
+    "afterShellExecution": [
+      { "command": "python <CROW_HOME>/bin/crow_cli.py hook post-tool --format cursor" }
+    ]
+  }
+}

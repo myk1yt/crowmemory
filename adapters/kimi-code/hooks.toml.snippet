@@ -1,0 +1,15 @@
+[[hooks]]
+event = "SessionStart"
+command = "python <CROW_HOME>/bin/crow_cli.py hook session-start --format text"
+timeout = 10
+
+[[hooks]]
+event = "UserPromptSubmit"
+command = "python <CROW_HOME>/bin/crow_cli.py hook pre-invocation --format text"
+timeout = 10
+
+[[hooks]]
+event = "PostToolUse"
+matcher = "Shell"
+command = "python <CROW_HOME>/bin/crow_cli.py hook post-tool --format text"
+timeout = 10

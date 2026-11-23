@@ -30,10 +30,18 @@ from typing import Any
 _I18N_DIR = Path(__file__).parent / "i18n"
 
 SUPPORTED_LOCALES = frozenset({
+    # v1.5 baseline (36)
     "en", "ko", "ja", "zh-cn", "zh-tw",
     "fr", "de", "it", "es", "pt-br", "ru", "tr", "pl", "cs", "hu",
     "nl", "uk", "sv", "th", "vi", "ro", "bg", "el", "hr", "id",
     "ms", "fi", "nb", "da", "sk", "sl", "et", "lv", "lt", "hi", "bn",
+    # v2.0 expansion (60) — full Google Translate language coverage
+    "af", "am", "ar", "az", "be", "bs", "ca", "ceb", "co", "eo",
+    "eu", "fa", "fil", "ga", "gd", "gl", "gu", "haw", "he", "hy",
+    "ig", "is", "jw", "ka", "kk", "km", "kn", "ku", "ky", "lb",
+    "lo", "mg", "mi", "mk", "mn", "mr", "mt", "my", "ne", "pa",
+    "ps", "sd", "si", "sm", "sn", "so", "sr", "st", "su", "sw",
+    "ta", "te", "tg", "ur", "pt", "yo", "zu", "xh", "yi", "uz",
 })
 
 # ---------------------------------------------------------------------------
@@ -231,7 +239,7 @@ def _canonicalize_locale(raw: str) -> str:
                 return "zh-tw"
             return "zh-cn"
         if prefix == "pt":
-            return "pt-br"
+            return "pt-br" if "br" in loc else "pt"
         if prefix == "nb" or prefix == "nn":
             return "nb"
         if prefix in SUPPORTED_LOCALES:

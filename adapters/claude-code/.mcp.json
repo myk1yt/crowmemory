@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "crow-memory": {
+      "command": "python",
+      "args": ["<CROW_HOME>/core/crow_mcp_stdio.py"],
+      "env": {
+        "PYTHONUTF8": "1",
+        "CROW_HOME": "<CROW_HOME>"
+      }
+    }
+  }
+}
