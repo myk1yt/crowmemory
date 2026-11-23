@@ -94,7 +94,7 @@ class McpSessionTests(unittest.TestCase):
         res = self.by_id[1]["result"]
         self.assertEqual(res["protocolVersion"], "2025-03-26")
         self.assertEqual(res["serverInfo"],
-                         {"name": "crow-memory", "version": "2.0.0"})
+                         {"name": "crow-memory", "version": "1.5.0"})
         self.assertIn("tools", res["capabilities"])
         self.assertIn("prompts", res["capabilities"])
         self.assertTrue(res["instructions"])

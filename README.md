@@ -23,7 +23,7 @@ Forgetting is not a bug. Crow's fixed-size 500-entry bank and per-register half-
 
 > *"Crow remembers not the code, but the hand that wrote it."*
 
-**Crow Memory v2.0 is serverless synaptic memory for AI coding agents.** It keeps your coding style, bug intuition, architectural preferences and personal context in one local SQLite file, and lifecycle hooks inject that memory into the model's context before it answers and record build/test outcomes after it acts. No MCP daemon, no port, no scheduler, no ML runtime: Python 3.11's standard library and `~/.crow-memory/crow.db`.
+**Crow Memory v1.5.0 is serverless synaptic memory for AI coding agents.** It keeps your coding style, bug intuition, architectural preferences and personal context in one local SQLite file, and lifecycle hooks inject that memory into the model's context before it answers and record build/test outcomes after it acts. No MCP daemon, no port, no scheduler, no ML runtime: Python 3.11's standard library and `~/.crow-memory/crow.db`.
 
 ---
 
@@ -128,7 +128,7 @@ The installer already writes this for Kimi Code (`~/.kimi-code/mcp.json`) and sh
 | `crow_ingest` | `key`, `value`, `register` (required); `polarity` or `exit_code`, `user_edited`, `project` |
 | `crow_admin` | `action` + `args`: `diagnostics`, `drift`, `prompt` (read/append/approve/stats), `backup`, `evolve`, `project_info`, `delete`, `purge` |
 
-Protocol version `2025-03-26`, server identity `crow-memory` `2.0.0`, plus two prompts: `crow_memory_bias` and `crow_evolved_rules`. Verified handshake: `initialize` → `2025-03-26` / `{"name": "crow-memory", "version": "2.0.0"}`.
+Protocol version `2025-03-26`, server identity `crow-memory` `1.5.0`, plus two prompts: `crow_memory_bias` and `crow_evolved_rules`. Verified handshake: `initialize` → `2025-03-26` / `{"name": "crow-memory", "version": "1.5.0"}`.
 
 ---
 
@@ -147,7 +147,7 @@ All commands print one compact JSON object (hooks print their host-specific enve
 | `migrate [--dry-run\|--apply] [--src-json PATH] [--home PATH] [--keep-junk]` | Import a v1.5 `value_bank.json` (default source `<repo>/memory/value_bank.json`) and seed `<CROW_HOME>/system_prompt.md` byte-identically when the target is absent. `crow_cli.py migrate` reports only unless you pass `--apply`; the module CLI `core/migrate_from_v1.py` requires exactly one of `--dry-run`/`--apply` and also accepts `--src-prompt`/`--force-prompt`. |
 | `serve-stdio` | Serve the stdio MCP protocol (same server as `crow_mcp_stdio.py`). |
 
-Every command above was executed against a fresh `CROW_HOME` during the 2.0.0 verification pass, except the fix-round additions called out under "Revocation and review" (`admin delete`, `admin purge`, `admin prompt approve`). Examples:
+Every command above was executed against a fresh `CROW_HOME` during the 1.5.0 verification pass, except the fix-round additions called out under "Revocation and review" (`admin delete`, `admin purge`, `admin prompt approve`). Examples:
 
 ```bash
 python core/crow_cli.py ingest --key "install quickstart" --value "run install_plugin.py then restart" --register arch --polarity 1.2
@@ -177,7 +177,7 @@ Model acts ──► build/test command ──► hook post-tool ──► silen
 ~/.crow-memory/crow.db  ◄── one file, shared by every tool you installed
 ```
 
-### Scoring (v2, no embeddings on the hot path)
+### Scoring (serverless, no embeddings on the hot path)
 
 ```
 sim   = 0.5 * token_cosine(query, key_text + " " + value_text)
@@ -289,24 +289,24 @@ The installer, the CLI and the MCP tool descriptions are localized; your editor 
 
 ## Legacy (v1.5 MCP server)
 
-> **New users should not use this.** v1.5 needs a long-running Python daemon on two ports, a 140 MB weight matrix and a background scheduler. v2.0 replaces all of it. The section exists so old installs can still be understood and retired.
+> **New users should not use this.** v1.5 needs a long-running Python daemon on two ports, a 140 MB weight matrix and a background scheduler. v1.5.0 replaces all of it. The section exists so old installs can still be understood and retired.
 
 v1.5 shipped `crow_core.py` (Hebbian EMA matrices in `memory/crow.bin`), `crow_mcp_server.py` (MCP over SSE + Streamable HTTP) and `install.py` / `install.ps1`, which wired autostart around [`start_crow_sse.bat`](start_crow_sse.bat) (Task Scheduler task `CrowMemoryAuto` at logon, with a Startup-folder fallback when the registration was denied).
 
 - Legacy server: `python crow_mcp_server.py --transport dual --port 9020 --http-port 9021` (SSE on `9020`, Streamable HTTP on `9021` via `uvicorn`).
 - Legacy client config: `{"transport": "http", "url": "http://127.0.0.1:9021/"}`; Kimi Code cannot use the SSE endpoint.
-- Legacy data: `memory/crow.bin`, `memory/value_bank.json`, `memory/recall_stats.json`, `memory/system_prompt.md` (v2's migration seeds the last one into `<CROW_HOME>/system_prompt.md`).
-- Legacy Antigravity plugin dir: an old `~/.gemini/config/plugins/crow_memory/` (underscore) is left untouched by v2; the installer prints a NOTE so you can remove it and avoid loading two copies.
+- Legacy data: `memory/crow.bin`, `memory/value_bank.json`, `memory/recall_stats.json`, `memory/system_prompt.md` (the serverless migration seeds the last one into `<CROW_HOME>/system_prompt.md`).
+- Legacy Antigravity plugin dir: an old `~/.gemini/config/plugins/crow_memory/` (underscore) is left untouched by v1.5.0; the installer prints a NOTE so you can remove it and avoid loading two copies.
 - Legacy tooling: `scripts/migrate_value_bank.py`, `scripts/merge_value_bank.py`, `scripts/purge_search_debris.py`, `backup_manager.py`, `hitl_panel.html`, the test suite under [`tests/`](tests) (`python -m unittest discover -s tests`).
 - Full v1.5 design, diagrams and math: the "Legacy v1.5 Matrix Engine" part of [`CROW_MEMORY_ARCHITECTURE.md`](CROW_MEMORY_ARCHITECTURE.md).
 
-**Retiring v1.5:** run `python scripts/install_plugin.py` (it migrates `memory/value_bank.json` into `~/.crow-memory/crow.db` and seeds `system_prompt.md`), then disable the autostart: `schtasks /delete /tn "CrowMemoryAuto" /f` and remove `start_crow_sse.bat` from your Startup folder. Nothing in `memory/` is deleted by v2.
+**Retiring v1.5:** run `python scripts/install_plugin.py` (it migrates `memory/value_bank.json` into `~/.crow-memory/crow.db` and seeds `system_prompt.md`), then disable the autostart: `schtasks /delete /tn "CrowMemoryAuto" /f` and remove `start_crow_sse.bat` from your Startup folder. Nothing in `memory/` is deleted by the v1.5.0 install.
 
 ---
 
 ## Architecture
 
-See [`CROW_MEMORY_ARCHITECTURE.md`](CROW_MEMORY_ARCHITECTURE.md): the v2.0 serverless chapter (components, data flow, schema, scoring, concurrency) first, then the v1.5 matrix engine as historical reference.
+See [`CROW_MEMORY_ARCHITECTURE.md`](CROW_MEMORY_ARCHITECTURE.md): the v1.5.0 serverless chapter (components, data flow, schema, scoring, concurrency) first, then the v1.5 matrix engine as historical reference.
 
 ---
 
@@ -314,7 +314,7 @@ See [`CROW_MEMORY_ARCHITECTURE.md`](CROW_MEMORY_ARCHITECTURE.md): the v2.0 serve
 
 | File | Share? | Reason |
 |------|--------|--------|
-| `core/*.py` | ✅ Yes | v2 runtime engine (stdlib only) |
+| `core/*.py` | ✅ Yes | v1.5.0 runtime engine (stdlib only) |
 | `adapters/**` | ✅ Yes | Hook / skill / rule templates |
 | `scripts/install_plugin.py` | ✅ Yes | One-click installer |
 | `crow_sanitize.py` | ✅ Yes | Input noise sanitizer (kaomoji/emoji/jamo-run scrubbing) |
@@ -355,5 +355,5 @@ Crow Memory is open-source and free to use under MIT. But every organization has
 
 ---
 
-*Crow Memory v2.0.0 — November 2026*
+*Crow Memory v1.5.0 — November 2026*
 *Co-designed by Stefano,Kim & AI*

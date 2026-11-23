@@ -1,26 +1,26 @@
 # Crow (까마귀) Memory Architecture
 ## A Synaptic State Cache for Recursive Agent Development
 
-**Version:** 2.0.0
+**Version:** 1.5.0
 **Date:** 2026-11-24
 **Author:** Stefano,Kim & AI Collaborative Design
 **Target Runtime:** Any AI coding agent with lifecycle hooks (Antigravity, Kimi Code, Claude Code, Cursor, Cline) or any agent that reads `AGENTS.md`; Python 3.11+ standard library only.
-**Reading order:** §0 summary, §1 philosophy, then the v2.0 Serverless Architecture chapter. Everything from §2 onward documents the legacy v1.5 matrix engine and is kept as historical reference.
+**Reading order:** §0 summary, §1 philosophy, then the v1.5.0 Serverless Architecture chapter. Everything from §2 onward documents the legacy v1.5 matrix engine and is kept as historical reference.
 
 ---
 
 ## 0. Executive Summary
 
-**Crow** is an external long-term memory for AI coding agents. It does not remember *what* you did, it remembers *how* you think: your naming habits, your architectural reflexes, your bug intuition, your personal constraints. The current release (v2.0.0) stores that memory as rows in a single SQLite file, `~/.crow-memory/crow.db`, and injects it through editor lifecycle hooks before the model answers. It requires no server, no port, no scheduler, and no machine-learning runtime.
+**Crow** is an external long-term memory for AI coding agents. It does not remember *what* you did, it remembers *how* you think: your naming habits, your architectural reflexes, your bug intuition, your personal constraints. The current release (v1.5.0) stores that memory as rows in a single SQLite file, `~/.crow-memory/crow.db`, and injects it through editor lifecycle hooks before the model answers. It requires no server, no port, no scheduler, and no machine-learning runtime.
 
-Earlier releases (v1.5.0 and below) stored the same experience as compressed synaptic weights inside a fixed-size `crow.bin` matrix and served it from a Python MCP daemon. That design is documented in full from §2 onward as a legacy reference; the v2.0 Serverless Architecture chapter right after §1 describes what ships today.
+Earlier releases (v1.5.0-mcp and below) stored the same experience as compressed synaptic weights inside a fixed-size `crow.bin` matrix and served it from a Python MCP daemon. That design is documented in full from §2 onward as a legacy reference; the v1.5.0 Serverless Architecture chapter right after §1 describes what ships today.
 
 The name "Crow (까마귀)" is deliberate. Crows possess episodic-like memory, tool-crafting intelligence, and social learning: they observe, remember, and adapt their behavior based on past outcomes without rewriting their DNA. Crow Memory does the same for an AI agent. It cannot modify the LLM's base weights, but it can sculpt the prompt environment and tool-use bias so effectively that the agent *behaves* as if it has evolved.
 
 **Key Constraint (Non-Negotiable):**  
 > Crow is **not** a knowledge base. It does not promise complete or exact retrieval. It stores short experiences with a signed polarity and an importance, ranks them by similarity and recency, and lets each register forget on its own schedule. Exact facts (API specs, file paths, syntax) still belong in RAG, markdown, or a spec. Crow handles the *vibe*: the gravitational pull of your coding style, your architectural instincts, your bug-hunting reflexes.
 
-**What v2.0 changed, in one paragraph.** v1.5 stored experience as matrix weights and needed a resident Python daemon to survive model load time and to serialize writes through an exclusive lock. v2.0 stores the same experience as text rows in SQLite (WAL, FTS5) and scores them with `0.5 * token_cosine + 0.5 * bm25_norm`, decayed by a per-register half-life. That removed the daemon, the ports, the lock file and the ML runtime, and it removed three defects that the matrix could not escape: the Sign Inversion Paradox (negative memories were being strengthened by `abs(polarity)`), the Importance Ratchet (last-ingested rows never aged out), and Rank-1 collapse (repeated ingestions turned a register into a projector onto one pattern, so every query returned the same hint).
+**What the serverless release changed, in one paragraph.** v1.5 stored experience as matrix weights and needed a resident Python daemon to survive model load time and to serialize writes through an exclusive lock. The serverless release stores the same experience as text rows in SQLite (WAL, FTS5) and scores them with `0.5 * token_cosine + 0.5 * bm25_norm`, decayed by a per-register half-life. That removed the daemon, the ports, the lock file and the ML runtime, and it removed three defects that the matrix could not escape: the Sign Inversion Paradox (negative memories were being strengthened by `abs(polarity)`), the Importance Ratchet (last-ingested rows never aged out), and Rank-1 collapse (repeated ingestions turned a register into a projector onto one pattern, so every query returned the same hint).
 
 ---
 
@@ -31,35 +31,35 @@ Every coding agent needs two distinct knowledge organs:
 
 | Organ | Medium | Precision | Role | Crow's Role |
 |-------|--------|-----------|------|-------------|
-| **Hippocampus** | Markdown, RAG, specs | Lossless | Exact facts, specs, file trees | **None** (v2 rows are text, but recall is scored, decayed and evictable, so it is still not a lossless store) |
-| **Neocortex Bias** | `crow.db` rows ranked by similarity and decay (v2); `crow.bin` matrix (v1.5) | Lossy & Associative | Style, instinct, architectural gravity | **Everything** |
+| **Hippocampus** | Markdown, RAG, specs | Lossless | Exact facts, specs, file trees | **None** (v1.5.0 rows are text, but recall is scored, decayed and evictable, so it is still not a lossless store) |
+| **Neocortex Bias** | `crow.db` rows ranked by similarity and decay (v1.5.0); `crow.bin` matrix (v1.5) | Lossy & Associative | Style, instinct, architectural gravity | **Everything** |
 
 Crow occupies the second layer. It ensures that when the LLM writes code for you, it feels *your* hand--not generic best practices, not Stack Overflow averages, but *your* early-return reflex, *your* JSDoc verbosity, *your* terror of unhandled Windows encodings.
 
 ### 1.2 Hebbian Episodicity
-Crow's write protocol mimics Hebbian plasticity: neurons that fire together, wire together. Repeating an experience raises its importance; correcting one lowers its signed polarity instead of adding weight. What prevents catastrophic interference is scheduled forgetting: v2.0 decays every register by its own half-life (7 to 180 days) before ranking, while v1.5 decayed the matrix weights with an Exponential Moving Average. Either way, new memories do not erase old ones. They reshape the dune instead of bulldozing it.
+Crow's write protocol mimics Hebbian plasticity: neurons that fire together, wire together. Repeating an experience raises its importance; correcting one lowers its signed polarity instead of adding weight. What prevents catastrophic interference is scheduled forgetting: v1.5.0 decays every register by its own half-life (7 to 180 days) before ranking, while v1.5 decayed the matrix weights with an Exponential Moving Average. Either way, new memories do not erase old ones. They reshape the dune instead of bulldozing it.
 
 ### 1.3 The Observer Effect
 Crow learns not from what the model *generates*, but from what the *user accepts*. A generated snippet that passes `npm run build` and is accepted without human edit is a **positive reinforcement** (+1.5). A snippet that the user immediately rewrites is a **negative reinforcement** (-0.8). The model is not the teacher; the user is.
 
 ### 1.4 Prompt Evolution as Phenotype
-While Crow cannot rewrite the LLM's genotype (base weights), it can rewrite its **phenotype** (system prompt and tool-call behavior). Crow's `evolve` protocol proposes prompt mutations, and v2 treats every model-written rule as untrusted: an append is scrubbed, flattened to a single line, capped at 400 characters and stored under an `[Unreviewed Model Suggestions]` section of `system_prompt.md`. Promotion needs a human-held secret: `admin prompt approve` refuses unless `CROW_ADMIN_TOKEN` is set in the environment and passed as `{"token": ...}`, and the model cannot read that variable, so it cannot promote its own line. Mutations still arise freely; selection stays human.
+While Crow cannot rewrite the LLM's genotype (base weights), it can rewrite its **phenotype** (system prompt and tool-call behavior). Crow's `evolve` protocol proposes prompt mutations, and v1.5.0 treats every model-written rule as untrusted: an append is scrubbed, flattened to a single line, capped at 400 characters and stored under an `[Unreviewed Model Suggestions]` section of `system_prompt.md`. Promotion needs a human-held secret: `admin prompt approve` refuses unless `CROW_ADMIN_TOKEN` is set in the environment and passed as `{"token": ...}`, and the model cannot read that variable, so it cannot promote its own line. Mutations still arise freely; selection stays human.
 
 ### 1.5 Fixed-Size Immortality
-Crow's memory is bounded by design: v2.0 keeps at most 500 active rows (`MAX_BANK`) and v1.5 kept a ~140 MB `crow.bin`. The bank never grows with your project count. This is not a limitation; it is a *feature*. It forces the system to compress, abstract and generalize, exactly what human long-term memory does. You do not remember every line of code you wrote in 2003; you remember *that you preferred monolithic classes back then*.
+Crow's memory is bounded by design: v1.5.0 keeps at most 500 active rows (`MAX_BANK`) and v1.5 kept a ~140 MB `crow.bin`. The bank never grows with your project count. This is not a limitation; it is a *feature*. It forces the system to compress, abstract and generalize, exactly what human long-term memory does. You do not remember every line of code you wrote in 2003; you remember *that you preferred monolithic classes back then*.
 
 ---
 
-## v2.0 Serverless Architecture (Current)
+## v1.5.0 Serverless Architecture (Current)
 
-**Status:** current, v2.0.0 (2026-11-24). Source of truth: [`core/`](core).
+**Status:** current, v1.5.0 (2026-11-24). Source of truth: [`core/`](core).
 **Shape:** editor lifecycle hooks + a short-lived CLI process + one SQLite file per user.
 
 ### v2.1 Why the daemon had to go
 
 The v1.5 Python server existed for three reasons, none of them essential to the memory itself:
 
-| v1.5 constraint (legacy) | Cause | v2.0 answer |
+| v1.5 constraint (legacy) | Cause | v1.5.0 answer |
 |---|---|---|
 | Resident process | `torch` + `nomic-embed-text-v1.5` + a 140 MB `crow.bin` took seconds to load, so a per-turn CLI was impractical | Pure-stdlib SQLite: warm in-engine recall p95 ≈ 6 ms at 486 rows, and the engine costs ≈ 15-17 ms inside a fresh process |
 | Single-writer file lock | `crow.bin` is one binary mutated in place; two processes corrupted it, so `crow.bin.lock` + PID checks + zombie cleanup were mandatory | SQLite WAL: readers never block, writers queue with `busy_timeout=5000` |
@@ -183,7 +183,7 @@ CREATE INDEX idx_memories_register_status ON memories(register, status);
 
 ### v2.7 Concurrency, durability, and what is deliberately absent
 
-| Concern | v2.0 mechanism |
+| Concern | v1.5.0 mechanism |
 |---------|----------------|
 | Many editors at once | SQLite WAL: concurrent readers never block, one writer at a time, waiters retry for 5 s (`busy_timeout`). Any number of Antigravity, Kimi, Claude and Cursor windows can share one `crow.db`. |
 | Crash safety | Every ingest is a single transaction; WAL checkpoints on close. `admin --action backup` copies `crow.db` (and `system_prompt.md`) into `backups/`, keeping the last 10. |
@@ -247,7 +247,7 @@ The installer deploys adapters to per-tool locations: `~/.gemini/config/plugins/
 
 ## Legacy v1.5 Matrix Engine (historical reference)
 
-> **Everything from §2 to the end of this document describes v1.5.0**, the PyTorch + `crow.bin` + MCP daemon engine. It is kept because old installations still exist and because the philosophy sections above reference it. New installations should use v2.0 only: see `README.md`, `core/`, and the chapter above.
+> **Everything from §2 to the end of this document describes v1.5.0-mcp**, the PyTorch + `crow.bin` + MCP daemon engine. It is kept because old installations still exist and because the philosophy sections above reference it. New installations should use v1.5.0 only: see `README.md`, `core/`, and the chapter above.
 >
 > Section numbers (2-13) are unchanged from the published v1.5 document so external references stay valid.
 
@@ -564,7 +564,7 @@ def _clip_spectrum(self, register: str, max_sv: float):
 
 This is the exact schema exposed by the local Python MCP server. The LLM sees these as native tools.
 
-### 3 MCP Tools (v1.5.0 — AD-5 consolidation)
+### 3 MCP Tools (v1.5.0-mcp — AD-5 consolidation)
 
 The former 10-tool surface was consolidated into 3 tools. Legacy capabilities are absorbed as parameters/actions. This is the exact schema exposed by [`crow_mcp_server.py`](crow_mcp_server.py):
 
@@ -705,7 +705,7 @@ The loop is **recursive but bounded**:
 | `crow_admin action="evolve"` | Auto-detected, auto-drafted | **Mandatory approval** before prompt append |
 | Prompts are never auto-adopted | Never auto | `admin prompt approve` promotes a staged line |
 
-**v2 note:** this table describes the v1.5 daemon. In v2.0 the `evolve` action only proposes candidates; a model-written rule is stored under `[Unreviewed Model Suggestions]` and does not become standing context until a human runs `admin prompt approve` (see §1.4 and the v2.0 chapter).
+**Serverless note:** this table describes the v1.5 daemon. In v1.5.0 the `evolve` action only proposes candidates; a model-written rule is stored under `[Unreviewed Model Suggestions]` and does not become standing context until a human runs `admin prompt approve` (see §1.4 and the v1.5.0 chapter).
 
 ### 7.2 Drift Detection
 
@@ -985,7 +985,7 @@ This launches two Uvicorn servers — one for SSE (`/sse`) and one for Streamabl
 
 ## 12. Fork Files & State Tagging
 
-### 12.1 `-myk1yt` Consolidation (v1.5.0)
+### 12.1 `-myk1yt` Consolidation (v1.5.0-mcp)
 
 All `-myk1yt` file copies (docs, code shims, bats, requirements) have been **fully merged into the canonical originals and removed** — the untagged files are the single source of truth.
 
@@ -1005,10 +1005,10 @@ The `-myk1yt` **data files** under `memory/` remain as a **historical archive sn
 |---------|------|--------|
 | 1.4.2 | 2026-06-01 | 8-register spec, i18n, REST API documentation |
 | 1.4.5 | 2026-08-30 | MCP SDK 2.1.1 migration (`MCPServer` high-level API) |
-| 1.5.0 | 2026-09-02 | **Recall precision overhaul**: `crow_sanitize.py` sanitize gate, `SIM_CUTOFF` 0.35 (env-overridable), `recall_multi()` global eff_sim merge, project tagging (`project`/`strict_project`), importance boost cap ×1.15, `NEG_DAMPEN_BY_REGISTER`, sha256 encode-cache keys. **AD-5 tool consolidation**: 10 → 3 tools (`crow_recall`/`crow_ingest`/`crow_admin`). Fork files converted to re-export shims. Maintenance scripts (`migrate_value_bank`, `merge_value_bank`, `purge_search_debris`) with dry-run default. 231 tests. |
-| 2.0.0 | 2026-11-24 | **Serverless rewrite (current)**: `core/crow_db.py` SQLite WAL + FTS5 engine replaces the matrix daemon; BM25 + token-cosine scoring; signed `polarity_net`; half-life effective importance; grace shield and register quotas; semantic upsert; 2-Tier bias block; lifecycle hook adapters for Antigravity/Kimi/Claude/Cursor/Cline plus universal `AGENTS.md`; optional stdlib stdio MCP (`2025-03-26`); one-click installer; 96 locales; `migrate_from_v1.py`. |
+| 1.5.0-mcp | 2026-09-02 | **Recall precision overhaul**: `crow_sanitize.py` sanitize gate, `SIM_CUTOFF` 0.35 (env-overridable), `recall_multi()` global eff_sim merge, project tagging (`project`/`strict_project`), importance boost cap ×1.15, `NEG_DAMPEN_BY_REGISTER`, sha256 encode-cache keys. **AD-5 tool consolidation**: 10 → 3 tools (`crow_recall`/`crow_ingest`/`crow_admin`). Fork files converted to re-export shims. Maintenance scripts (`migrate_value_bank`, `merge_value_bank`, `purge_search_debris`) with dry-run default. 231 tests. |
+| 1.5.0 | 2026-11-24 | **Serverless rewrite (current)**: `core/crow_db.py` SQLite WAL + FTS5 engine replaces the matrix daemon; BM25 + token-cosine scoring; signed `polarity_net`; half-life effective importance; grace shield and register quotas; semantic upsert; 2-Tier bias block; lifecycle hook adapters for Antigravity/Kimi/Claude/Cursor/Cline plus universal `AGENTS.md`; optional stdlib stdio MCP (`2025-03-26`); one-click installer; 96 locales; `migrate_from_v1.py`. |
 
-*Note: the version table is chronological. §2 onward describes the 1.5.0 engine; the v2.0.0 architecture chapter appears earlier in this document.*
+*Note: the version table is chronological. §2 onward describes the 1.5.0-mcp engine; the serverless architecture chapter appears earlier in this document.*
 
 ---
 

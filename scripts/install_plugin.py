@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""Crow Memory v2.0.0 plugin installer.
+"""Crow Memory v1.5.0 plugin installer.
 
 Copies repo ``core/`` into the data home, creates ``bin/`` shims (plus
 ``.cmd`` wrappers on Windows so hooks work when ``python`` is not on PATH in
@@ -38,7 +38,7 @@ import tempfile
 import time
 from pathlib import Path
 
-VERSION = "2.0.0"
+VERSION = "1.5.0"
 TOOLS = ("generic", "antigravity", "kimi-code", "claude-code",
          "cursor", "cline", "codex", "zoo-code")
 

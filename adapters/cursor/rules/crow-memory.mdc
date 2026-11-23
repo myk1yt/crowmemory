@@ -4,7 +4,7 @@ globs:
 alwaysApply: true
 ---
 
-# Crow Memory — Agent Rules (v2.0.0)
+# Crow Memory — Agent Rules (v1.5.0)
 
 External synaptic memory for AI coding agents: zero server, zero port, zero scheduler, local SQLite WAL.
 

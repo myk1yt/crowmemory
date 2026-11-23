@@ -4,7 +4,7 @@ Crow Memory is an external synaptic memory system for LLM-based AI coding assist
 
 ---
 
-## v2.0 Serverless (recommended)
+## v1.5.0 Serverless (recommended)
 
 No daemon, no port, no scheduler. Kimi Code's native hooks call one short-lived CLI process, which reads and writes a local SQLite file (`~/.crow-memory/crow.db`). Memory arrives before the model thinks, and build outcomes are recorded after the shell returns.
 
@@ -44,13 +44,13 @@ python <CROW_HOME>/bin/crow_cli.py admin --action diagnostics
 
 Token-gated admin actions: `admin prompt approve` and `admin purge` with `confirm_all=true` refuse unless the human-held `CROW_ADMIN_TOKEN` environment variable is set and its value is passed as `{"token": "<value>"}` in `--args`. The model cannot read that variable, so it can append to `[Unreviewed Model Suggestions]` but cannot promote its own line or wipe active rows.
 
-If a `[User Bias -- Crow Memory]` block appears in your context, follow it. Do not ask the user to start a server: v2 has none.
+If a `[User Bias -- Crow Memory]` block appears in your context, follow it. Do not ask the user to start a server: the serverless release has none.
 
 ---
 
 ## MCP Server Setup (Streamable HTTP) — legacy v1.5 only
 
-> ⚠️ **Legacy v1.5 only.** This section applies only to the legacy v1.5 MCP server (`crow_mcp_server.py`). If you installed v2.0 with `scripts/install_plugin.py`, skip it entirely: v2 needs no HTTP endpoint, and its optional MCP server runs over stdio. Do not point Kimi Code at port `9021` on a v2 install.
+> ⚠️ **Legacy v1.5 only.** This section applies only to the legacy v1.5 MCP server (`crow_mcp_server.py`). If you installed v1.5.0 with `scripts/install_plugin.py`, skip it entirely: the serverless release needs no HTTP endpoint, and its optional MCP server runs over stdio. Do not point Kimi Code at port `9021` on a v1.5.0 install.
 >
 > ⚠️ **Kimi Code does NOT support SSE transport.** It has a known bug where it fails to recognize the MCP SSE `event: endpoint` handshake message. Use **Streamable HTTP** instead.
 
@@ -79,7 +79,7 @@ Or use the bundled script: `start_crow_sse.bat` (Windows) — it starts in dual 
 
 ## CROW MEMORY INTEGRATION
 
-> v2 note: with the hooks installed, recall and ingest already happen without tool calls (see the four triggers above). The rules in this section apply when the stdio MCP server is attached, which the installer configures for you in `~/.kimi-code/mcp.json`.
+> Serverless note: with the hooks installed, recall and ingest already happen without tool calls (see the four triggers above). The rules in this section apply when the stdio MCP server is attached, which the installer configures for you in `~/.kimi-code/mcp.json`.
 
 ### SESSION START (MANDATORY)
 At the beginning of every conversation session (i.e., your very first response to the user), you MUST call `crow_recall` to retrieve context about the user:

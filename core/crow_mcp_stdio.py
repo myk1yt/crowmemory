@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""crow_mcp_stdio.py - thin stdio MCP server for Crow Memory v2.
+"""crow_mcp_stdio.py - thin stdio MCP server for Crow Memory v1.5.0 (serverless).
 
 JSON-RPC 2.0 over newline-delimited stdin/stdout, stdlib only. One CrowDB
 instance per process, opened on first use and closed on exit. Serves the same
@@ -7,7 +7,7 @@ instance per process, opened on first use and closed on exit. Serves the same
 semantics preserved), backed by the serverless SQLite engine instead of a
 daemon.
 
-Protocol: 2025-03-26. Server identity: crow-memory / 2.0.0.
+Protocol: 2025-03-26. Server identity: crow-memory / 1.5.0.
 """
 
 import json
@@ -32,7 +32,7 @@ except ImportError:
 
 PROTOCOL_VERSION = "2025-03-26"
 SERVER_NAME = "crow-memory"
-SERVER_VERSION = "2.0.0"
+SERVER_VERSION = "1.5.0"
 
 MIN_TOP_K = 1
 MAX_TOP_K = 5

@@ -5,14 +5,16 @@ All notable changes to Crow Memory will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [2.0.0] — 2026-11-24
+## [1.5.0] — 2026-11-24
+
+> The v1.5.0 git tag points at this serverless release; the 2026-09-02 MCP-server milestone below was never published as a GitHub release.
 
 ### Added
 - **Serverless core (`core/`)**: a stdlib-only SQLite WAL engine replaces the PyTorch weight-matrix daemon. Recall and ingest now run in a short-lived process against `~/.crow-memory/crow.db`, so no server, port, scheduler, virtualenv or 140 MB `crow.bin` is needed. Text scoring is BM25 (FTS5) plus token cosine instead of matrix projection: the matrix engine's Rank-1 collapse (every query returning the same dominant pattern) cannot occur.
 - **`core/crow_db.py`**: 8-register engine with signed `polarity_net` storage, half-life effective importance, grace shield plus per-register quotas on eviction, semantic upsert, 2-Tier bias block, and non-destructive `rebuild_from_bank()`.
 - **`core/crow_text.py`**: shared tokenizer, `token_cosine()` and `_smart_truncate()` (500 characters by default, sentence-boundary cut, `CROW_HINT_MAX_CHARS` override with a 450 floor).
 - **`core/crow_cli.py`**: one CLI for `hook session-start` / `hook pre-invocation` / `hook post-tool` (with `--format agy|claude|kimi|cursor|text`), `recall`, `ingest`, `admin`, `migrate` and `serve-stdio`.
-- **`core/crow_mcp_stdio.py`**: optional stdlib JSON-RPC 2.0 stdio MCP server (protocol `2025-03-26`, server `crow-memory` 2.0.0) exposing `crow_recall`, `crow_ingest`, `crow_admin` and the `crow_memory_bias` / `crow_evolved_rules` prompts. The client spawns and stops it; nothing stays resident.
+- **`core/crow_mcp_stdio.py`**: optional stdlib JSON-RPC 2.0 stdio MCP server (protocol `2025-03-26`, server `crow-memory` 1.5.0) exposing `crow_recall`, `crow_ingest`, `crow_admin` and the `crow_memory_bias` / `crow_evolved_rules` prompts. The client spawns and stops it; nothing stays resident.
 - **`core/migrate_from_v1.py`**: imports a v1.5 `value_bank.json` with its registers, importance, polarities and timestamps, filters test debris (`k`, `test key`, `[CHECKPOINT]`, ...), and seeds `<CROW_HOME>/system_prompt.md` byte-identically from `<repo>/memory/system_prompt.md` (`--src-prompt` overrides the source; a live file is never overwritten unless `--force-prompt`, which backs it up to `.bak.<timestamp>` first). Reports `{processed, inserted, merged, rejected, skipped_junk, skipped_invalid, errors}` plus a `prompt{src, dst, would_copy, copied, skipped_exists, error}` block, with `migrated` kept equal to `processed`. The module CLI requires exactly one of `--dry-run` / `--apply`.
 - **Lifecycle hook adapters (`adapters/`)**: Antigravity (root `hooks.json`, `PreInvocation`, `run_command` matcher), Kimi Code (`[[hooks]]` snippet + stdio `mcp.json`), Claude Code (plugin + `SessionStart`/`UserPromptSubmit`), Cursor (`version: 1` hooks + rule), Cline (`.clinerules` block), plus `generic` / `codex` / `zoo-code` universal `AGENTS.md` rules that work for any agent without MCP.
 - **`scripts/install_plugin.py`**: one-command, idempotent, stdlib-only installer: copies `core/` and creates `bin/` shims, deploys the selected adapters, migrates v1 data, backs up every overwritten file as `*.bak.<timestamp>`, and prints per-tool next steps.
@@ -48,7 +50,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Legacy v1.5:** the old MCP server (SSE `9020` / Streamable HTTP `9021` under `uvicorn`) is documented under "Legacy (v1.5 MCP server)" in the README and must not be started alongside v2 data.
 - `memory/system_prompt.md` is seeded into `<CROW_HOME>/system_prompt.md` by the migration (byte-identical, only when the target is absent). A live file is never overwritten unless you pass `--force-prompt`, which backs it up first. Model-written rules are staged under `[Unreviewed Model Suggestions]` and promoted with `admin prompt approve`.
 
-## [1.5.0] — 2026-09-02
+## [1.5.0-mcp] — 2026-09-02 (unpublished milestone, content preserved, tag retargeted)
 
 ### Added
 - **Cleaner recall results**: Recall now applies a similarity cutoff (default 0.35) before showing hints, so you see only relevant memories instead of noise. Tune it with the `CROW_SIM_CUTOFF`, `CROW_SIM_CUTOFF_CROSS_PROJECT`, and `CROW_PROJECT_BOOST` environment variables.

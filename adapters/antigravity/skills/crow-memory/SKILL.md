@@ -3,7 +3,7 @@ name: crow-memory
 description: External synaptic memory for this coding agent. Recall user bias at session start, capture build outcomes and learnings automatically. Use when the user states preferences, when builds/tests finish, or when durable project context emerges.
 ---
 
-# Crow Memory (v2.0.0, serverless)
+# Crow Memory (v1.5.0, serverless)
 
 Crow Memory stores durable user preferences, bug patterns, and project context in a
 local SQLite database and injects the relevant parts before the model thinks.

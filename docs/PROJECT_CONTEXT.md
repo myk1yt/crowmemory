@@ -1,13 +1,13 @@
 # 🧠 Crow Memory — 프로젝트 컨텍스트 문서
 
-> **버전:** v2.0.0 | **라이선스:** MIT | **저장소:** [myk1yt/crowmemory](https://github.com/myk1yt/crowmemory)
+> **버전:** v1.5.0 | **라이선스:** MIT | **저장소:** [myk1yt/crowmemory](https://github.com/myk1yt/crowmemory)
 > **최종 갱신:** 2026-11-24 | **문서 목적:** 인간 및 AI를 위한 온보딩 가이드
 
-## 0. v2.0.0 Serverless (현재 기본 경로)
+## 0. v1.5.0 Serverless (현재 기본 경로)
 
-v2.0은 **데몬 없는(serverless)** 구조입니다. MCP 서버를 띄우지 않고, 에디터의 라이프사이클 훅이 짧은 CLI 프로세스를 호출해 로컬 SQLite 파일(`~/.crow-memory/crow.db`)을 읽고 씁니다.
+v1.5.0은 **데몬 없는(serverless)** 구조입니다. MCP 서버를 띄우지 않고, 에디터의 라이프사이클 훅이 짧은 CLI 프로세스를 호출해 로컬 SQLite 파일(`~/.crow-memory/crow.db`)을 읽고 씁니다.
 
-| 항목 | v2.0 (현재) | v1.5 (레거시) |
+| 항목 | v1.5.0 (현재) | v1.5 (레거시) |
 |------|-------------|---------------|
 | 실행 구조 | 훅 → `core/crow_cli.py` → SQLite | 상주 MCP 서버 (SSE + Streamable HTTP) |
 | 상주 프로세스 / 포트 | 없음 (0개 상주, 포트 없음) | `9020` / `9021`, Task Scheduler |
@@ -50,7 +50,7 @@ python scripts/install_plugin.py            # 전체 도구, 또는 --tools kimi
 
 모델이 쓴 규칙은 신뢰하지 않습니다. `admin --action prompt --args '{"action":"append",...}'`는 내용을 정화하고 한 줄로 평탄화한 뒤 400자로 제한해 `system_prompt.md`의 `[Unreviewed Model Suggestions]` 구역에 넣습니다. 사람이 `admin prompt approve`를 실행해야 검토된 규칙이 됩니다. 잘못 저장된 기억은 `admin --action delete`(단건) 또는 `admin --action purge`(조건 일괄)로 같은 CLI에서 제거합니다. 주입되는 바이어스 블록은 "과거 세션의 참고 맥락"으로만 렌더링되며 새 지시가 아닙니다.
 
-> ⚠️ 1장부터 10장까지는 **v1.5.0 서버 방식**을 설명합니다. v2만 사용한다면 0장만 읽어도 됩니다.
+> ⚠️ 1장부터 10장까지는 **v1.5.0-mcp 서버 방식**을 설명합니다. v1.5.0만 사용한다면 0장만 읽어도 됩니다.
 
 ## 1. 프로젝트 정체성
 
@@ -66,7 +66,7 @@ python scripts/install_plugin.py            # 전체 도구, 또는 --tools kimi
 
 ## 2. 디렉토리 구조
 
-> v2.0의 실제 코드는 `core/`(6개 모듈), `adapters/`(도구별 훅/스킬), `scripts/install_plugin.py`입니다. 아래 트리는 v1.5 서버 기준입니다.
+> v1.5.0의 실제 코드는 `core/`(6개 모듈), `adapters/`(도구별 훅/스킬), `scripts/install_plugin.py`입니다. 아래 트리는 v1.5 서버 기준입니다.
 
 ```
 Crow Memory/
@@ -95,7 +95,7 @@ Crow Memory/
 
 ## 3. 기술 스택
 
-> 아래 표는 **v1.5 레거시** 스택입니다. v2.0은 Python 3.11+ 표준 라이브러리(`sqlite3`, `json`, `re`, `math`, `argparse`)만 사용하며 `pip install`이 필요 없습니다.
+> 아래 표는 **v1.5 레거시** 스택입니다. v1.5.0은 Python 3.11+ 표준 라이브러리(`sqlite3`, `json`, `re`, `math`, `argparse`)만 사용하며 `pip install`이 필요 없습니다.
 
 | 계층 | 기술 | 버전 |
 |------|------|------|
@@ -120,7 +120,7 @@ Crow Memory/
 
 ## 5. 아키텍처
 
-> 아래 다이어그램은 **v1.5 레거시**(상주 MCP 서버) 구조입니다. v2.0 구조는 `CROW_MEMORY_ARCHITECTURE.md`의 "v2.0 Serverless Architecture" 장을 참조하세요.
+> 아래 다이어그램은 **v1.5 레거시**(상주 MCP 서버) 구조입니다. v1.5.0 구조는 `CROW_MEMORY_ARCHITECTURE.md`의 "v1.5.0 Serverless Architecture" 장을 참조하세요.
 
 ```
 AI Coding Agent (MCP Client)
@@ -190,7 +190,7 @@ MCP 클라이언트 연결
 
 ## 6. 핵심 모듈
 
-### core/crow_db.py — v2 엔진 (현재)
+### core/crow_db.py — v1.5.0 엔진 (현재)
 - SQLite WAL + FTS5. 8개 레지스터, 부호 있는 `polarity_net`, 반감기 실효 중요도, 유예 보호(1시간) + 레지스터 쿼터(15), 시맨틱 업서트(토큰 코사인 0.90), 2단 바이어스 블록
 - API: `recall()`, `ingest()`, `bias_block()`, `admin()`(diagnostics / drift / prompt / backup / evolve / project_info / delete / purge), `rebuild_from_bank()`, `stats()`
 - 점수: `0.5×토큰 코사인 + 0.5×BM25` → 반감기 감쇠 → 중요도(최대 ×1.15) → 프로젝트 보정, `SIM_CUTOFF` 0.35
@@ -212,15 +212,15 @@ MCP 클라이언트 연결
 - 핵심 메서드: encode(), recall(), recall_multi(), ingest(), evolve_propose(), check_drift(), recover_from_drift(), for_project(), get_user_bias_block()
 - 업데이트: Hebbian EMA S = λ*S + (1-λ)*polarity*k*v^T
 - 정규화: 1000회마다 SVD 스펙트럴 클리핑
-- 회상 정밀도 (v1.5.0): SIM_CUTOFF 0.35 (env CROW_SIM_CUTOFF/CROW_SIM_CUTOFF_CROSS_PROJECT/CROW_PROJECT_BOOST), importance 부스트 ×1.15 cap, 백도어 제거, 프로젝트 태깅 부스트, NEG_DAMPEN_BY_REGISTER (bug/life_avoid=1.0, 기본 0.6)
+- 회상 정밀도 (v1.5.0-mcp): SIM_CUTOFF 0.35 (env CROW_SIM_CUTOFF/CROW_SIM_CUTOFF_CROSS_PROJECT/CROW_PROJECT_BOOST), importance 부스트 ×1.15 cap, 백도어 제거, 프로젝트 태깅 부스트, NEG_DAMPEN_BY_REGISTER (bug/life_avoid=1.0, 기본 0.6)
 - ingest 스크럽 게이트: crow_sanitize.py로 정화 후 빈 텍스트면 rejected (empty_after_sanitize)
 - encode 캐시 키: sha256 (구 200자 prefix 충돌 해소)
 
-### crow_sanitize.py — 입력 정화 (v1.5.0 신규)
+### crow_sanitize.py — 입력 정화 (v1.5.0-mcp 신규)
 - scrub_text() / scrub_display() / project_slug()
 - kaomoji·emoji·jamo-run 정화, C++ 코드/URL/식별자/한글 보호
 
-### crow_mcp_server.py — MCP Server (SDK 2.1.1, v1.5.0)
+### crow_mcp_server.py — MCP Server (SDK 2.1.1, v1.5.0-mcp)
 - 3개 MCP 도구 (AD-5 통합, `@mcp.tool()` 타입힌트 자동 스키마): crow_recall (format="bias_block"으로 get_user_bias 흡수), crow_ingest (exit_code로 build-result 흡수, polarity 선택적), crow_admin (diagnostics/drift/prompt/backup/evolve/project_info 6-action dispatch)
 - 2개 MCP 프롬프트 (`@mcp.prompt()`): crow_memory_bias, crow_evolved_rules
 - 3개 REST 라우트 (`@mcp.custom_route()`): GET /health, POST /ingest, GET /recall (project/strict_project 파라미터 지원)
@@ -249,16 +249,16 @@ MCP 클라이언트 연결
 1. 파일 잠금의 플랫폼 의존성 (crow_core.py:38-90) — portalocker 도입 검토
 2. SVD O(n³) 복잡도 (crow_core.py:347-361) — Randomized SVD 검토
 3. FAISS 인덱스 무효화 패턴 (crow_core.py:428-456) — 증분 인덱스 검토
-4. ~~Startup 폴더 경쟁 상태~~ ✅ **v1.5.0에서 해결** — Windows Task Scheduler(AtLogon)로 마이그레이션하여 VS Code보다 먼저 서버 시작 보장
+4. ~~Startup 폴더 경쟁 상태~~ ✅ **v1.5.0-mcp에서 해결** — Windows Task Scheduler(AtLogon)로 마이그레이션하여 VS Code보다 먼저 서버 시작 보장
 
 ### 중간
-5. ~~임베딩 캐시 충돌 가능성 (truncated[:200] 키)~~ ✅ **v1.5.0에서 해결** — sha256 캐시 키
+5. ~~임베딩 캐시 충돌 가능성 (truncated[:200] 키)~~ ✅ **v1.5.0-mcp에서 해결** — sha256 캐시 키
 6. 원자적이지 않은 3파일 순차 저장
 7. Windows cp949 인코딩 이슈
 
 ## 9. 개발 환경 설정
 
-### 9.1 v2.0 (현재, 저장소 루트에서 실행)
+### 9.1 v1.5.0 (현재, 저장소 루트에서 실행)
 
 ```bash
 # 설치 (표준 라이브러리만 사용, pip install 불필요)
@@ -266,7 +266,7 @@ python scripts/install_plugin.py --tools generic
 
 # 검증 (임시 홈을 지정하면 실제 메모리를 건드리지 않습니다)
 export CROW_HOME="$HOME/.crow-memory-smoke"
-python core/crow_cli.py ingest --key "smoke" --value "v2 cli works" --register arch --polarity 1.0
+python core/crow_cli.py ingest --key "smoke" --value "v1.5.0 cli works" --register arch --polarity 1.0
 python core/crow_cli.py recall --query "smoke" --domain code --top-k 1
 python core/crow_cli.py admin --action diagnostics
 echo '{"invocationNum":1,"lastUserInput":"hello"}' | python core/crow_cli.py hook pre-invocation --format text

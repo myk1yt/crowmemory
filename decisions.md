@@ -12,5 +12,9 @@
 8. **Session working folder `docs/261124_0001_session_crow-v2-serverless/` intentionally NOT committed** per AGENTS.md §5 (contains worker/reviewer reports, contract, fix-lists).
 9. **Committed the user's audit spec + reports/ research files** as the v2.0 design rationale trail.
 10. **Known incident**: a FIX-B probe created the real `~/.crow-memory/` (empty schema, 0 rows) during testing; left in place — it is the canonical v2 install location and will be populated by the user's first real install/migration.
+
+## 2026-11-24 — CEO rename: release renumbered 2.0.0 → 1.5.0
+
+The CEO ordered the serverless release versioned **v1.5.0** (not 2.0.0). Every product-version reference in the repo was renamed: the 2026-11-24 CHANGELOG entry is now `[1.5.0]`, and the old 2026-09-02 MCP-server milestone is kept as `[1.5.0-mcp]` (unpublished, content preserved). The `v1.5.0` git tag will be retargeted to the serverless commit after this rename lands (orchestrator action; no git mutation here). Code constants (`SERVER_VERSION`, installer `VERSION`), adapters, docs and tests were aligned in the same pass.
 EOF
 echo done
