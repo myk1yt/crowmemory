@@ -6,12 +6,12 @@ Crows use tools, recognize faces, possess long-term memory, and have the "situat
 ### 2. Why This Technology?
 Transformer-based LLMs are frozen at training time — they cannot remember their users. Solutions based on RAG or SQLite accumulate information indefinitely and deliver 100% accurate recall like "notes in a notepad," but that is precisely the problem: it's a "jot it down and look it up later" approach. The human and animal brain doesn't work that way. Old habits fade, new patterns strengthen.
 
-Forgetting is not a bug. Crow's fixed-size weight matrices and λ (decay rate) implement this "creative forgetting." By sacrificing 100% accurate recall, an AI that remembers through Crow responds with biases closer to your *present* self. The goal is low-latency, real-time synaptic plasticity — something that feels alive.
+Forgetting is not a bug. Crow's fixed-size 500-entry bank and per-register half-life decay implement this "creative forgetting." By sacrificing 100% accurate recall, an AI that remembers through Crow responds with biases closer to your *present* self. The goal is low-latency, real-time synaptic plasticity — something that feels alive.
 
 ### 3. Who Is This For?
 - **Anyone** who wants an AI that remembers their habits and adapts to them
 - **Vibe coders** — those who want their AI to feel like a "colleague who knows them well"
-- **Multi-agent users** — those who switch between multiple AI agents yet share a single `crow.bin` to maintain a consistent "AI that knows you"
+- **Multi-agent users** — those who switch between multiple AI agents yet share a single `crow.db` to maintain a consistent "AI that knows you"
 - **Local-first advocates** — those who don't want to hand their personal data over to a cloud API
 
 *"If you share this philosophy and want to join me on this journey, you are always welcome."*
@@ -23,219 +23,290 @@ Forgetting is not a bug. Crow's fixed-size weight matrices and λ (decay rate) i
 
 > *"Crow remembers not the code, but the hand that wrote it."*
 
-**Crow** is an external synaptic memory system for LLM-powered AI assistants. It plugs into any MCP-compatible coding agent (Claude, GPT, DeepSeek, Gemini, etc.) and stores your coding style, bug intuition, architectural preferences, and personal context as compressed weight matrices inside a fixed-size `crow.bin` file. Think of it as long-term muscle memory for your AI pair programmer.
+**Crow Memory v2.0 is serverless synaptic memory for AI coding agents.** It keeps your coding style, bug intuition, architectural preferences and personal context in one local SQLite file, and lifecycle hooks inject that memory into the model's context before it answers and record build/test outcomes after it acts. No MCP daemon, no port, no scheduler, no ML runtime: Python 3.11's standard library and `~/.crow-memory/crow.db`.
 
 ---
 
-## Quick Start
+## Quick Start (under 5 minutes)
 
 ### 1. Requirements
 
-- **Python 3.10+**
-- **Zoo Code** (or any MCP-compatible AI coding agent)
-- Git (to clone the repository)
+- **Python 3.11+** on PATH (`python --version`)
+- **One supported AI coding tool** (Antigravity, Kimi Code, Claude Code, Cursor, Cline, Codex, Zoo Code, or any agent that reads `AGENTS.md`)
+- **Git**
 
-### 2. Install (One Command)
+### 2. Install (one command)
 
-**Windows (PowerShell):**
-```powershell
-git clone https://github.com/myk1yt/crowmemory.git
-cd crowmemory
-.\install.ps1
-```
-
-**macOS / Linux:**
 ```bash
 git clone https://github.com/myk1yt/crowmemory.git
 cd crowmemory
-python install.py
+python scripts/install_plugin.py
 ```
 
-The installer automatically:
-- Installs Python dependencies
-- Initializes `crow.bin` (140MB fixed-size weight matrix)
-- Registers `CrowMemoryAuto` in Windows Task Scheduler — **auto-starts the SSE server at user logon** (no manual commands needed)
-- Creates an **"Orchestrator + Crow"** custom mode with `allowedMcpServers` + AUTO-INGEST (Crow Memory integrated into the Orchestrator workflow)
-- Configures Crow Memory via **global MCP settings** (no project-level `.roo/mcp.json` needed)
-- Registers a Startup `.bat` so the SSE server also starts with Windows
-- Pre-authorizes all 3 Crow tools (`alwaysAllow`)
+The installer is stdlib-only, idempotent and non-destructive. It:
 
-> ⚡ **That's it.** No manual server commands. The SSE server auto-starts when you log into Windows and **survives IDE restarts** (runs as a detached background process).
+- copies the six runtime modules from [`core/`](core) to `<CROW_HOME>/core/` and creates `bin/` shims (`crow_cli.py`, `crow_mcp_stdio.py` + `.cmd` wrappers),
+- deploys one adapter per tool (see the table below; `--tools` narrows the set),
+- migrates your v1.5 `memory/value_bank.json` into `~/.crow-memory/crow.db` when that file exists (verified run: `{"migrated": 488, "skipped_junk": 12, "skipped_invalid": 0, "errors": 0}`),
+- backs up any file it overwrites as `*.bak.<timestamp>`, and never deletes anything,
+- prints per-tool "next steps" (validate command, restart instruction).
 
-### How Auto-Start Works (v1.5.0)
+`<CROW_HOME>` is the data home: `~/.crow-memory` unless you export `CROW_HOME` first.
 
-The installer registers a Windows Task Scheduler task (`CrowMemoryAuto`) that launches the server at user logon:
+### 3. Per-tool one-liners
 
-1. **User logs into Windows** → Task Scheduler triggers `CrowMemoryAuto` (30s delay)
-2. [`start_crow_sse.bat`](start_crow_sse.bat) launches the server as a detached process
-3. Server begins listening on `127.0.0.1:9020` (SSE) + `127.0.0.1:9021` (Streamable HTTP)
-4. Health check confirms readiness (max ~55s)
-5. **Open VS Code** → Zoo Code / Kimi Code / Roo Code detects the running server via Global MCP config → Crow activates immediately
+| Tool | One-liner | What it wires |
+|------|-----------|---------------|
+| **Antigravity** | `python scripts/install_plugin.py --tools antigravity` | plugin → `~/.gemini/config/plugins/crow-memory/` (`plugin.json`, root `hooks.json`, `rules/AGENTS.md`, `skills/crow-memory/SKILL.md`, optional `mcp_config.json`) |
+| **Kimi Code** | `python scripts/install_plugin.py --tools kimi-code` | `[[hooks]]` block in `~/.kimi-code/config.toml`, stdio `~/.kimi-code/mcp.json`, `skills/crow-memory/SKILL.md` |
+| **Claude Code** | `python scripts/install_plugin.py --tools claude-code` | plugin → `~/.claude/plugins/crow-memory/` (`.claude-plugin/plugin.json`, `hooks/hooks.json`, `.mcp.json`, skill) |
+| **Cursor** | `python scripts/install_plugin.py --tools cursor` | `~/.cursor/hooks.json`, `~/.cursor/mcp.json`, `~/.cursor/rules/crow-memory.mdc` |
+| **Cline** | `python scripts/install_plugin.py --tools cline` | rule block in `~/.clinerules`; MCP entry stays manual (`adapters/cline/mcp.json.snippet`) |
+| **Codex** | `python scripts/install_plugin.py --tools codex` | `~/.codex/AGENTS.md` |
+| **Zoo Code** | `python scripts/install_plugin.py --tools zoo-code` | `~/.zoo/AGENTS.md` (copy into a project root for per-project memory) |
+| **Any other agent** | `python scripts/install_plugin.py --tools generic` | nothing auto-deployed; copy [`adapters/generic/AGENTS.md`](adapters/generic/AGENTS.md) into your project root or paste its rules into your global agent instructions |
 
-**Reliability**: If the server fails to start, Task Scheduler automatically retries every 3 minutes (up to 3 times). As a fallback, the installer also places a delayed launcher in the Windows Startup folder.
+`python scripts/install_plugin.py` without `--tools` is the same as `--tools all`.
 
-### 3. Restart & Switch Mode
+### 4. Restart your tool, then verify
 
-1. **Restart Zoo Code**
-2. Open the `crowsmemory` workspace folder
-3. Switch mode to **"Orchestrator + Crow"** — for task-delegation workflows with Crow Memory integration
-4. Done. The SSE server auto-starts. Crow activates on every response.
+```bash
+python ~/.crow-memory/bin/crow_cli.py admin --action diagnostics
+python ~/.crow-memory/bin/crow_cli.py hook session-start --format text
+```
 
-### 4. Verify
-
-Ask the AI:
-> "Call crow_admin with action=\"diagnostics\" to check Crow memory status."
-
-If Crow is alive, it will report register norms, update count, and value bank size.
-
-### How Auto-Activation Works
-
-Two layers ensure Crow is always active:
-
-| Layer | Mechanism |
-|-------|-----------|
-| **SSE Auto-Start** | Windows Task Scheduler (`CrowMemoryAuto`) with `AtLogon` trigger |
-| **UNIVERSAL RECALL + AUTO-INGEST** | Custom mode system prompt (`custom_modes.yaml` for Zoo Code) |
-
-The installer copies [`system_prompt.example.md`](system_prompt.example.md) → `memory/system_prompt.md` with 3 pre-evolved rules.
+A fresh home answers `{"total_rows": 0, ...}` and the hook prints nothing (there is nothing to inject yet). After a few sessions the row count grows and the hook prints a `[User Bias -- Crow Memory]` block. On Windows, `cmd.exe` users can call `%USERPROFILE%\.crow-memory\bin\crow_cli.cmd admin --action diagnostics`.
 
 ---
 
-## `.zoo/` Configuration Structure
+## How It Remembers: Four Triggers
 
-Crow Memory now supports the Zoo Code `.zoo/` configuration convention:
+Adapters call the same CLI with a `--format` that matches the host protocol:
 
-| File | Description |
-|------|-------------|
-| [`.zoo/config.json`](.zoo/config.json) | Project-level Zoo configuration — default mode, version, Crow auto-recall/ingest flags |
-| [`.zoo/config.schema.json`](.zoo/config.schema.json) | JSON Schema for `.zoo/config.json` validation |
-| [`.roo/mcp.schema.json`](.roo/mcp.schema.json) | JSON Schema for `.roo/mcp.json` MCP configuration validation |
+| Trigger | Command | Behavior |
+|---------|---------|----------|
+| **Session start** | `python <CROW_HOME>/core/crow_cli.py hook session-start --format <tool>` | Prints a 2-Tier `[User Bias -- Crow Memory]` block (core principles + avoid list + task recall). The host injects it as a system message / additional context. Prints nothing when the block would be empty. |
+| **Before each prompt** | `... hook pre-invocation --format <tool>` | Queries memory with the user's own words and prints the matching bias. Injects once per distinct `lastUserInput` (`sha256` state in `<CROW_HOME>/.last_inject.json`). |
+| **After a shell/build tool** | `... hook post-tool --format <tool>` | Silent auto-ingest. Build/test command with exit 0 → `+1.0` `context` row; nonzero exit → `-0.5` row carrying the last stderr line. Prints `{}` for `agy`/`claude`, nothing for `kimi`/`cursor`/`text`. Identical successes inside a 1-hour grace window are skipped (`.last_ingest.json`). |
+| **Optional deep work** | `... recall` / `ingest` / `admin` | Explicit queries, corrections and health checks (see the CLI table). |
 
-### Default Mode
+`<tool>` is one of `agy`, `claude`, `kimi`, `cursor`, `text`. The Antigravity and Claude adapters point at `<CROW_HOME>/core/crow_cli.py`; the Kimi and Cursor adapters point at `<CROW_HOME>/bin/crow_cli.py` (same code through a shim). Both paths are rewritten to your real home at install time.
 
-Set `"defaultMode": "orchestrator-crow"` in [`.zoo/config.json`](.zoo/config.json) to automatically activate the Orchestrator + Crow mode when you open the project.
+Hook contracts, verified end-to-end:
 
-### Templates
+| Format | `session-start` / `pre-invocation` | `post-tool` |
+|--------|-----------------------------------|-------------|
+| `agy` | `{"injectSteps":[{"systemMessage":{"systemMessage":"<bias block>"}}]}` | `{}` |
+| `claude` | `{"hookSpecificOutput":{"hookEventName":"SessionStart"\|"UserPromptSubmit","additionalContext":"<bias block>"}}` | `{}` |
+| `kimi` / `cursor` / `text` | raw bias block text | nothing |
 
-The [`templates/`](templates/) directory contains reusable configuration templates:
+Hooks always exit 0, tolerate empty or malformed stdin, and never write logs to stdout.
 
-| Template | Description |
-|----------|-------------|
-| [`templates/zoo-config.json`](templates/zoo-config.json) | Template for `.zoo/config.json` with Crow Memory defaults |
-| [`templates/.roo/mcp.json`](templates/.roo/mcp.json) | Template for `.roo/mcp.json` with Crow Memory MCP server config |
+---
+
+## Optional: stdio MCP (3 tools)
+
+Hooks cover automatic recall and ingest. If you also want the model to call memory as tools, attach the stdio MCP server. It is plain stdlib JSON-RPC over stdin/stdout: your editor spawns it and stops it, so there is still no daemon.
+
+```json
+{
+  "mcpServers": {
+    "crow-memory": {
+      "command": "python",
+      "args": ["<CROW_HOME>/bin/crow_mcp_stdio.py"],
+      "env": { "PYTHONUTF8": "1", "CROW_HOME": "<CROW_HOME>" }
+    }
+  }
+}
+```
+
+The installer already writes this for Kimi Code (`~/.kimi-code/mcp.json`) and ships the same shape for Claude Code (`.mcp.json`), Antigravity (`mcp_config.json`) and Cursor (`mcp.json`).
+
+| Tool | Parameters |
+|------|------------|
+| `crow_recall` | `query` (required), `register` (one of 8 or `all`), `domain` (`code`/`life`/`all`), `top_k` (1-5), `format` (`hint` or `bias_block`), `project`, `strict_project` |
+| `crow_ingest` | `key`, `value`, `register` (required); `polarity` or `exit_code`, `user_edited`, `project` |
+| `crow_admin` | `action` + `args`: `diagnostics`, `drift`, `prompt` (read/append/approve/stats), `backup`, `evolve`, `project_info`, `delete`, `purge` |
+
+Protocol version `2025-03-26`, server identity `crow-memory` `2.0.0`, plus two prompts: `crow_memory_bias` and `crow_evolved_rules`. Verified handshake: `initialize` → `2025-03-26` / `{"name": "crow-memory", "version": "2.0.0"}`.
+
+---
+
+## CLI Reference
+
+All commands print one compact JSON object (hooks print their host-specific envelope instead). Exit codes: `0` success, `2` usage error, `1` runtime error.
+
+| Command | What it does |
+|---------|--------------|
+| `hook session-start --format agy\|claude\|kimi\|cursor\|text` | Emit the session bias block. |
+| `hook pre-invocation --format ...` | Emit turn-scoped recall for the user's input. |
+| `hook post-tool --format ...` | Auto-ingest a build/test result read from stdin. |
+| `recall --query STR [--register R] [--domain code\|life\|all] [--top-k N] [--format hint\|bias_block] [--project P] [--strict-project] [--no-stats]` | Query memory. `hint` returns a JSON list of hint objects; `bias_block` returns the rendered `[User Bias]` text as a JSON string. |
+| `ingest --key K --value V --register R [--polarity F] [--exit-code N] [--user-edited] [--project P]` | Store one experience. `--exit-code 0` maps to `+1.5` (`+0.5` with `--user-edited`), nonzero to `-1.0` (`-0.5` with `--user-edited`); omitted polarity defaults to `+1.0`. |
+| `admin --action diagnostics\|drift\|prompt\|backup\|evolve\|project_info\|delete\|purge [--args JSON]` | Health counts, drift report, `system_prompt.md` read/append/approve/stats, backups, evolve candidates, project list/create, and revocation (`delete` one entry, `purge` a filtered set). |
+| `migrate [--dry-run\|--apply] [--src-json PATH] [--home PATH] [--keep-junk]` | Import a v1.5 `value_bank.json` (default source `<repo>/memory/value_bank.json`) and seed `<CROW_HOME>/system_prompt.md` byte-identically when the target is absent. `crow_cli.py migrate` reports only unless you pass `--apply`; the module CLI `core/migrate_from_v1.py` requires exactly one of `--dry-run`/`--apply` and also accepts `--src-prompt`/`--force-prompt`. |
+| `serve-stdio` | Serve the stdio MCP protocol (same server as `crow_mcp_stdio.py`). |
+
+Every command above was executed against a fresh `CROW_HOME` during the 2.0.0 verification pass, except the fix-round additions called out under "Revocation and review" (`admin delete`, `admin purge`, `admin prompt approve`). Examples:
+
+```bash
+python core/crow_cli.py ingest --key "install quickstart" --value "run install_plugin.py then restart" --register arch --polarity 1.2
+python core/crow_cli.py recall --query "how do I install crow memory" --domain code --top-k 3
+python core/crow_cli.py admin --action backup --args '{"action":"create","tag":"daily"}'
+python core/crow_cli.py migrate --dry-run
+echo '{"tool":"run_command","toolInput":{"command":"pytest -q tests/"},"result":{"exitCode":0}}' | python core/crow_cli.py hook post-tool --format agy
+```
 
 ---
 
 ## How It Works
 
 ```
-User query → LLM (via MCP over SSE)
-                ↓ crow_recall("query", domain="all", project="my-app")
-           Crow MCP Server (SSE 9020 / HTTP 9021)
-                ↓ encode() (sha256-cached) → Sᵀ @ q → confidence
-                ↓ value_bank nearest-neighbor (FAISS) + effective-sim ranking
-                ↓ scrub gate + similarity cutoff (0.35; cross-project 0.42)
-                ↓ same-project boost ×1.05 (capped ×1.15)
-           crow.bin (8-register weight matrix + tagged value_bank)
-                ↓
-           [User Bias] hints returned → injected into context
-                ↓
-           LLM generates response aligned with your preferences
-
-Multi-client safe: One dual-mode server → many AI clients share one crow.bin
+Editor session starts
+      │  hooks.json / config.toml [[hooks]] / plugin hooks
+      ▼
+crow_cli.py hook session-start      stdin: {conversationId, workspacePaths, cwd, locale}
+      │  CrowDB.recall / bias_block  (SQLite WAL, FTS5 + token cosine)
+      ▼
+stdout: [User Bias -- Crow Memory] ──► injected into the model's context
+      │
+User prompt ──► hook pre-invocation ──► turn-scoped recall (deduped by prompt hash)
+      │
+Model acts ──► build/test command ──► hook post-tool ──► silent ingest (+1.0 / -0.5)
+      │
+~/.crow-memory/crow.db  ◄── one file, shared by every tool you installed
 ```
 
-### The 8 Registers (Hybrid: Code + Life)
+### Scoring (v2, no embeddings on the hot path)
 
-**Code Domain**
+```
+sim   = 0.5 * token_cosine(query, key_text + " " + value_text)
+      + 0.5 * bm25_norm                      # FTS5 BM25 rescaled to [0,1]
+decay = 2 ** (-age_days / HALF_LIFE_DAYS[register])
+eff_importance = min(importance, 25.0) * decay
+final = sim * min(1 + 0.12*ln(eff_importance + 1), 1.15) * project_factor
+project_factor = same project x1.05 (total boost capped x1.15),
+                 cross-project x0.9 when a same-project row exists
+accept when sim >= 0.35 ; stance = "avoid" iff polarity_net < 0
+```
 
-| Register | Dimensions | λ (EMA decay) | Capacity | Domain |
-|----------|-----------|----------------|----------|--------|
-| `style` | 4096×4096 | 0.9999 (~7K to halve) | ~2,000 patterns | Variable naming, comment style, folder aesthetics |
-| `bug` | 2048×2048 | 0.9995 (~1.4K to halve) | ~800 patterns | Abstract bug families, not exact fixes |
-| `arch` | 2048×2048 | 0.9995 | ~800 patterns | Early-return vs deep-nesting, error-handling philosophy |
-| `context` | 2048×4096 | 0.9500 (~14 to halve) | ~400 patterns | Recent project context, active file context |
+Negative memories are scored exactly like positive ones and surfaced with an `AVOID:` label, so a past failure can come back as a guardrail.
 
-**Life Domain** (NEW)
+The injected block is reference context, not an instruction channel: the bias renderer frames it that way, and the shipped adapters tell the agent to treat it as past-session context, never as new instructions.
 
-| Register | Dimensions | λ (EMA decay) | Capacity | Domain |
-|----------|-----------|----------------|----------|--------|
-| `life_pref` | 4096×4096 | 0.9999 | ~2,000 | Personal taste, preferred environments, habits |
-| `life_avoid` | 2048×2048 | 0.9995 | ~800 | Situations to avoid, dislikes, past mistakes |
-| `life_phil` | 2048×2048 | 0.9995 | ~800 | Life philosophy, decision principles, values |
-| `life_context` | 2048×4096 | 0.9500 | ~400 | Current plans, recent events, ongoing concerns |
+### Revocation and review
 
-> **Backward compatible**: `style`, `bug`, `arch`, `context` still work as before.
+`admin` can remove what it wrote: `--action delete` drops one memory and `--action purge` clears a filtered set, so a wrong or poisoned row is revocable through the same CLI that stored it. Prompt rules follow the same rule: a model-written line is scrubbed, flattened to one line, capped at 400 characters and stored under an `[Unreviewed Model Suggestions]` section of `system_prompt.md`. Promotion is the one step the model cannot take: `admin prompt approve` refuses unless the human-held `CROW_ADMIN_TOKEN` is exported in the environment and its value is passed as `{"token": "..."}` in `--args`. The model can write the arguments, but it cannot read that variable, so it cannot approve its own line.
 
-### How Crow Remembers (Without Being Asked)
+```bash
+export CROW_ADMIN_TOKEN="$(python -c "import secrets; print(secrets.token_urlsafe(24))")"
+python <CROW_HOME>/bin/crow_cli.py admin --action prompt \
+  --args '{"action": "approve", "match": "small functions", "token": "<the exported value>"}'
+```
 
-The core challenge: LLMs don't spontaneously call tools. Crow solves this with four layers:
+The same token gates the destructive branch of purge: `--action purge --args '{"only_status": "active", "confirm_all": true, "token": "..."}'` refuses without it, so a self-attested `confirm_all` in tool arguments no longer wipes the bank. Purges that only touch superseded or archived rows need no token.
 
-| Layer | Mechanism | When |
-|-------|-----------|------|
-| **AUTO-INGEST** | AI proactively evaluates every exchange and calls `crow_ingest` when it detects preferences, philosophy, corrections, or context. No "remember this" needed. | Every exchange |
-| **MCP Prompt** | `crow_memory_bias` is auto-loaded by the LLM host at session start. No tool call needed. | Every session |
-| **Auto-Inject** | Custom mode system prompt pre-generates a `[User Bias]` block for manual injection. | Pre-task hook |
-| **Evolved Rules** | Statistically significant patterns promoted to `system_prompt.md` via HITL approval. | Permanent |
+### The 8 Registers (half-life decay)
 
----
+| Register | Domain | Half-life | Use case |
+|----------|--------|-----------|----------|
+| `style` | code | 180 days | Naming, comment style, folder aesthetics |
+| `bug` | code | 60 days | Bug families, error-prone patterns |
+| `arch` | code | 60 days | Early-return vs nesting, error-handling philosophy |
+| `context` | code | 7 days | Recent project context, active files |
+| `life_pref` | life | 180 days | Personal taste, habits, preferred environments |
+| `life_avoid` | life | 60 days | Situations to avoid, past mistakes |
+| `life_phil` | life | 180 days | Life philosophy, decision principles |
+| `life_context` | life | 7 days | Current plans, recent events |
 
-## 3 MCP Tools + 2 Prompts (v1.5.0 — AD-5 Tool Consolidation)
+### The 2-Tier `[User Bias]` block
 
-The former 10-tool surface was consolidated into **3 tools**. Legacy capabilities are absorbed as parameters/actions — no functionality was lost.
+```
+[User Bias -- Crow Memory]
+[Core Principles]          <- tier 1: top life_phil / life_avoid / arch rows by effective importance
+[Avoid / Past Failures]    <- negative polarity rows, rendered "[register:AVOID] AVOID: ..."
+[Task Recall]              <- tier 2: rows that match the current query
+```
 
-### MCP Tools (auto-connected via Zoo Code)
+Hints are truncated at a sentence boundary near 500 characters (`CROW_HINT_MAX_CHARS` overrides, minimum 450).
 
-| Tool | Description |
-|------|-------------|
-| `crow_recall` | Retrieve context from memory. Parameters: `query` (required), `register` (single register or `all`), `domain` (`code`/`life`/`all`), `top_k` (1–5), `format` (`hint` JSON — default, or `bias_block` for the `[User Bias]` system-prompt block), `project` / `strict_project` (project-scoped recall) |
-| `crow_ingest` | Store new experiences into synaptic memory. Parameters: `key`, `value`, `register` (required); `polarity` optional — omit it and pass `exit_code` for automatic build-result polarity mapping (+1.5/+0.5 on success, −0.5/−1.0 on failure, adjusted by `user_edited`). Content is sanitized first — pure-noise input is rejected without touching memory. |
-| `crow_admin` | Administrative operations via `action` + `args` dispatch: `diagnostics` (memory health/statistics), `drift` (consistency check), `prompt` (read/append/stats on `system_prompt.md`), `backup` (create/rotate/list/recover), `evolve` (propose system prompt improvements), `project_info` (list/create project-tagged instances) |
+### Engine constants
 
-> **Project tagging**: `crow_recall` and `crow_ingest` accept an optional `project` tag. Entries tagged with a project get a same-project similarity boost at recall time; untagged (`null`) entries stay global. `strict_project` hard-filters cross-project entries out.
-
-> **Input sanitization**: All ingested content passes through [`crow_sanitize.py`](crow_sanitize.py) (`scrub_text`) — kaomoji, emoji, and Korean jamo-run noise are removed while C++ code, URLs, identifiers, and Korean text are protected.
-
-### Maintenance Scripts (dry-run first)
-
-| Script | Description |
-|--------|-------------|
-| [`scripts/migrate_value_bank.py`](scripts/migrate_value_bank.py) | Migrate legacy value_bank entries (sanitize + add `project` field). Runs in **dry-run** by default; pass `--apply` to write. |
-| [`scripts/merge_value_bank.py`](scripts/merge_value_bank.py) | Merge value_bank files (dedupe, resolve conflicts). Dry-run by default; `--apply` to write. |
-| [`scripts/purge_search_debris.py`](scripts/purge_search_debris.py) | Remove search-log debris entries from value_bank. Dry-run by default; `--apply` to write. |
-
-### MCP Prompts (Auto-Loaded by Host)
-
-| Prompt | Description |
-|--------|-------------|
-| `crow_memory_bias` | Full context: evolved rules + recent memory hints. Loaded automatically at session start. |
-| `crow_evolved_rules` | Permanent rules from `system_prompt.md`. |
-
-### Fork Files (`-myk1yt`) Consolidation & Data Layout
-
-All `-myk1yt` file copies (docs, code, bats, requirements) have been **fully merged into the canonical originals and removed** — the canonical files are the single source of truth. Only the historical **memory data archive** remains:
-
-| File | Status |
-|------|--------|
-| `memory/crow.bin` + `memory/value_bank.json` | ✅ **Active** |
-| `memory/crow-myk1yt.bin` / `value_bank-myk1yt.json` / `recall_stats-myk1yt.json` | 🗄️ Historical archive (not read by the server, preserved untouched) |
-
-> The `CROW_STATE_TAG` mechanism ([`crow_mcp_server.py`](crow_mcp_server.py) `resolve_state_path()`) can still create isolated instances (`crow-<tag>.bin`) when intentionally set — no tag is currently in use.
-
-### Tests
-
-**231 tests** across 6 suites: `test_sanitize` (55), `test_tool_schema` (56), `test_recall_precision` (42), `test_merge` (33), `test_migrate` (27), `test_purge_debris` (18) — under [`tests/`](tests/).
+| Constant | Value | Meaning |
+|----------|-------|---------|
+| `MAX_BANK` | 500 | Row ceiling; eviction ranks by effective importance |
+| `MIN_PER_REGISTER` | 15 | A register is never evicted below 15 active rows |
+| `GRACE_SECONDS` | 3600 | Newly inserted rows cannot be evicted for an hour |
+| `IMPORTANCE_CAP` | 25.0 | Storage and scoring cap for importance |
+| `UPSERT_COSINE` | 0.90 | Same-register, same-sign near-duplicates merge instead of stacking |
+| `SIM_CUTOFF` | 0.35 | Below this combined similarity a row is not returned |
 
 ---
 
-## Internationalization (i18n) — 36 Languages
+## Data Locations
 
-Crow Memory automatically detects your VS Code language setting and displays all messages, MCP tool descriptions, and installer output in your preferred language.
+Everything lives in one per-user home, not per-project:
 
-**Supported locales:**
-🇺🇸 English · 🇰🇷 한국어 · 🇯🇵 日本語 · 🇨🇳 简体中文 · 🇹🇼 繁體中文 · 🇫🇷 Français · 🇩🇪 Deutsch · 🇮🇹 Italiano · 🇪🇸 Español · 🇧🇷 Português · 🇷🇺 Русский ... and 26 more.
+```
+~/.crow-memory/            (or $CROW_HOME)
+├── crow.db                SQLite (WAL) — memories, memories_fts, entry_evolve_hits
+├── core/*.py              runtime copy of the repo's core/
+├── bin/crow_cli.py        shim + .cmd wrapper
+├── bin/crow_mcp_stdio.py  shim + .cmd wrapper
+├── system_prompt.md       seeded by migration; reviewed rules + [Unreviewed Model Suggestions]
+├── backups/crow-<tag>-<ts>.db   from `admin backup create` (rotation keeps 10)
+├── .last_inject.json      turn-dedup state
+└── .last_ingest.json       post-tool spam guard
+```
 
-The installer, MCP server, and system prompt templates all use your VS Code locale automatically. If a translation is missing, English is used as fallback.
+### Zero dependencies
+
+The hot path imports only the Python standard library: `sqlite3`, `json`, `re`, `math`, `os`, `sys`, `pathlib`, `argparse`, `hashlib`, `time`, `shutil`, `subprocess`. No `torch`, no `sentence-transformers`, no `faiss`, no web-server package, no `mcp` package, no virtualenv. Measured at 486 rows: warm in-engine recall p95 ≈ 6 ms (bias block p95 ≈ 7 ms), the engine costs ≈ 15-17 ms inside a fresh process, and an end-to-end CLI or hook call is dominated by Python interpreter start-up (≈ 140-180 ms; a bare interpreter start is ≈ 46 ms on the test machine).
+
+---
+
+## Internationalization (i18n) — 96 Languages
+
+The installer, the CLI and the MCP tool descriptions are localized; your editor locale is detected automatically and English is the fallback.
+
+**Supported locales (96):** 🇺🇸 English · 🇰🇷 한국어 · 🇯🇵 日本語 · 🇨🇳 简体中文 · 🇹🇼 繁體中文 · 🇫🇷 Français · 🇩🇪 Deutsch · 🇮🇹 Italiano · 🇪🇸 Español · 🇧🇷 Português · 🇷🇺 Русский · 🇸🇦 العربية · 🇮🇳 हिन्दी · 🇹🇷 Türkçe · 🇻🇳 Tiếng Việt · 🇹🇭 ไทย · 🇮🇩 Bahasa Indonesia ... and 79 more under [`i18n/`](i18n). `crow_i18n.SUPPORTED_LOCALES` lists 96 entries and `i18n/` holds 96 JSON files.
+
+---
+
+## Troubleshooting
+
+| Symptom | Cause / fix |
+|---------|-------------|
+| No `[User Bias]` block at session start | The database is empty or has no `life_phil` / `life_avoid` / `arch` rows. Run `admin --action diagnostics`; ingest a few memories first. An empty block is printed as nothing, not as an error. |
+| `recall` returns `[]` | Nothing cleared `SIM_CUTOFF` (0.35). Crow needs a handful of ingests before hints appear. |
+| Hooks never fire | Restart the tool after installing; hooks are read at startup. For Antigravity, `agy plugin validate ~/.gemini/config/plugins/crow-memory --strict` exits 0 and lists `hooks 3`. |
+| `python: command not found` in a hook | Hooks call bare `python`. Put Python 3.11+ on PATH (or edit the command in your tool's hook config to the absolute interpreter). |
+| Hooks print nothing and exit 0 | Intended: hook failures are swallowed. Re-run one command by hand with `CROW_DEBUG=1` set to see the traceback. |
+| Korean / Unicode output looks broken | Hooks and the CLI write UTF-8. If your console is `cp949`, set `set PYTHONUTF8=1` before running commands by hand. |
+| Writes seem slow with many editors open | Normal under WAL: writers queue with `busy_timeout=5000`. Reads never block. |
+
+---
+
+## Legacy (v1.5 MCP server)
+
+> **New users should not use this.** v1.5 needs a long-running Python daemon on two ports, a 140 MB weight matrix and a background scheduler. v2.0 replaces all of it. The section exists so old installs can still be understood and retired.
+
+v1.5 shipped `crow_core.py` (Hebbian EMA matrices in `memory/crow.bin`), `crow_mcp_server.py` (MCP over SSE + Streamable HTTP) and `install.py` / `install.ps1`, which wired autostart around [`start_crow_sse.bat`](start_crow_sse.bat) (Task Scheduler task `CrowMemoryAuto` at logon, with a Startup-folder fallback when the registration was denied).
+
+- Legacy server: `python crow_mcp_server.py --transport dual --port 9020 --http-port 9021` (SSE on `9020`, Streamable HTTP on `9021` via `uvicorn`).
+- Legacy client config: `{"transport": "http", "url": "http://127.0.0.1:9021/"}`; Kimi Code cannot use the SSE endpoint.
+- Legacy data: `memory/crow.bin`, `memory/value_bank.json`, `memory/recall_stats.json`, `memory/system_prompt.md` (v2's migration seeds the last one into `<CROW_HOME>/system_prompt.md`).
+- Legacy Antigravity plugin dir: an old `~/.gemini/config/plugins/crow_memory/` (underscore) is left untouched by v2; the installer prints a NOTE so you can remove it and avoid loading two copies.
+- Legacy tooling: `scripts/migrate_value_bank.py`, `scripts/merge_value_bank.py`, `scripts/purge_search_debris.py`, `backup_manager.py`, `hitl_panel.html`, the test suite under [`tests/`](tests) (`python -m unittest discover -s tests`).
+- Full v1.5 design, diagrams and math: the "Legacy v1.5 Matrix Engine" part of [`CROW_MEMORY_ARCHITECTURE.md`](CROW_MEMORY_ARCHITECTURE.md).
+
+**Retiring v1.5:** run `python scripts/install_plugin.py` (it migrates `memory/value_bank.json` into `~/.crow-memory/crow.db` and seeds `system_prompt.md`), then disable the autostart: `schtasks /delete /tn "CrowMemoryAuto" /f` and remove `start_crow_sse.bat` from your Startup folder. Nothing in `memory/` is deleted by v2.
+
+---
+
+## Architecture
+
+See [`CROW_MEMORY_ARCHITECTURE.md`](CROW_MEMORY_ARCHITECTURE.md): the v2.0 serverless chapter (components, data flow, schema, scoring, concurrency) first, then the v1.5 matrix engine as historical reference.
 
 ---
 
@@ -243,228 +314,17 @@ The installer, MCP server, and system prompt templates all use your VS Code loca
 
 | File | Share? | Reason |
 |------|--------|--------|
-| `crow_core.py` | ✅ Yes | Core engine (code) |
+| `core/*.py` | ✅ Yes | v2 runtime engine (stdlib only) |
+| `adapters/**` | ✅ Yes | Hook / skill / rule templates |
+| `scripts/install_plugin.py` | ✅ Yes | One-click installer |
 | `crow_sanitize.py` | ✅ Yes | Input noise sanitizer (kaomoji/emoji/jamo-run scrubbing) |
-| `crow_mcp_server.py` | ✅ Yes | MCP server |
-| `backup_manager.py` | ✅ Yes | Backup utility |
-| `hitl_panel.html` | ✅ Yes | HITL UI |
-| `crow_i18n.py` | ✅ Yes | i18n core module |
-| `i18n/*.json` | ✅ Yes | Translation files (36 languages) |
+| `crow_i18n.py`, `i18n/*.json` | ✅ Yes | i18n core module and 96 translation files |
 | `system_prompt.example/` | ✅ Yes | Locale-specific prompt templates |
-| `requirements.txt` | ✅ Yes | Dependencies |
-| **`memory/crow.bin`** | ❌ **No** | Your personal synaptic memories |
-| **`memory/value_bank.json`** | ❌ **No** | Your experience data |
-| **`memory/recall_stats.json`** | ❌ **No** | Your recall statistics |
-| `system_prompt.example.md` | ✅ Yes | Evolved rules template (copied to memory/ on install) |
-| `install.py` / `install.ps1` | ✅ Yes | One-command installers |
-| **`memory/system_prompt.md`** | ❌ **No** | Your evolved rules (auto-copied from template) |
+| **`~/.crow-memory/crow.db`** | ❌ **No** | Your personal memories (never inside the repo) |
+| **`~/.crow-memory/system_prompt.md`** | ❌ **No** | Your evolved rules |
+| **`memory/*`** | ❌ **No** | v1.5 personal memory + archive files |
 
-The included `.gitignore` automatically excludes all personal memory files.
-
----
-
-## Multi-Client Setup (Zoo Code + others)
-
-### ✅ Default: Dual-Mode Server (Auto-Start)
-
-The installer configures a **dual-mode** server (SSE + Streamable HTTP) by default. This is the only safe way to share `crow.bin` across multiple AI clients:
-
-```
-┌──────────────┐     ┌──────────────┐     ┌──────────────┐
-│  Zoo Code    │     │  Kimi Code   │     │  Other Client│
-│  (SSE MCP)   │     │  (HTTP MCP)  │     │  (SSE MCP)   │
-└──────┬───────┘     └──────┬───────┘     └──────┬───────┘
-       │                    │                    │
-       └────────┬───────────┴───────────┬────────┘
-                │                       │
-     http://127.0.0.1:9020/sse   http://127.0.0.1:9021/
-       ┌────────┴───────────────────────┴────────┐
-       │          Crow MCP Server                │
-       │  (Dual Mode: SSE port 9020 +            │
-       │   Streamable HTTP port 9021)            │
-       │  Auto-started by Windows Task Scheduler (AtLogon)     │
-       └────────┬───────────────────────┬────────┘
-                │                       │
-       ┌────────┴───────────────────────┴────────┐
-       │              crow.bin                   │
-       │           (single source)               │
-       └─────────────────────────────────────────┘
-```
-
-**How it works:**
-1. You open the `crowsmemory` workspace in **any** VS Code-based editor
-2. [`.vscode/tasks.json`](.vscode/tasks.json) auto-runs [`start_crow_sse.bat`](start_crow_sse.bat) — if server is already running (detached from previous session), exits instantly; otherwise starts it detached + polls until ready
-3. The server starts in **dual mode**: SSE on port 9020, Streamable HTTP on port 9021
-4. Zoo Code and SSE-compatible clients connect to `http://127.0.0.1:9020/sse`
-5. Kimi Code connects to `http://127.0.0.1:9021/` via Streamable HTTP
-6. The single server process serializes all reads/writes — **no race conditions, no data corruption**
-7. The server process is **detached** from VS Code — closing the IDE does not kill it
-
-### ⚠️ Warning: stdio Mode
-
-If you manually switch to `"type": "stdio"` (command mode), each VS Code instance spawns its own `crow_mcp_server.py` process. **Two processes writing to the same `crow.bin` will cause silent data loss.** Only use stdio mode if you run exactly one AI client.
-
-### Cross-Editor Compatibility
-
-| Client | Transport | Port | Config File | Auto-Generated |
-|--------|-----------|------|-------------|----------------|
-| Zoo Code | SSE | 9020 | `mcp_settings.json` (global) | ✅ Yes |
-| Cline / Roo Code | SSE | 9020 | `mcp_settings.json` (global) | ✅ Yes |
-| Kimi Code | Streamable HTTP | 9021 | `~/.kimi/mcp.json` | ✅ Yes |
-
----
-
-### Kimi Code Integration
-
-Kimi Code does not support custom modes like Zoo Code's `orchestrator-crow`. Instead, use the single-file [`AGENTS.md`](AGENTS.md) for equivalent Crow Memory integration:
-
-1. Set environment variable: `KIMI_AGENTS_MD=/path/to/crowsmemory/AGENTS.md`
-2. Configure MCP in `~/.kimi/mcp.json`:
-
-   ```json
-   {
-     "mcpServers": {
-       "crow_memory": {
-         "transport": "http",
-         "url": "http://127.0.0.1:9021/"
-       }
-     }
-   }
-   ```
-
-3. The server must run in **dual mode**: `python crow_mcp_server.py --transport dual --port 9020 --http-port 9021`
-   (or just use `start_crow_sse.bat` which starts in dual mode by default)
-
-> ⚠️ **Kimi Code does NOT support SSE transport.** It has a known bug where it fails to recognize the MCP SSE `event: endpoint` handshake message, causing an infinite "Testing..." hang or a **405 Method Not Allowed** error. Always use Streamable HTTP (`"transport": "http"`, port 9021) for Kimi Code.
-
-The `AGENTS.md` file provides session-start recall, session-end ingest, and full tool reference — matching the `orchestrator-crow` experience in Zoo Code.
-
----
-
-## Troubleshooting
-
-### Crow tools don't appear
-- **Restart your editor** — MCP settings are read at startup only.
-- First launch downloads `nomic-embed-text-v1.5` model (~30-60s). Subsequent launches are fast (~5-10s).
-- Verify Python is in PATH: `python --version`
-- Check the SSE server is running: visit `http://127.0.0.1:9020/` in a browser — should show "Crow Memory MCP SSE Server"
-- Verify global MCP settings have `crow_memory` configured for SSE.
-
-### ECONNREFUSED 127.0.0.1:9020 on VS Code restart
-- This is a **race condition** fixed in v1.3.1. The SSE server now runs as a **detached process** that survives VS Code restarts.
-- If you still see this: wait 10 seconds and re-run the `Crow SSE Server — Auto Start` task manually (`Ctrl+Shift+P` → `Tasks: Run Task`).
-- Verify the server is alive: visit `http://127.0.0.1:9020/` in a browser.
-
-### SSE server not auto-starting
-- Verify Task Scheduler registration: `schtasks /query /tn "CrowMemoryAuto"`
-- Check server health: visit `http://127.0.0.1:9020/health`
-- View server logs: `type sse_server.log`
-- Manually start: run [`start_crow_sse.bat`](start_crow_sse.bat)
-- Re-register: `powershell -File scripts/register_crow_task.ps1`
-
-### Port 9020 already in use
-- [`start_crow_sse.bat`](start_crow_sse.bat) detects this and skips duplicate starts automatically
-- To force restart: kill the process on port 9020, delete `memory\crow.bin.lock`, then re-open the workspace
-
-### Recall returns empty hints (no fabricated text)
-- Normal! Crow only returns memories above the similarity cutoff (0.35). Below it, you get an empty hints list with confidence 0 — no filler text (v1.5.0 removed the old "faint bias" placeholders). Crow needs 20-30+ ingestions before meaningful hints emerge. Keep coding.
-- Enable AUTO-INGEST by switching to **"Orchestrator + Crow"** mode — the AI will learn proactively.
-
-### UnicodeEncodeError: 'cp949' codec can't encode character (Korean Windows)
-
-**Symptoms**: Zoo Code shows `UnicodeEncodeError: 'cp949' codec can't encode character...`.
-
-**Root cause**: Korean Windows uses `cp949` (EUC-KR) as the default system encoding. When MCP clients process SSE responses containing Unicode characters (✓, Korean text, emoji), the `cp949` codec fails because it cannot represent these characters.
-
-**Affected languages** (any non-UTF-8 Windows locale):
-| Language | Code Page | Issue |
-|----------|-----------|-------|
-| Korean (한국어) | `cp949` | Unicode checkmarks, Korean characters |
-| Japanese (日本語) | `cp932` | Shift-JIS can't encode certain Unicode symbols |
-| Chinese Simplified (简体中文) | `cp936` | GBK encoding conflicts |
-| Chinese Traditional (繁體中文) | `cp950` | Big5 encoding conflicts |
-| Thai (ไทย) | `cp874` | Thai + Unicode mixing issues |
-| Any non-Unicode Windows locale | various | Same class of problem |
-
-**Fix A — Enable Windows UTF-8 mode (recommended, permanent)**
-
-1. `Win + R` → `intl.cpl` → Enter
-2. **Administrative** tab → **Change system locale...**
-3. Check ✅ **Beta: Use Unicode UTF-8 for worldwide language support**
-4. OK → **Restart Windows**
-
-Or via PowerShell (Admin):
-```powershell
-Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Nls\CodePage" -Name "ACP" -Value "65001"
-```
-
-**Fix B — Environment variables (already applied by installer)**
-
-[`start_crow_sse.bat`](start_crow_sse.bat) sets `PYTHONUTF8=1` and `PYTHONIOENCODING=utf-8`, and runs Python with `-X utf8` flag. [`crow_mcp_server.py`](crow_mcp_server.py) enforces UTF-8 stdout/stderr at startup. These prevent most encoding issues on the server side, but client-side encoding requires Fix A.
-
-### PermissionError / lock file issues
-- Delete stale lock: `del memory\crow.bin.lock` (Windows) or `rm memory/crow.bin.lock` (macOS/Linux)
-- [`start_crow_sse.bat`](start_crow_sse.bat) automatically cleans stale locks before starting
-
----
-
-## REST API Endpoints
-
-Crow Memory Server also provides REST API alongside the MCP SSE protocol.
-VibeZoo Bridge and other tools can communicate directly with Crow Memory over HTTP.
-
-### `GET /health`
-Check server health:
-```json
-{"status": "ok", "version": "1.5.0", "entries": 42}
-```
-
-### `POST /ingest`
-Store new memory:
-```json
-{"content": "...", "register": "context", "source": "rest_api", "tags": [], "project": null}
-```
-
-### `GET /recall?query=...&register=...&limit=5&project=...&strict_project=false`
-Search memories (params: `query`, `register` (single or `all` → multi-register merge), `limit` (1-20, default 5), `project`, `strict_project`):
-```json
-{"results": [{"content": "...", "score": 0.95, ...}], "count": 1}
-```
-
-### How to Run
-```bash
-# SSE + REST API (default, recommended)
-python crow_mcp_server.py --transport dual --port 9020 --http-port 9021
-
-# SSE only
-python crow_mcp_server.py --transport sse --port 9020
-
-# Verify REST API + health check
-curl http://127.0.0.1:9020/health
-```
-
-### Windows Auto-Start (v1.5.0+)
-
-The server is registered as a Windows Task Scheduler task during installation. To manually register or unregister:
-
-```bash
-# Register auto-start
-powershell -File scripts/register_crow_task.ps1
-
-# Check status
-schtasks /query /tn "CrowMemoryAuto"
-
-# Remove auto-start
-schtasks /delete /tn "CrowMemoryAuto" /f
-```
-
-For manual server start without auto-registration, use [`start_crow_sse.bat`](start_crow_sse.bat).
-
----
-
-## Architecture
-
-See [`CROW_MEMORY_ARCHITECTURE.md`](CROW_MEMORY_ARCHITECTURE.md) for the full technical specification including mathematical foundations, Hebbian EMA update rules, spectral clipping, and capacity bounds.
+The included `.gitignore` excludes personal memory files.
 
 ---
 
@@ -476,16 +336,16 @@ MIT License — see [`LICENSE`](LICENSE) for details.
 
 ## Commercial Services
 
-Crow Memory is open-source and free to use under MIT. But every organization has unique needs — different security requirements, proprietary LLM integrations, custom encoding schemes, or industry-specific compliance mandates.
+Crow Memory is open-source and free to use under MIT. But every organization has unique needs — different security requirements, proprietary LLM integrations, custom memory schemas, or industry-specific compliance mandates.
 
 **We offer custom development services for:**
 
-- 🔒 **Security-hardened deployments** — Air-gap environments, on-premise only, encrypted `crow.bin` storage, audit logging, RBAC integration
-- 🏢 **Enterprise customization** — Custom register dimensions, industry-specific decay profiles (finance, healthcare, legal), dedicated SLA-backed MCP server clusters
-- 🤖 **LLM-specific optimization** — Fine-tuned embedding models, custom projection layers, optimized weight matrices for specific LLM architectures (Claude, GPT, DeepSeek, Gemini, local models)
-- 🧩 **Software integration** — Plugin-style Crow integration for non-VS Code IDEs, CI/CD pipeline hooks, custom build event detectors
-- 🌐 **Additional language support** — Beyond the 36 VS Code locales, we can add translation support for any language or domain-specific terminology
-- 📊 **Enterprise analytics** — Memory usage dashboards, team-wide style consistency monitoring, drift alerting
+- 🔒 **Security-hardened deployments** — air-gapped environments, on-premise only, encrypted `crow.db` storage, audit logging, RBAC integration
+- 🏢 **Enterprise customization** — custom registers, industry-specific decay profiles (finance, healthcare, legal), dedicated memory services
+- 🤖 **LLM-specific optimization** — custom tokenizers, hybrid retrieval for specific model families (Claude, GPT, Gemini, local models)
+- 🧩 **Software integration** — plugin-style Crow integration for editors outside the shipped adapters, CI/CD hooks, custom build detectors
+- 🌐 **Additional language support** — beyond the 96 shipped locales, any language or domain-specific terminology
+- 📊 **Enterprise analytics** — memory usage dashboards, team-wide style consistency monitoring, drift alerting
 
 > **For security-enhanced, enterprise-grade, or custom LLM/software-tailored Crow Memory development:**
 
@@ -495,5 +355,5 @@ Crow Memory is open-source and free to use under MIT. But every organization has
 
 ---
 
-*Crow Memory v1.5.0 — September 2026*
+*Crow Memory v2.0.0 — November 2026*
 *Co-designed by Stefano,Kim & AI*

@@ -4,8 +4,54 @@ Crow Memory is an external synaptic memory system for LLM-based AI coding assist
 
 ---
 
-## MCP Server Setup (Streamable HTTP)
+## v2.0 Serverless (recommended)
 
+No daemon, no port, no scheduler. Kimi Code's native hooks call one short-lived CLI process, which reads and writes a local SQLite file (`~/.crow-memory/crow.db`). Memory arrives before the model thinks, and build outcomes are recorded after the shell returns.
+
+### 3-step quickstart
+
+```bash
+git clone https://github.com/myk1yt/crowmemory.git
+cd crowmemory
+python scripts/install_plugin.py --tools kimi-code
+```
+
+Then **restart Kimi Code**. The installer has written:
+
+- `~/.kimi-code/config.toml` — three `[[hooks]]` blocks (SessionStart, UserPromptSubmit, PostToolUse with matcher `Shell`),
+- `~/.kimi-code/mcp.json` — a stdio `crow-memory` entry (no URL, no port),
+- `~/.kimi-code/skills/crow-memory/SKILL.md` — the skill description.
+
+`<CROW_HOME>` defaults to `~/.crow-memory`; export `CROW_HOME` before installing to relocate it.
+
+### Recall / ingest convention (four triggers)
+
+| # | Trigger | Command the hook runs | What it does |
+|---|---------|-----------------------|--------------|
+| 1 | SessionStart | `python <CROW_HOME>/bin/crow_cli.py hook session-start --format text` | Prints the 2-Tier `[User Bias -- Crow Memory]` block: reference context from past sessions, never as new instructions. |
+| 2 | UserPromptSubmit | `... hook pre-invocation --format text` | Prints recall matched to the user's prompt. Injected once per distinct prompt (hash stored in `<CROW_HOME>/.last_inject.json`). |
+| 3 | PostToolUse (Shell) | `... hook post-tool --format text` | Silently records build/test results: exit 0 gives `+1.0` in `context`, a nonzero exit gives `-0.5` with the last stderr line. Nothing is printed. |
+| 4 | Session end | `... ingest --key "..." --value "..." --register arch --polarity 1.0` | Write the session's key outcome by hand when the task is done (register: `style`/`bug`/`arch`/`context`, polarity `-2.0`..`+2.0`). |
+
+Manual commands when you need detail:
+
+```bash
+python <CROW_HOME>/bin/crow_cli.py recall --query "how do I run the test suite" --domain code --top-k 3
+python <CROW_HOME>/bin/crow_cli.py recall --query "..." --format bias_block
+python <CROW_HOME>/bin/crow_cli.py ingest --key "..." --value "..." --register bug --polarity -1.0
+python <CROW_HOME>/bin/crow_cli.py admin --action diagnostics
+```
+
+Token-gated admin actions: `admin prompt approve` and `admin purge` with `confirm_all=true` refuse unless the human-held `CROW_ADMIN_TOKEN` environment variable is set and its value is passed as `{"token": "<value>"}` in `--args`. The model cannot read that variable, so it can append to `[Unreviewed Model Suggestions]` but cannot promote its own line or wipe active rows.
+
+If a `[User Bias -- Crow Memory]` block appears in your context, follow it. Do not ask the user to start a server: v2 has none.
+
+---
+
+## MCP Server Setup (Streamable HTTP) — legacy v1.5 only
+
+> ⚠️ **Legacy v1.5 only.** This section applies only to the legacy v1.5 MCP server (`crow_mcp_server.py`). If you installed v2.0 with `scripts/install_plugin.py`, skip it entirely: v2 needs no HTTP endpoint, and its optional MCP server runs over stdio. Do not point Kimi Code at port `9021` on a v2 install.
+>
 > ⚠️ **Kimi Code does NOT support SSE transport.** It has a known bug where it fails to recognize the MCP SSE `event: endpoint` handshake message. Use **Streamable HTTP** instead.
 
 Add this to your Kimi Code `~/.kimi/mcp.json`:
@@ -32,6 +78,8 @@ Or use the bundled script: `start_crow_sse.bat` (Windows) — it starts in dual 
 ---
 
 ## CROW MEMORY INTEGRATION
+
+> v2 note: with the hooks installed, recall and ingest already happen without tool calls (see the four triggers above). The rules in this section apply when the stdio MCP server is attached, which the installer configures for you in `~/.kimi-code/mcp.json`.
 
 ### SESSION START (MANDATORY)
 At the beginning of every conversation session (i.e., your very first response to the user), you MUST call `crow_recall` to retrieve context about the user:

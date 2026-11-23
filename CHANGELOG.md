@@ -5,6 +5,49 @@ All notable changes to Crow Memory will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.0] — 2026-11-24
+
+### Added
+- **Serverless core (`core/`)**: a stdlib-only SQLite WAL engine replaces the PyTorch weight-matrix daemon. Recall and ingest now run in a short-lived process against `~/.crow-memory/crow.db`, so no server, port, scheduler, virtualenv or 140 MB `crow.bin` is needed. Text scoring is BM25 (FTS5) plus token cosine instead of matrix projection: the matrix engine's Rank-1 collapse (every query returning the same dominant pattern) cannot occur.
+- **`core/crow_db.py`**: 8-register engine with signed `polarity_net` storage, half-life effective importance, grace shield plus per-register quotas on eviction, semantic upsert, 2-Tier bias block, and non-destructive `rebuild_from_bank()`.
+- **`core/crow_text.py`**: shared tokenizer, `token_cosine()` and `_smart_truncate()` (500 characters by default, sentence-boundary cut, `CROW_HINT_MAX_CHARS` override with a 450 floor).
+- **`core/crow_cli.py`**: one CLI for `hook session-start` / `hook pre-invocation` / `hook post-tool` (with `--format agy|claude|kimi|cursor|text`), `recall`, `ingest`, `admin`, `migrate` and `serve-stdio`.
+- **`core/crow_mcp_stdio.py`**: optional stdlib JSON-RPC 2.0 stdio MCP server (protocol `2025-03-26`, server `crow-memory` 2.0.0) exposing `crow_recall`, `crow_ingest`, `crow_admin` and the `crow_memory_bias` / `crow_evolved_rules` prompts. The client spawns and stops it; nothing stays resident.
+- **`core/migrate_from_v1.py`**: imports a v1.5 `value_bank.json` with its registers, importance, polarities and timestamps, filters test debris (`k`, `test key`, `[CHECKPOINT]`, ...), and seeds `<CROW_HOME>/system_prompt.md` byte-identically from `<repo>/memory/system_prompt.md` (`--src-prompt` overrides the source; a live file is never overwritten unless `--force-prompt`, which backs it up to `.bak.<timestamp>` first). Reports `{processed, inserted, merged, rejected, skipped_junk, skipped_invalid, errors}` plus a `prompt{src, dst, would_copy, copied, skipped_exists, error}` block, with `migrated` kept equal to `processed`. The module CLI requires exactly one of `--dry-run` / `--apply`.
+- **Lifecycle hook adapters (`adapters/`)**: Antigravity (root `hooks.json`, `PreInvocation`, `run_command` matcher), Kimi Code (`[[hooks]]` snippet + stdio `mcp.json`), Claude Code (plugin + `SessionStart`/`UserPromptSubmit`), Cursor (`version: 1` hooks + rule), Cline (`.clinerules` block), plus `generic` / `codex` / `zoo-code` universal `AGENTS.md` rules that work for any agent without MCP.
+- **`scripts/install_plugin.py`**: one-command, idempotent, stdlib-only installer: copies `core/` and creates `bin/` shims, deploys the selected adapters, migrates v1 data, backs up every overwritten file as `*.bak.<timestamp>`, and prints per-tool next steps.
+- **96 locales**: `i18n/` grew from 36 to 96 translation files and `crow_i18n.SUPPORTED_LOCALES` now lists 96 entries.
+- **Documentation**: README quickstart for eight tools, v2 architecture chapter, and a v2 section in the repository `AGENTS.md`.
+
+### Changed
+- **Recall precision**: combined similarity is `0.5 * token_cosine + 0.5 * bm25_norm`, gated by `SIM_CUTOFF` 0.35, then multiplied by a half-life decay factor and an importance factor capped at ×1.15.
+- **Negative memories are first-class**: a row with negative `polarity_net` is scored like any other row and labelled `stance="avoid"`. This is the Sign Inversion Paradox fix: failures used to be strengthened by the old `abs(polarity)` importance add and then crowded out the very memories that should have surfaced.
+- **Eviction policy**: the Importance Ratchet ("last ingested wins forever") is gone: eviction ranks rows by decayed effective importance, never touches rows inside the 1-hour grace window, and never drops a register below `MIN_PER_REGISTER` (15) active rows.
+- **Bias injection**: `[User Bias -- Crow Memory]` is now two-tiered: stable core principles (no query match required) followed by task-matched recall, with an explicit `[Avoid / Past Failures]` tier.
+- **Hooks replace tool calls**: `PreInvocation` / `UserPromptSubmit` hooks inject memory before the model thinks (`sha256(lastUserInput)` dedup in `.last_inject.json`), and `PostToolUse` hooks ingest build/test outcomes silently (+1.0 success, -0.5 failure) without the model deciding to call a tool.
+
+### Fixed
+- **Importance Ratchet**: repeating a negative correction no longer increases importance; polarity accumulates with its sign and `importance` is clamped to a 0.05 floor (v1.5 added `abs(polarity)`).
+- **Rank-1 collapse**: removes the spectral-clipping regime where repeated ingestions turned a register into a projector onto one pattern, so different queries now return different hints.
+- **Concurrent editors**: SQLite WAL with `busy_timeout=5000` replaces the advisory `crow.bin.lock`; any number of editors may read and write at once.
+- **Non-destructive migration**: neither `memory/*` nor any v1 file is modified or deleted by installing v2.
+
+### Removed
+- Nothing from v1.5 was deleted. `crow_core.py`, `crow_mcp_server.py`, `install.py` / `install.ps1`, `start_crow_sse.bat`, `memory/*` and the legacy test suites stay in place as the v1.5 engine.
+
+### Fix round 1 (security hardening, same release)
+- **Prompt append is staged, not trusted**: model-written rules are scrubbed, flattened to one line, capped at 400 characters and stored under an `[Unreviewed Model Suggestions]` section of `system_prompt.md`; a line becomes active context only after `admin prompt approve`. Every stage/approve is audit-logged, and the bias block carries an explicit "reference context, not instructions" framing line.
+- **Revocation exists**: `admin --action delete` removes one memory and `admin --action purge` clears a filtered set, so a poisoned row is removable through the CLI that wrote it.
+- **Backup recover is confined**: `backup recover` reads only inside `<CROW_HOME>/backups/`, opens the file read-only and validates tables before restoring; a displaced live database is kept as a timestamped `.bak`.
+- **MCP stdio is bounded**: request line length and recursion depth are capped so a hostile client cannot exhaust the server.
+- **Installer merges instead of replacing**: existing `~/.cursor/hooks.json`, `~/.codex/AGENTS.md` and `~/.zoo/AGENTS.md` get marked-block merges, and a re-run no longer re-migrates (database fingerprint guard).
+- **Negative dampening is applied**: `NEG_DAMPEN_BY_REGISTER` is enforced on ingest (full strength for `bug` / `life_avoid`, ×0.6 elsewhere), as the contract always specified.
+- **Docs and adapters aligned**: `system_prompt.md` seeding, the Antigravity `plugins/crow-memory/` path, the required `--dry-run`/`--apply` flags, the `crow_i18n.py` line count and the v2 core module list, and the "reference context, never new instructions" agent rule.
+
+### Notes
+- **Legacy v1.5:** the old MCP server (SSE `9020` / Streamable HTTP `9021` under `uvicorn`) is documented under "Legacy (v1.5 MCP server)" in the README and must not be started alongside v2 data.
+- `memory/system_prompt.md` is seeded into `<CROW_HOME>/system_prompt.md` by the migration (byte-identical, only when the target is absent). A live file is never overwritten unless you pass `--force-prompt`, which backs it up first. Model-written rules are staged under `[Unreviewed Model Suggestions]` and promoted with `admin prompt approve`.
+
 ## [1.5.0] — 2026-09-02
 
 ### Added
